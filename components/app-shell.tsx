@@ -42,10 +42,12 @@ export function AppShell({
   children,
   nome,
   perfil,
+  condominioNome,
 }: {
   children: React.ReactNode
   nome: string
   perfil: Perfil
+  condominioNome: string
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -72,9 +74,11 @@ export function AppShell({
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <Building2 className="h-5 w-5" />
         </div>
-        <div className="leading-tight">
+        <div className="min-w-0 leading-tight">
           <p className="font-serif text-base font-bold">GestCondo</p>
-          <p className="text-xs text-sidebar-foreground/60">Gestão de condomínios</p>
+          <p className="truncate text-xs text-sidebar-foreground/60">
+            {condominioNome}
+          </p>
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { getMembroAtual } from '@/lib/session'
 import { db } from '@/lib/db'
 import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
-import { desc } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PrioridadeBadge, EstadoBadge } from '@/components/badges'
@@ -21,10 +21,20 @@ export default async function DashboardPage() {
   const membro = (await getMembroAtual())!
 
   const [movimentos, avisos, ocorrencias, fracoes] = await Promise.all([
-    db.select().from(movimento),
-    db.select().from(aviso).orderBy(desc(aviso.createdAt)).limit(4),
-    db.select().from(ocorrencia).orderBy(desc(ocorrencia.createdAt)).limit(5),
-    db.select().from(fracao),
+    db.select().from(movimento).where(eq(movimento.condominioId, membro.condominioId)),
+    db
+      .select()
+      .from(aviso)
+      .where(eq(aviso.condominioId, membro.condominioId))
+      .orderBy(desc(aviso.createdAt))
+      .limit(4),
+    db
+      .select()
+      .from(ocorrencia)
+      .where(eq(ocorrencia.condominioId, membro.condominioId))
+      .orderBy(desc(ocorrencia.createdAt))
+      .limit(5),
+    db.select().from(fracao).where(eq(fracao.condominioId, membro.condominioId)),
   ])
 
   const receitas = movimentos

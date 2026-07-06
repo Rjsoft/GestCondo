@@ -8,14 +8,23 @@ import { revalidatePath } from 'next/cache'
 
 export async function getOcorrencias() {
   const m = await requireMembroAprovado()
-  // Admin vê todas; condómino vê as suas.
+  // Admin vê todas as do seu condomínio; condómino vê só as suas.
   if (m.perfil === 'admin') {
-    return db.select().from(ocorrencia).orderBy(desc(ocorrencia.createdAt))
+    return db
+      .select()
+      .from(ocorrencia)
+      .where(eq(ocorrencia.condominioId, m.condominioId))
+      .orderBy(desc(ocorrencia.createdAt))
   }
   return db
     .select()
     .from(ocorrencia)
-    .where(eq(ocorrencia.userId, m.userId))
+    .where(
+      and(
+        eq(ocorrencia.condominioId, m.condominioId),
+        eq(ocorrencia.userId, m.userId),
+      ),
+    )
     .orderBy(desc(ocorrencia.createdAt))
 }
 
@@ -33,6 +42,7 @@ export async function criarOcorrencia(formData: FormData) {
   }
 
   await db.insert(ocorrencia).values({
+    condominioId: m.condominioId,
     userId: m.userId,
     reporterNome: m.nome,
     titulo,
@@ -51,25 +61,40 @@ const ESTADOS = ['aberta', 'em_curso', 'resolvida']
 
 export async function atualizarEstadoOcorrencia(id: number, estado: string) {
   // Apenas admin gere o estado das ocorrências.
-  await requireAdmin()
+  const admin = await requireAdmin()
   if (!ESTADOS.includes(estado)) throw new Error('Estado inválido')
   await db
     .update(ocorrencia)
     .set({ estado, updatedAt: new Date() })
-    .where(eq(ocorrencia.id, id))
+    .where(
+      and(
+        eq(ocorrencia.id, id),
+        eq(ocorrencia.condominioId, admin.condominioId),
+      ),
+    )
   revalidatePath('/ocorrencias')
   revalidatePath('/')
 }
 
 export async function eliminarOcorrencia(id: number) {
   const m = await requireMembroAprovado()
-  // Admin pode eliminar qualquer; condómino só as suas.
+  // Admin pode eliminar qualquer uma do seu condomínio; condómino só as suas.
   if (m.perfil === 'admin') {
-    await db.delete(ocorrencia).where(eq(ocorrencia.id, id))
+    await db
+      .delete(ocorrencia)
+      .where(
+        and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, m.condominioId)),
+      )
   } else {
     await db
       .delete(ocorrencia)
-      .where(and(eq(ocorrencia.id, id), eq(ocorrencia.userId, m.userId)))
+      .where(
+        and(
+          eq(ocorrencia.id, id),
+          eq(ocorrencia.condominioId, m.condominioId),
+          eq(ocorrencia.userId, m.userId),
+        ),
+      )
   }
   revalidatePath('/ocorrencias')
 }

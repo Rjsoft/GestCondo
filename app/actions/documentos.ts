@@ -3,12 +3,16 @@
 import { db } from '@/lib/db'
 import { documento } from '@/lib/db/schema'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getDocumentos() {
-  await requireMembroAprovado()
-  return db.select().from(documento).orderBy(desc(documento.createdAt))
+  const m = await requireMembroAprovado()
+  return db
+    .select()
+    .from(documento)
+    .where(eq(documento.condominioId, m.condominioId))
+    .orderBy(desc(documento.createdAt))
 }
 
 export async function criarDocumento(formData: FormData) {
@@ -27,6 +31,7 @@ export async function criarDocumento(formData: FormData) {
   }
 
   await db.insert(documento).values({
+    condominioId: admin.condominioId,
     userId: admin.userId,
     titulo,
     categoria,
@@ -38,7 +43,9 @@ export async function criarDocumento(formData: FormData) {
 }
 
 export async function eliminarDocumento(id: number) {
-  await requireAdmin()
-  await db.delete(documento).where(eq(documento.id, id))
+  const admin = await requireAdmin()
+  await db
+    .delete(documento)
+    .where(and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId)))
   revalidatePath('/documentos')
 }

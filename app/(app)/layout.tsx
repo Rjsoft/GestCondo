@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { PendingScreen } from '@/components/pending-screen'
-import { getMembroAtual } from '@/lib/session'
+import { getCondominioAtual, getMembroAtual } from '@/lib/session'
 import { Toaster } from '@/components/ui/sonner'
 
 export default async function AppLayout({
@@ -21,8 +21,14 @@ export default async function AppLayout({
     )
   }
 
+  const condominio = await getCondominioAtual(membro.condominioId)
+
   return (
-    <AppShell nome={membro.nome} perfil={membro.perfil}>
+    <AppShell
+      nome={membro.nome}
+      perfil={membro.perfil}
+      condominioNome={condominio?.nome ?? 'Condomínio'}
+    >
       {children}
       <Toaster />
     </AppShell>

@@ -8,7 +8,7 @@
 
 **Correções feitas durante a auditoria original:** nenhuma alteração ao código-fonte foi necessária para a concluir. Para o `next build` e o smoke test HTTP correrem, foram usadas variáveis de ambiente fictícias (`DATABASE_URL`, `BETTER_AUTH_SECRET`) apenas no processo local dessa sessão — nada foi persistido no repositório.
 
-**Atualização 2026-07-06 — início da Fase 1:** a pedido do utilizador, avançou-se com os dois primeiros itens da lista de próximos passos (secção G): (1) `git init` + primeiro commit (`0b9154e`, branch `main`); (2) correção do `pnpm lint` (instalação de `eslint`/`eslint-config-next`, `eslint.config.mjs` novo, 3 variáveis não usadas removidas); (3) correção dos 14 erros de tipo de `@base-ui/react` (troca de `asChild` por `render={<Componente />}` e ajuste dos `onValueChange` dos `Select`) e remoção de `ignoreBuildErrors` de `next.config.mjs` — detalhe em `TECHNICAL_DEBT.md` T1/T2. Estas foram as únicas alterações de código feitas desde a auditoria original.
+**Atualização 2026-07-06 — Fase 1 em curso:** a pedido do utilizador, avançou-se com os itens 1–3 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; e (4) o redesenho do schema multi-tenant — nova tabela `condominio`, `condominioId` em todas as tabelas de dados, isolamento aplicado em todas as server actions e no dashboard, `drizzle-kit` configurado com a primeira migração (`drizzle/0000_multi_tenant_baseline.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1, T2, T4, D1–D4) e `SECURITY_AUDIT.md` (S9, S10, S12). Estas foram as únicas alterações de código feitas desde a auditoria original.
 
 Este documento é o índice e resumo executivo. O detalhe está nos seguintes ficheiros, todos criados nesta sessão:
 
@@ -64,7 +64,7 @@ Ver `TECHNICAL_DEBT.md`. Resumo dos achados mais graves:
 | Sem testes automatizados | Alta | Sem rede de segurança para nenhuma alteração futura, em particular em permissões |
 | `pnpm lint` quebrado (eslint não instalado) | Média | Zero verificação estática de qualidade a correr |
 | `typescript.ignoreBuildErrors: true` esconde 13 erros de tipo reais | Média | Erros de tipo futuros (incluindo em lógica de permissões) podem passar despercebidos no build |
-| Sem `drizzle-kit`/migrações versionadas | Alta | Alterações de schema sem processo reprodutível documentado |
+~~Sem `drizzle-kit`/migrações versionadas~~ — resolvido 2026-07-06 | Alta | Ver `TECHNICAL_DEBT.md` T4 |
 | `membro.userId` sem `UNIQUE` | Média | Corrida de duplicação de registo no primeiro login |
 | Sem índices, sem FK declarada em `movimento.fracaoId` | Baixa | Sem impacto imediato; agrava-se com escala e com multi-tenant |
 
@@ -98,9 +98,9 @@ Ver `ROADMAP.md` para o detalhe de cada fase:
 
 1. ✅ `git init` + primeiro commit do estado atual — feito 2026-07-06 (commit `0b9154e`, branch `main`).
 2. ✅ Corrigir `pnpm lint` e os 14 erros de tipo de `@base-ui/react`; remover `ignoreBuildErrors` — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T1/T2).
-3. Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId` em todas as tabelas).
+3. ✅ Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId` em todas as tabelas) — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` D1–D4, `SECURITY_AUDIT.md` S9/S10/S12). Falta o fluxo de produto para um 2º condomínio.
 4. Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio).
-5. Introduzir `drizzle-kit` com migrações versionadas.
+5. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06.
 6. Implementar `audit_log` + soft-delete nas eliminações de dados financeiros.
 7. Configurar provedor de email + reset de password + verificação de email.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.

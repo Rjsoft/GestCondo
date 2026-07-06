@@ -14,7 +14,7 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 | CRUD de frações | 🟡 Parcial — falta multi-condomínio, proprietário relacional, histórico |
 | CRUD de condóminos + aprovação | 🟡 Parcial — falta perfis (proprietário/inquilino/fornecedor/auditor), âmbito por condomínio |
 | Assembleias/atas | ❌ Inexistente (0%) |
-| Multi-condomínio / multi-tenant | ❌ Inexistente (0%) — nada está "simulado", simplesmente não existe |
+| Multi-condomínio / multi-tenant | 🟡 Schema e isolamento de queries resolvidos 2026-07-06; falta o fluxo de produto (criar/convidar para um 2º condomínio) |
 | RGPD (textos legais, direitos do titular) | ❌ Inexistente (0%) |
 | Auditoria/log de alterações | ❌ Inexistente (0%) |
 | Upload de ficheiros | ❌ Inexistente (0%) |
@@ -40,8 +40,8 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 1. ✅ **Feito 2026-07-06** — Inicializar repositório git; primeiro commit do estado atual (`0b9154e`, branch `main`).
 2. Configurar CI mínimo (lint + typecheck + build) — mesmo que corra só localmente para já.
 3. ✅ **Feito 2026-07-06** — Corrigido `pnpm lint` (T1) e os 14 erros de tipo pré-existentes de `@base-ui/react` (T2), com `ignoreBuildErrors` removido de `next.config.mjs`. Ver `TECHNICAL_DEBT.md`.
-4. Introduzir `drizzle-kit` com migrações versionadas.
-5. Redesenhar o schema para multi-tenant: entidade `condominio`, `condominioId` em todas as tabelas de dados do condomínio, e âmbito de acesso por condomínio em todas as server actions.
+4. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T4; a migração gerada é uma *baseline*, ler a nota sobre BDs já existentes antes de aplicar).
+5. ✅ **Feito 2026-07-06** — Redesenhado o schema para multi-tenant: entidade `condominio`, `condominioId` em todas as tabelas de dados do condomínio, e âmbito de acesso por condomínio em todas as server actions e no dashboard. Falta ainda o fluxo de produto para criar/convidar para um segundo condomínio (ver `FUNCTIONAL_GAPS.md`).
 6. Redesenhar o modelo de papéis para os 7 perfis pedidos (ver `FUNCTIONAL_GAPS.md` secção 8), com âmbito por condomínio (um utilizador pode ter papéis diferentes em condomínios diferentes).
 7. Introduzir tabela e mecanismo de `audit_log`; mudar eliminações de dados financeiros para soft-delete.
 8. Configurar envio de email transacional (mínimo: reset de password, verificação de email).
@@ -96,9 +96,9 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 
 1. ✅ `git init` + primeiro commit — feito 2026-07-06.
 2. ✅ Corrigir `pnpm lint` e os erros de tipo de `@base-ui/react`; remover `ignoreBuildErrors` — feito 2026-07-06.
-3. Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId`) — a decisão de modelo de dados mais cara de adiar.
+3. ✅ Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId`) — feito 2026-07-06.
 4. Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio).
-5. Introduzir `drizzle-kit` com migrações.
+5. ✅ Introduzir `drizzle-kit` com migrações — feito 2026-07-06.
 6. Implementar `audit_log` + soft-delete nas eliminações de dados financeiros.
 7. Configurar provedor de email + reset de password + verificação de email.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.

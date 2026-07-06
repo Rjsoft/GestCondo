@@ -3,12 +3,16 @@
 import { db } from '@/lib/db'
 import { aviso } from '@/lib/db/schema'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getAvisos() {
-  await requireMembroAprovado()
-  return db.select().from(aviso).orderBy(desc(aviso.createdAt))
+  const m = await requireMembroAprovado()
+  return db
+    .select()
+    .from(aviso)
+    .where(eq(aviso.condominioId, m.condominioId))
+    .orderBy(desc(aviso.createdAt))
 }
 
 export async function criarAviso(formData: FormData) {
@@ -23,6 +27,7 @@ export async function criarAviso(formData: FormData) {
   }
 
   await db.insert(aviso).values({
+    condominioId: admin.condominioId,
     userId: admin.userId,
     autorNome: admin.nome,
     titulo,
@@ -35,8 +40,10 @@ export async function criarAviso(formData: FormData) {
 }
 
 export async function eliminarAviso(id: number) {
-  await requireAdmin()
-  await db.delete(aviso).where(eq(aviso.id, id))
+  const admin = await requireAdmin()
+  await db
+    .delete(aviso)
+    .where(and(eq(aviso.id, id), eq(aviso.condominioId, admin.condominioId)))
   revalidatePath('/avisos')
   revalidatePath('/')
 }

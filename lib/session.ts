@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { membro } from '@/lib/db/schema'
-import { count, eq } from 'drizzle-orm'
+import { condominio, membro } from '@/lib/db/schema'
+import { asc, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
 export type Perfil = 'admin' | 'condomino'
@@ -9,6 +9,7 @@ export type EstadoMembro = 'pendente' | 'aprovado'
 
 export type MembroSessao = {
   id: number
+  condominioId: number
   userId: string
   nome: string
   email: string
@@ -25,9 +26,17 @@ export async function getSession() {
 }
 
 /**
- * Garante que o utilizador autenticado tem um registo de `membro`.
- * O primeiro membro do condomínio é automaticamente administrador; os
- * seguintes são condóminos. Retorna o membro (com o perfil).
+ * Garante que o utilizador autenticado tem um registo de `membro` num
+ * condomínio. Cada `membro` pertence a exactamente um `condominio`
+ * (`membro.condominioId`) — ver lib/db/schema.ts para o modelo multi-tenant.
+ *
+ * IMPORTANTE: ainda não existe nenhum fluxo de convite/criação de um segundo
+ * condomínio. Esta função só sabe: (a) criar o primeiro condomínio e tornar
+ * o primeiro utilizador admin+aprovado, ou (b) juntar qualquer utilizador
+ * novo seguinte ao único condomínio já existente, como condómino pendente.
+ * Antes de suportar mais do que um condomínio por instância, é necessário
+ * construir esse fluxo (ver FUNCTIONAL_GAPS.md) — o modelo de dados e o
+ * isolamento por `condominioId` já estão prontos para isso.
  */
 export async function getMembroAtual(): Promise<MembroSessao | null> {
   const session = await getSession()
@@ -39,12 +48,14 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     .select()
     .from(membro)
     .where(eq(membro.userId, userId))
+    .orderBy(asc(membro.id))
     .limit(1)
 
   if (existente.length > 0) {
     const m = existente[0]
     return {
       id: m.id,
+      condominioId: m.condominioId,
       userId: m.userId,
       nome: m.nome,
       email: m.email,
@@ -54,15 +65,38 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     }
   }
 
-  // Primeiro utilizador do sistema = admin, aprovado automaticamente.
-  // Os seguintes ficam "pendente" até um administrador os aprovar.
-  const [{ total }] = await db.select({ total: count() }).from(membro)
-  const perfil: Perfil = total === 0 ? 'admin' : 'condomino'
-  const estado: EstadoMembro = total === 0 ? 'aprovado' : 'pendente'
+  const [condominioExistente] = await db
+    .select({ id: condominio.id })
+    .from(condominio)
+    .orderBy(asc(condominio.id))
+    .limit(1)
+
+  let condominioId: number
+  let perfil: Perfil
+  let estado: EstadoMembro
+
+  if (!condominioExistente) {
+    // Primeiro utilizador do sistema: cria o condomínio e fica admin,
+    // aprovado automaticamente.
+    const [novoCondominio] = await db
+      .insert(condominio)
+      .values({ nome: 'Condomínio' })
+      .returning({ id: condominio.id })
+    condominioId = novoCondominio.id
+    perfil = 'admin'
+    estado = 'aprovado'
+  } else {
+    // Utilizadores seguintes juntam-se ao (único) condomínio existente,
+    // como condómino pendente até um admin aprovar.
+    condominioId = condominioExistente.id
+    perfil = 'condomino'
+    estado = 'pendente'
+  }
 
   const [novo] = await db
     .insert(membro)
     .values({
+      condominioId,
       userId,
       nome: name ?? email,
       email,
@@ -73,6 +107,7 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
 
   return {
     id: novo.id,
+    condominioId,
     userId,
     nome: name ?? email,
     email,
@@ -113,4 +148,17 @@ export async function requireAdmin(): Promise<MembroSessao> {
   if (!m) throw new Error('Não autorizado')
   if (m.perfil !== 'admin') throw new Error('Apenas administradores')
   return m
+}
+
+/**
+ * Dados do condomínio do membro atual (nome, morada, NIF). Útil para exibir
+ * a identidade do condomínio na UI (ex. cabeçalho da app).
+ */
+export async function getCondominioAtual(condominioId: number) {
+  const [c] = await db
+    .select()
+    .from(condominio)
+    .where(eq(condominio.id, condominioId))
+    .limit(1)
+  return c ?? null
 }

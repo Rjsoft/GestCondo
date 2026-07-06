@@ -3,14 +3,18 @@
 import { db } from '@/lib/db'
 import { movimento } from '@/lib/db/schema'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getMovimentos() {
   // Dados partilhados do condomínio: todos os membros aprovados podem
-  // consultar.
-  await requireMembroAprovado()
-  return db.select().from(movimento).orderBy(desc(movimento.data))
+  // consultar, mas apenas os do seu próprio condomínio.
+  const m = await requireMembroAprovado()
+  return db
+    .select()
+    .from(movimento)
+    .where(eq(movimento.condominioId, m.condominioId))
+    .orderBy(desc(movimento.data))
 }
 
 export async function criarMovimento(formData: FormData) {
@@ -28,6 +32,7 @@ export async function criarMovimento(formData: FormData) {
   }
 
   await db.insert(movimento).values({
+    condominioId: admin.condominioId,
     userId: admin.userId,
     tipo,
     categoria,
@@ -42,14 +47,19 @@ export async function criarMovimento(formData: FormData) {
 }
 
 export async function eliminarMovimento(id: number) {
-  await requireAdmin()
-  await db.delete(movimento).where(eq(movimento.id, id))
+  const admin = await requireAdmin()
+  await db
+    .delete(movimento)
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
   revalidatePath('/financas')
   revalidatePath('/')
 }
 
 export async function alternarPago(id: number, pago: boolean) {
-  await requireAdmin()
-  await db.update(movimento).set({ pago }).where(eq(movimento.id, id))
+  const admin = await requireAdmin()
+  await db
+    .update(movimento)
+    .set({ pago })
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
   revalidatePath('/financas')
 }

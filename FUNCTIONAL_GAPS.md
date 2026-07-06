@@ -14,7 +14,7 @@ Módulos inteiros pedidos como essenciais para o mercado português — **Assemb
 
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
-| Condomínios/edifícios (entidade própria) | ❌ Em falta | Não existe tabela `condominio`. Bloqueador estrutural para tudo o resto. | **P0** |
+| Condomínios/edifícios (entidade própria) | 🟡 Parcial — schema resolvido 2026-07-06 | Tabela `condominio` (nome, morada, NIF) existe e todas as tabelas de dados têm `condominioId` com isolamento aplicado em todas as queries (ver `SECURITY_AUDIT.md` S9). Falta o fluxo de produto: criar um segundo condomínio, convidar/associar utilizadores a um condomínio específico, e um ecrã de definições do condomínio (hoje o nome fica fixo em "Condomínio" desde o bootstrap, sem forma de o editar pela UI). | **P0 → P1** (bloqueador estrutural resolvido; falta o fluxo de onboarding) |
 | Frações autónomas | 🟡 Parcial | `app/(app)/fracoes/page.tsx` + schema `fracao`: identificação, proprietário (texto livre), permilagem, contactos, notas. Sem condomínio associado. | P1 (completar) |
 | Permilagens | 🟡 Parcial | Campo `permilagem` existe e soma-se no dashboard, mas não há validação de que a soma das permilagens de um condomínio é 1000‰ (ou 100%), o que é a base de qualquer cálculo de quotas/votos corretos. | P1 |
 | Proprietários | 🟡 Parcial | `fracao.proprietario` é texto livre, não uma entidade/pessoa relacional. Não suporta compropriedade (vários proprietários na mesma fração) nem NIF. | P1 |
@@ -130,7 +130,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 ## 9. Resumo de prioridades P0/P1 (o que bloqueia mesmo o MVP)
 
-1. **P0** — Entidade `condominio` + isolamento multi-tenant (pré-requisito para tudo).
+1. ~~**P0** — Entidade `condominio` + isolamento multi-tenant~~ **Resolvido 2026-07-06** (schema e queries); falta o fluxo de onboarding/convite para um segundo condomínio.
 2. **P0/P1** — Log de auditoria mínimo + soft-delete em dados financeiros.
 3. **P1** — Módulo de Assembleias (convocatória → ordem de trabalhos → presenças/procurações → quórum → votação → ata).
 4. **P1** — Gestão financeira formal: orçamento, dívida por fração, recibos, exportação PDF/Excel.
