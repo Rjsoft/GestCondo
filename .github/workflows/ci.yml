@@ -1,0 +1,49 @@
+name: CI
+
+# Este workflow só corre quando o repositório for enviado para o GitHub —
+# criá-lo agora não publica nem executa nada localmente (ver memória de
+# workflow: fase de desenvolvimento local, sem push/deploy sem pedido
+# explícito).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Verificação de tipos
+        run: pnpm exec tsc --noEmit
+
+      - name: Testes unitários
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
+        env:
+          # Credenciais fictícias só para o build compilar (nenhuma ligação
+          # real é feita a esta connection string durante o build). Testes
+          # de integração com uma base de dados real ainda não existem
+          # (ver MVP_PLAN.md) — quando existirem, adicionar aqui um serviço
+          # `postgres:` do GitHub Actions.
+          DATABASE_URL: postgres://user:pass@localhost:5432/db
+          BETTER_AUTH_SECRET: ci-only-dummy-secret-not-for-production-use
