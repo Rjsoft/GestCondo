@@ -16,7 +16,7 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 | Assembleias/atas | ❌ Inexistente (0%) |
 | Multi-condomínio / multi-tenant | 🟡 Schema e isolamento de queries resolvidos 2026-07-06; falta o fluxo de produto (criar/convidar para um 2º condomínio) |
 | RGPD (textos legais, direitos do titular) | ❌ Inexistente (0%) |
-| Auditoria/log de alterações | ❌ Inexistente (0%) |
+| Auditoria/log de alterações | ✅ Resolvido 2026-07-06 — `audit_log` + página `/auditoria` + soft-delete em `movimento` |
 | Upload de ficheiros | ❌ Inexistente (0%) |
 | Notificações por email | ❌ Inexistente (0%) — inclui recuperação de password |
 | Exportação PDF/Excel | ❌ Inexistente (0%) |
@@ -43,9 +43,9 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 4. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T4; a migração gerada é uma *baseline*, ler a nota sobre BDs já existentes antes de aplicar).
 5. ✅ **Feito 2026-07-06** — Redesenhado o schema para multi-tenant: entidade `condominio`, `condominioId` em todas as tabelas de dados do condomínio, e âmbito de acesso por condomínio em todas as server actions e no dashboard. Falta ainda o fluxo de produto para criar/convidar para um segundo condomínio (ver `FUNCTIONAL_GAPS.md`).
 6. ✅ **Feito 2026-07-06** — Redesenhado o modelo de papéis para os 7 perfis pedidos (ver `FUNCTIONAL_GAPS.md` secção 8 e `SECURITY_AUDIT.md` S8), com âmbito por condomínio.
-7. Introduzir tabela e mecanismo de `audit_log`; mudar eliminações de dados financeiros para soft-delete.
-8. Configurar envio de email transacional (mínimo: reset de password, verificação de email).
-9. Adicionar `.env.example`, corrigir `.gitignore`, cabeçalhos de segurança básicos.
+7. ✅ **Feito 2026-07-06** — Introduzida tabela e mecanismo de `audit_log`; eliminação de dados financeiros passou a soft-delete.
+8. ✅ **Feito 2026-07-06** — Configurado envio de email transacional (reset de password, verificação de email) — falta só configurar uma `RESEND_API_KEY` real antes de produção (hoje cai em modo local/consola).
+9. 🟡 Adicionar `.env.example` ✅ (feito 2026-07-06) e corrigir `.gitignore` ✅ (feito antes) — falta ainda os cabeçalhos de segurança básicos (`SECURITY_AUDIT.md` S14).
 10. Introduzir framework de testes e cobrir, no mínimo, autorização/isolamento entre condomínios (ver `MVP_PLAN.md`).
 
 ## Fase 2 — MVP funcional (utilizável por um condomínio real, um só administrador)

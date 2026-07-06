@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { pool } from '@/lib/db'
+import { sendEmail } from '@/lib/email'
 
 export const auth = betterAuth({
   database: pool,
@@ -13,6 +14,27 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    minPasswordLength: 10,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: 'Repor password — GestCondo',
+        html: `<p>Recebemos um pedido para repor a password da sua conta GestCondo.</p><p><a href="${url}">Clique aqui para repor a password</a></p><p>Se não foi você a pedir, ignore este email — a sua password não será alterada.</p>`,
+      })
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: 'Confirme o seu email — GestCondo',
+        html: `<p>Bem-vindo(a) ao GestCondo.</p><p><a href="${url}">Clique aqui para confirmar o seu email</a></p>`,
+      })
+    },
   },
   trustedOrigins: [
     ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),

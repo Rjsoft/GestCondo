@@ -89,7 +89,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
 | Avisos aos condóminos | ✅ Implementado | `app/(app)/avisos/page.tsx`, com prioridade. | — |
-| Notificações (push/email) | ❌ Em falta | Não existe nenhum envio de email configurado em toda a aplicação (nem para reset de password, nem para avisos). | **P1** |
+| Notificações (push/email) | 🟡 Parcial — infraestrutura de email pronta desde 2026-07-06 (`lib/email.ts`, ver `SECURITY_AUDIT.md` S1/S2), usada hoje só para verificação de conta e reset de password. Ainda não envia email quando um aviso importante é publicado ou uma ocorrência é atualizada. | P1 |
 | Mensagens internas (condómino ↔ admin) | ❌ Em falta | Sem qualquer canal de mensagem direta/privada. | P2 |
 | Histórico de comunicações | 🟡 Parcial | Avisos ficam listados indefinidamente, mas não há registo de "quem viu o quê". | P2 |
 | Confirmação de leitura | ❌ Em falta | Nem em avisos nem (mais crítico) em convocatórias de assembleia. | P1/P2 conforme uso |
@@ -110,10 +110,10 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
-| Registo de ações importantes | ❌ Em falta | Ver `SECURITY_AUDIT.md` S17. | **P0/P1** |
-| Quem criou/alterou/apagou dados | ❌ Em falta | Idem. | **P0/P1** |
-| Histórico de alterações | ❌ Em falta | Idem. | P1 |
-| Logs consultáveis por admin autorizado | ❌ Em falta | Depende do log de auditoria existir primeiro. | P1 |
+| Registo de ações importantes | ✅ Implementado 2026-07-06 | `audit_log` (ver `SECURITY_AUDIT.md` S17). | — |
+| Quem criou/alterou/apagou dados | ✅ Implementado 2026-07-06 | Idem — ator, ação, entidade, timestamp. | — |
+| Histórico de alterações | 🟡 Parcial | O `audit_log` regista *que* algo foi alterado e por quem, mas não um diff antes/depois do conteúdo (só um resumo em texto livre opcional). | P2 |
+| Logs consultáveis por admin autorizado | ✅ Implementado 2026-07-06 | Página `/auditoria`, acessível a admin/gestor/auditor. | — |
 | Proteção contra alteração indevida de atas/documentos/deliberações | ❌ Em falta | Não há atas ainda, mas o princípio (imutabilidade após aprovação) tem de ser desenhado desde o início do módulo de Assembleias, não acrescentado depois. | P1 (quando Assembleias for construído) |
 
 ## 8. Perfis de utilizador pedidos vs. existentes
@@ -133,7 +133,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 ## 9. Resumo de prioridades P0/P1 (o que bloqueia mesmo o MVP)
 
 1. ~~**P0** — Entidade `condominio` + isolamento multi-tenant~~ **Resolvido 2026-07-06** (schema e queries); falta o fluxo de onboarding/convite para um segundo condomínio.
-2. **P0/P1** — Log de auditoria mínimo + soft-delete em dados financeiros.
+2. ~~**P0/P1** — Log de auditoria mínimo + soft-delete em dados financeiros~~ **Resolvido 2026-07-06.**
 3. **P1** — Módulo de Assembleias (convocatória → ordem de trabalhos → presenças/procurações → quórum → votação → ata).
 4. **P1** — Gestão financeira formal: orçamento, dívida por fração, recibos, exportação PDF/Excel.
 5. **P1** — Upload de ficheiros (documentos, faturas, fotos de ocorrências) com controlo de acesso.

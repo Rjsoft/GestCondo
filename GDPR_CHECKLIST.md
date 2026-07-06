@@ -42,12 +42,12 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 ## 5. Retenção de dados
 
-- **Não existe qualquer política de retenção configurável ou documentada.** Registos financeiros (`movimento`), obrigatórios por lei comercial/fiscal em Portugal por prazos tipicamente de 10 anos, podem ser apagados permanentemente e sem rasto por qualquer admin através de `eliminarMovimento` — isto é simultaneamente um risco RGPD (retenção não controlada) e um risco de conformidade contabilística/legal (perda de registos obrigatórios).
+- **Atualizado 2026-07-06:** registos financeiros (`movimento`) deixaram de poder ser apagados fisicamente — `eliminarMovimento` faz agora soft-delete (`deletedAt`), preservando o registo para efeitos de retenção contabilística/fiscal enquanto deixa de aparecer na UI. **Ainda não existe** uma política de retenção formal (prazos configuráveis, expurgo automático ao fim do prazo legal) nem soft-delete nas restantes tabelas (`fracao`, `aviso`, `documento`, `ocorrencia`, `membro`), que continuam a usar `DELETE` físico.
 - **Sessões do better-auth** (`session` table) não têm política de limpeza automática configurada além do `expiresIn`/`updateAge` (7 dias / 1 dia) — registos expirados não são necessariamente apagados da BD (depende de rotina de limpeza do better-auth, a confirmar).
 
 ## 6. Logs de auditoria
 
-Inexistentes (ver `SECURITY_AUDIT.md` S17). Do ponto de vista RGPD isto é ambivalente: por um lado, menos logging é menos exposição de dados pessoais; por outro, o RGPD (e a boa prática de accountability, art. 5º/2) espera precisamente o oposto de "apagar sem rasto" para decisões que afetam terceiros (ex. quem aprovou/rejeitou o acesso de um condómino, quem alterou uma dívida). A recomendação é um log de auditoria **minimamente invasivo** (ator, ação, entidade, timestamp — sem duplicar dados pessoais de outras tabelas dentro do log).
+**Atualizado 2026-07-06:** implementado um `audit_log` (ver `SECURITY_AUDIT.md` S17) — ator, ação, entidade, id, timestamp, mais um resumo em texto livre opcional (`detalhes`), sem duplicar dados pessoais de outras tabelas. Cobre as ações sensíveis: criar/eliminar movimentos, alternar pago, criar/eliminar avisos/documentos/frações, aprovar/rejeitar/editar/mudar perfil de condóminos, criar/atualizar/eliminar ocorrências. Consultável em `/auditoria` por admin/gestor/auditor. Isto resolve a ambivalência identificada anteriormente entre "menos logging = menos exposição" e a exigência de accountability do art. 5º/2 RGPD — o log guarda quem fez o quê, não dados pessoais duplicados.
 
 ## 7. Documentos e dados pessoais de terceiros
 
@@ -84,14 +84,14 @@ Não existe nenhum destes ecrãs/documentos na aplicação:
 - [ ] Mecanismo de pedido de oposição/limitação, mesmo que processado manualmente numa fase inicial
 
 ### Segurança e minimização (cruzar com `SECURITY_AUDIT.md`)
-- [ ] Controlo de acesso a contactos pessoais restrito ao necessário
-- [ ] Isolamento multi-condomínio implementado (um condómino nunca vê dados de outro condomínio)
+- [ ] Controlo de acesso a contactos pessoais restrito ao necessário (inquilino/fornecedor já não veem dados financeiros/patrimoniais desde 2026-07-06, mas contactos de outros proprietários continuam visíveis a todos os condóminos)
+- [x] Isolamento multi-condomínio implementado — 2026-07-06 (schema + todas as queries; falta o fluxo de onboarding para um 2º condomínio, ver `FUNCTIONAL_GAPS.md`)
 - [ ] Cifra em trânsito (HTTPS obrigatório em produção) e em repouso (a confirmar com o provedor de BD)
-- [ ] Log de auditoria de acessos/alterações a dados pessoais e financeiros
+- [x] Log de auditoria de acessos/alterações a dados pessoais e financeiros — 2026-07-06 (`audit_log`, página `/auditoria`)
 
 ### Retenção e ciclo de vida
 - [ ] Política de retenção definida por tipo de dado (ex. registos financeiros: prazo legal; candidaturas rejeitadas de condóminos: prazo curto)
-- [ ] Soft-delete + expurgo programado em vez de `DELETE` imediato para dados com obrigação de retenção
+- [x] Soft-delete + expurgo programado em vez de `DELETE` imediato — 2026-07-06, mas só para `movimento` (o caso legalmente mais crítico); `fracao`/`aviso`/`documento`/`ocorrencia`/`membro` continuam com `DELETE` físico
 - [ ] Rotina de limpeza de sessões expiradas confirmada
 
 ### Terceiros
@@ -103,5 +103,5 @@ Não existe nenhum destes ecrãs/documentos na aplicação:
 As três ações RGPD com maior relação impacto/esforço para já:
 
 1. Redigir e publicar Política de Privacidade + Termos, e mostrar o aviso de finalidade no registo (baixo esforço técnico, obrigatório desde o primeiro utilizador real).
-2. Substituir `DELETE` físico por soft-delete em `movimento` e (no futuro) atas/deliberações — resolve simultaneamente um risco RGPD e um risco de conformidade contabilística.
+2. ✅ Substituir `DELETE` físico por soft-delete em `movimento` — feito 2026-07-06. Falta ainda para (no futuro) atas/deliberações, quando esse módulo existir.
 3. Ecrã de autogestão de dados pessoais para o condómino (ver os seus próprios dados, pedir correção) — hoje o poder está 100% concentrado no admin, o que também não é desejável do ponto de vista de exatidão dos dados.

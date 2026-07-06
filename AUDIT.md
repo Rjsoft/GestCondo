@@ -8,7 +8,7 @@
 
 **Correções feitas durante a auditoria original:** nenhuma alteração ao código-fonte foi necessária para a concluir. Para o `next build` e o smoke test HTTP correrem, foram usadas variáveis de ambiente fictícias (`DATABASE_URL`, `BETTER_AUTH_SECRET`) apenas no processo local dessa sessão — nada foi persistido no repositório.
 
-**Atualização 2026-07-06 — Fase 1 em curso:** a pedido do utilizador, avançou-se com os itens 1–4 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; (4) redesenho do schema multi-tenant — nova tabela `condominio`, `condominioId` em todas as tabelas de dados, isolamento aplicado em todas as server actions e no dashboard; e (5) redesenho do modelo de papéis para os 7 perfis pedidos (`admin`, `gestor`, `condomino`, `inquilino`, `fornecedor`, `auditor`, mais a flag `user.superAdmin`), com a lógica pura de permissões separada em `lib/perfis.ts` (client-safe) e aplicada em todas as leituras/escritas. `drizzle-kit` configurado com duas migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1, T2, T4, D1–D4) e `SECURITY_AUDIT.md` (S8, S9, S10, S12). Estas foram as únicas alterações de código feitas desde a auditoria original.
+**Atualização 2026-07-06 — Fase 1 quase fechada:** a pedido do utilizador, avançou-se com os itens 1–7 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; (4) redesenho do schema multi-tenant (`condominio` + `condominioId` em todas as tabelas, isolamento em todas as server actions e no dashboard); (5) redesenho do modelo de papéis para os 7 perfis pedidos, com a lógica pura de permissões em `lib/perfis.ts` (client-safe); (6) `audit_log` + soft-delete em `movimento`, com página `/auditoria`; e (7) email transacional (verificação de conta + reset de password) via `lib/email.ts`, com fallback para consola em desenvolvimento local e ecrãs `/esqueci-password`/`/redefinir-password`. `drizzle-kit` configurado com três migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`, `0002_audit_log_and_soft_delete.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1, T2, T4, T6, D1–D5) e `SECURITY_AUDIT.md` (S1, S2, S4, S8, S9, S10, S12, S17). Restam da Fase 1: CI mínimo, cabeçalhos de segurança (S14), e testes automatizados. Estas foram as únicas alterações de código feitas desde a auditoria original.
 
 Este documento é o índice e resumo executivo. O detalhe está nos seguintes ficheiros, todos criados nesta sessão:
 
@@ -39,7 +39,7 @@ Justificação: a nota reflete a distância entre o que existe e um produto prof
 2. **Legal/produto:** ausência completa do módulo de Assembleias/Atas — o instrumento central da vida legal de um condomínio em Portugal não existe em nenhuma forma.
 3. **RGPD:** nenhum texto legal, nenhum direito do titular implementado, dívidas por pessoa/fração armazenadas sem log de quem altera o quê, eliminação de dados financeiros sem rasto (risco duplo: RGPD e conformidade contabilística).
 4. **Continuidade/engenharia:** sem controlo de versões (não é sequer um repositório git), sem testes, sem CI. Qualquer alteração futura corre sem rede de segurança nenhuma.
-5. **Confiança do utilizador final:** sem recuperação de password nem verificação de email — a aplicação não é operável com utilizadores reais não técnicos no seu estado atual.
+5. ~~**Confiança do utilizador final:** sem recuperação de password nem verificação de email~~ — **Resolvido 2026-07-06.** Falta apenas configurar um provedor de email real (`RESEND_API_KEY`) antes de operar com utilizadores reais — sem essa chave, os emails ficam só na consola do servidor.
 
 ### Principais oportunidades
 
@@ -101,8 +101,8 @@ Ver `ROADMAP.md` para o detalhe de cada fase:
 3. ✅ Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId` em todas as tabelas) — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` D1–D4, `SECURITY_AUDIT.md` S9/S10/S12). Falta o fluxo de produto para um 2º condomínio.
 4. ✅ Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio) — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S8, `FUNCTIONAL_GAPS.md` secção 8).
 5. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06.
-6. Implementar `audit_log` + soft-delete nas eliminações de dados financeiros.
-7. Configurar provedor de email + reset de password + verificação de email.
+6. ✅ Implementar `audit_log` + soft-delete nas eliminações de dados financeiros — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S17).
+7. ✅ Configurar provedor de email + reset de password + verificação de email — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S1/S2). Falta configurar uma `RESEND_API_KEY` real antes de produção.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
 9. Implementar upload de ficheiros com controlo de acesso.
 10. Construir gestão financeira formal (orçamento, dívida por fração, recibos, exportação).

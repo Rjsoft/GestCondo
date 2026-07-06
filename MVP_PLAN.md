@@ -18,14 +18,14 @@ Nenhum destes critérios está 100% satisfeito hoje — ver `FUNCTIONAL_GAPS.md`
 Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não são estimativas de tempo, apenas ordenação relativa):
 
 **Esforço estrutural (fazer primeiro, condiciona o resto):**
-- Modelo multi-tenant (`condominio` + `condominioId`).
-- Modelo de papéis alargado com âmbito por condomínio.
-- `audit_log` + soft-delete.
+- ✅ Modelo multi-tenant (`condominio` + `condominioId`) — feito 2026-07-06.
+- ✅ Modelo de papéis alargado com âmbito por condomínio — feito 2026-07-06.
+- ✅ `audit_log` + soft-delete (em `movimento`) — feito 2026-07-06.
 
 **Esforço médio, alto valor:**
 - Livro-razão de dívida por fração (a peça financeira que falta para responder "quanto deve o 2ºEsq?").
 - Upload de ficheiros com controlo de acesso.
-- Envio de email (reset de password + notificações básicas).
+- ✅ Envio de email — reset de password + verificação de conta feito 2026-07-06 (falta `RESEND_API_KEY` real); notificações de avisos/ocorrências ainda por fazer.
 - Autogestão de dados pelo condómino.
 
 **Esforço alto, mas incontornável para o público-alvo:**
