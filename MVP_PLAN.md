@@ -34,7 +34,7 @@ Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não 
 
 ## 3. Testes — estado atual
 
-**Atualizado 2026-07-06:** `vitest` configurado, com 38 testes unitários cobrindo a matriz de permissões completa (`lib/perfis.test.ts`) e a formatação (`lib/format.test.ts`). Ainda **não existem testes de integração/e2e automatizados** contra uma base de dados real — mas nesta sessão, ao ligar a aplicação pela primeira vez a uma base de dados PostgreSQL real (Neon) para verificação manual, foi encontrada e corrigida uma condição de corrida real no bootstrap do primeiro condomínio (ver `SECURITY_AUDIT.md` S10) que nenhum teste unitário (sobre lógica pura) alguma vez apanharia — é exactamente o tipo de bug que só um teste de concorrência contra uma BD real revela, e é a prova mais concreta possível de que os testes de integração da secção 4.2/4.4 abaixo não são um exercício teórico.
+**Atualizado 2026-07-06:** `vitest` configurado, com 38 testes unitários cobrindo a matriz de permissões completa (`lib/perfis.test.ts`) e a formatação (`lib/format.test.ts`). Ao ligar a aplicação pela primeira vez a uma base de dados PostgreSQL real (Neon do utilizador) para verificação manual, foram encontrados dois bugs reais que nenhum teste unitário (sobre lógica pura) alguma vez apanharia: uma condição de corrida no bootstrap do primeiro condomínio, e uma asserção não-nula insegura que fazia as páginas rebentar quando a sessão expirava a meio do pedido (ver `SECURITY_AUDIT.md` S10) — a prova mais concreta possível de que os testes de integração descritos abaixo não são um exercício teórico. Na sequência disso, foi criado `lib/db/tenant-isolation.dbtest.ts` (corrido via `pnpm test:db`, fora do `pnpm test`/CI porque precisa de `DATABASE_URL` real) — um teste de integração dentro de uma transação sempre revertida (nunca persiste nada, mesmo contra a base de dados real do utilizador) que confirma o isolamento multi-tenant do item 4.4 abaixo. **Ainda por fazer:** os restantes itens de 4.2–4.4 (autorização das server actions via um pedido HTTP real, fluxo de aprovação, e2e no browser).
 
 ## 4. Plano de testes proposto
 
@@ -59,7 +59,7 @@ Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não 
 ### 4.4 Segurança/permissões (o mais prioritário a introduzir)
 - IDOR: condómino A tenta eliminar/alterar uma ocorrência de condómino B via chamada direta à server action (não só pela UI) → tem de falhar.
 - Escalonamento de privilégio: condómino tenta chamar `requireAdmin()`-gated actions diretamente → tem de falhar.
-- Isolamento multi-tenant (quando existir): utilizador do condomínio A tenta aceder a um recurso do condomínio B por id direto (ex. `eliminarMovimento(idDeOutroCondominio)`) → tem de falhar.
+- ✅ Isolamento multi-tenant — feito 2026-07-06 (`lib/db/tenant-isolation.dbtest.ts`, ao nível da query/BD). Falta a mesma verificação ao nível da server action completa (com sessão HTTP real), não só da query isolada.
 - Utilizador pendente: confirmar que nenhuma server action de leitura/escrita de dados partilhados responde a um utilizador com `estado: pendente` (cobre regressões em `requireMembroAprovado`).
 
 ### 4.5 RGPD
@@ -79,7 +79,7 @@ Por ordem, assumindo que se começa do zero:
 1. Testes de autorização das server actions existentes (`requireAdmin`, `requireMembroAprovado`) — protege o que já está construído, esforço baixo, valor imediato.
 2. Teste end-to-end do fluxo de aprovação de acesso (é o controlo de acesso mais recentemente introduzido e o mais fácil de quebrar silenciosamente numa refactor futura).
 3. Testes de IDOR nas ações de eliminação (`eliminarOcorrencia`, e as restantes assim que ganharem a mesma distinção admin/dono).
-4. Teste de isolamento multi-tenant — a escrever **ao mesmo tempo** que o schema multi-tenant for implementado, não depois.
+4. ✅ Teste de isolamento multi-tenant — feito 2026-07-06 (`lib/db/tenant-isolation.dbtest.ts`), assim que existiu uma BD real para o correr com confiança.
 5. Testes de validação de formulário/enum nas server actions (rápidos de escrever, já há lógica pronta a testar: `ESTADOS`, `PERFIS`, regex de URL).
 
 ## 6. Ferramentas sugeridas

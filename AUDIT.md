@@ -8,7 +8,7 @@
 
 **Correções feitas durante a auditoria original:** nenhuma alteração ao código-fonte foi necessária para a concluir. Para o `next build` e o smoke test HTTP correrem, foram usadas variáveis de ambiente fictícias (`DATABASE_URL`, `BETTER_AUTH_SECRET`) apenas no processo local dessa sessão — nada foi persistido no repositório.
 
-**Atualização 2026-07-06 — Fase 1 praticamente fechada:** a pedido do utilizador, avançou-se com os itens 1–9 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; (4) redesenho do schema multi-tenant; (5) redesenho do modelo de papéis para os 7 perfis pedidos; (6) `audit_log` + soft-delete em `movimento`, com página `/auditoria`; (7) email transacional (verificação de conta + reset de password) via `lib/email.ts`; (8) CI mínimo (`.github/workflows/ci.yml`) e cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.mjs`; e (9) `vitest` + 38 testes unitários da matriz de permissões (`lib/perfis.test.ts`) e formatação (`lib/format.test.ts`). `drizzle-kit` com três migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`, `0002_audit_log_and_soft_delete.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1–T4, T6, D1–D5) e `SECURITY_AUDIT.md` (S1, S2, S4, S8, S9, S10, S12, S14, S17). **Único item ainda aberto da Fase 1:** testes de integração/e2e contra uma base de dados real (isolamento multi-tenant, autorização ponta-a-ponta) — o utilizador está a configurar uma instância Neon gratuita para isso. Estas foram as únicas alterações de código feitas desde a auditoria original.
+**Atualização 2026-07-06 — Fase 1 fechada:** a pedido do utilizador, avançou-se com todos os itens 1–13 da lista de próximos passos (secção G), incluindo, depois de o utilizador ligar a aplicação a uma base de dados PostgreSQL real (Neon): `lib/db/tenant-isolation.dbtest.ts` (`pnpm test:db`) confirmando o isolamento multi-tenant com um teste de integração real (dentro de uma transação sempre revertida), e a correção de dois bugs reais só visíveis com uma BD real — uma condição de corrida no bootstrap do primeiro condomínio e uma asserção não-nula insegura que fazia páginas rebentar quando a sessão expirava (`SECURITY_AUDIT.md` S10, commits `d862aed`/`35cadc1`). `drizzle-kit` com três migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`, `0002_audit_log_and_soft_delete.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1–T4, T6, D1–D5) e `SECURITY_AUDIT.md` (S1, S2, S4, S8, S9, S10, S12, S14, S17). A Fase 1 está agora completamente fechada. Estas foram as únicas alterações de código feitas desde a auditoria original.
 
 Este documento é o índice e resumo executivo. O detalhe está nos seguintes ficheiros, todos criados nesta sessão:
 
@@ -61,7 +61,7 @@ Ver `TECHNICAL_DEBT.md`. Resumo dos achados mais graves:
 | Problema | Gravidade | Impacto |
 |---|---|---|
 | Sem controlo de versões (não é repositório git) | Alta | Sem histórico, sem rollback, sem code review possível |
-| ~~Sem testes automatizados~~ — parcialmente resolvido 2026-07-06 | Alta | `vitest` + 38 testes da matriz de permissões (`lib/perfis.ts`). Falta cobertura de integração/isolamento multi-tenant (precisa de BD real) |
+| ~~Sem testes automatizados~~ — resolvido 2026-07-06 | Alta | `vitest` + 38 testes da matriz de permissões (`lib/perfis.ts`), mais `lib/db/tenant-isolation.dbtest.ts` confirmando isolamento multi-tenant contra uma BD real. Falta cobertura de autorização e2e via HTTP |
 | `pnpm lint` quebrado (eslint não instalado) | Média | Zero verificação estática de qualidade a correr |
 | `typescript.ignoreBuildErrors: true` esconde 13 erros de tipo reais | Média | Erros de tipo futuros (incluindo em lógica de permissões) podem passar despercebidos no build |
 ~~Sem `drizzle-kit`/migrações versionadas~~ — resolvido 2026-07-06 | Alta | Ver `TECHNICAL_DEBT.md` T4 |
@@ -104,7 +104,7 @@ Ver `ROADMAP.md` para o detalhe de cada fase:
 6. ✅ Implementar `audit_log` + soft-delete nas eliminações de dados financeiros — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S17).
 7. ✅ Configurar provedor de email + reset de password + verificação de email — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S1/S2). Falta configurar uma `RESEND_API_KEY` real antes de produção.
 8. ✅ CI mínimo + cabeçalhos de segurança básicos — feito 2026-07-06 (`.github/workflows/ci.yml`, `SECURITY_AUDIT.md` S14).
-9. 🟡 Testes automatizados, começando pela autorização — `vitest` + 38 testes unitários da matriz de permissões (`lib/perfis.test.ts`) feito 2026-07-06. Falta o teste de isolamento multi-tenant, que precisa de uma base de dados real (o utilizador está a configurar uma instância Neon).
+9. ✅ Testes automatizados, começando pela autorização — `vitest` + 38 testes unitários da matriz de permissões (`lib/perfis.test.ts`) e teste de integração de isolamento multi-tenant (`lib/db/tenant-isolation.dbtest.ts`, via `pnpm test:db`) feito 2026-07-06, depois de o utilizador ligar a aplicação a uma BD Neon real.
 10. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
 11. Implementar upload de ficheiros com controlo de acesso.
 12. Construir gestão financeira formal (orçamento, dívida por fração, recibos, exportação).

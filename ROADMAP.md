@@ -20,7 +20,7 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 | Upload de ficheiros | ❌ Inexistente (0%) |
 | Notificações por email | ❌ Inexistente (0%) — inclui recuperação de password |
 | Exportação PDF/Excel | ❌ Inexistente (0%) |
-| Testes automatizados | 🟡 `vitest` + 38 testes unitários (permissões, formatação) desde 2026-07-06; faltam testes de integração/e2e contra BD real |
+| Testes automatizados | ✅ `vitest` + 38 testes unitários (permissões, formatação) + teste de integração real de isolamento multi-tenant (`pnpm test:db`, contra a BD Neon do utilizador) desde 2026-07-06; faltam testes de autorização e2e via HTTP |
 | Controlo de versões / CI | ✅ Git desde 2026-07-06; `.github/workflows/ci.yml` criado 2026-07-06 (só corre quando/se for enviado para o GitHub) |
 
 Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma fachada enganosa — o que não existe simplesmente não está no código. Isto é preferível a ter simulações escondidas, mas significa que a distância até "pronto para uso real" é maior do que a app aparenta ao navegar por ela.
@@ -37,7 +37,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 
 ## Fase 1 — Estabilização técnica (fundação, antes de qualquer nova feature de produto)
 
-**Estado em 2026-07-06: praticamente fechada.** Os 10 itens abaixo estão feitos, exceto a parte de testes de integração/e2e do item 10, que depende de uma base de dados real (o utilizador está a configurar uma instância gratuita no Neon — ver memória `workflow_local_first`). Assim que essa BD existir, a prioridade imediata é o teste de isolamento multi-tenant referido no item 12 da lista de próximos passos (secção G).
+**Estado em 2026-07-06: fechada.** Todos os 10 itens abaixo estão feitos, incluindo o teste de isolamento multi-tenant (item 12 da lista de próximos passos), depois de o utilizador ter ligado a aplicação a uma base de dados PostgreSQL real (Neon). Ao ligar essa BD pela primeira vez, foram encontrados e corrigidos dois bugs reais só visíveis com uma BD real: uma condição de corrida no bootstrap do primeiro condomínio, e uma asserção não-nula insegura que fazia as páginas rebentar quando a sessão expirava a meio do pedido (ver `SECURITY_AUDIT.md` S10 e commits `d862aed`/`35cadc1`).
 
 1. ✅ **Feito 2026-07-06** — Inicializar repositório git; primeiro commit do estado atual (`0b9154e`, branch `main`).
 2. ✅ **Feito 2026-07-06** — Configurado CI mínimo (`.github/workflows/ci.yml`: lint, typecheck, testes, build). Só corre de facto quando/se o repositório for enviado para o GitHub.
@@ -48,7 +48,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 7. ✅ **Feito 2026-07-06** — Introduzida tabela e mecanismo de `audit_log`; eliminação de dados financeiros passou a soft-delete.
 8. ✅ **Feito 2026-07-06** — Configurado envio de email transacional (reset de password, verificação de email) — falta só configurar uma `RESEND_API_KEY` real antes de produção (hoje cai em modo local/consola).
 9. ✅ **Feito 2026-07-06** — `.env.example`, `.gitignore` corrigido, e cabeçalhos de segurança básicos (`SECURITY_AUDIT.md` S14).
-10. 🟡 Introduzir framework de testes — `vitest` + testes unitários de permissões feito 2026-07-06. Autorização/isolamento entre condomínios ainda por testar (precisa de BD real, ver `MVP_PLAN.md`).
+10. ✅ Introduzir framework de testes — `vitest` + testes unitários de permissões e teste de integração de isolamento multi-tenant (`pnpm test:db`) feito 2026-07-06.
 
 ## Fase 2 — MVP funcional (utilizável por um condomínio real, um só administrador)
 
@@ -104,11 +104,11 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 6. ✅ Implementar `audit_log` + soft-delete nas eliminações de dados financeiros — feito 2026-07-06.
 7. ✅ Configurar provedor de email + reset de password + verificação de email — feito 2026-07-06 (falta `RESEND_API_KEY` real antes de produção).
 7b. ✅ CI mínimo (`.github/workflows/ci.yml`) e cabeçalhos de segurança básicos — feito 2026-07-06.
-7c. 🟡 Testes automatizados — `vitest` + 38 testes unitários de permissões feito 2026-07-06; falta o teste de isolamento multi-tenant (item 12) assim que houver uma BD real.
+7c. ✅ Testes automatizados — `vitest` + 38 testes unitários de permissões, mais o teste de integração de isolamento multi-tenant (item 12) feito 2026-07-06 contra a BD Neon real do utilizador.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
 9. Implementar upload de ficheiros com controlo de acesso.
 10. Construir gestão financeira formal (orçamento, dívida por fração, recibos, exportação).
 11. Construir módulo de Assembleias (o maior módulo em falta, tratar como projeto próprio dentro do roadmap).
-12. 🟡 Introduzir testes cobrindo isolamento multi-tenant e permissões (o mais crítico de tudo para não regredir em segurança à medida que o produto cresce) — a parte de permissões puras já está feita (`lib/perfis.test.ts`); falta o teste de isolamento entre condomínios, que precisa de uma BD real para ser um teste com valor (ver `MVP_PLAN.md`).
+12. ✅ Introduzir testes cobrindo isolamento multi-tenant e permissões — feito 2026-07-06 (`lib/perfis.test.ts` para permissões; `lib/db/tenant-isolation.dbtest.ts` para isolamento entre condomínios, corrido contra uma BD Neon real dentro de uma transação sempre revertida).
 
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.
