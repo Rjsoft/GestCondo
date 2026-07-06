@@ -1,4 +1,5 @@
-import { getMembroAtual } from '@/lib/session'
+import { notFound } from 'next/navigation'
+import { getMembroAtual, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import { getFracoes } from '@/app/actions/fracoes'
 import { PageHeader } from '@/components/page-header'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
@@ -15,7 +16,8 @@ import {
 
 export default async function FracoesPage() {
   const membro = (await getMembroAtual())!
-  const isAdmin = membro.perfil === 'admin'
+  if (!temAcessoFinanceiro(membro)) notFound()
+  const isAdmin = temPermissaoGestao(membro)
   const fracoes = await getFracoes()
 
   return (

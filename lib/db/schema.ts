@@ -21,6 +21,12 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  // Campo próprio da aplicação (não gerido pelo better-auth): identifica um
+  // operador da plataforma ("Super Admin"), com acesso de gestão em
+  // qualquer condomínio a que também pertença como `membro`. Não existe
+  // ainda nenhuma UI para o ativar — é definido diretamente na base de
+  // dados pelo operador da plataforma (ver lib/session.ts).
+  superAdmin: boolean("superAdmin").notNull().default(false),
 })
 
 export const session = pgTable("session", {
@@ -86,10 +92,18 @@ export const condominio = pgTable("condominio", {
 })
 
 // --- App tables --------------------------------------------------------------
-// O `perfil` de `membro` distingue administradores de condóminos dentro de um
-// condomínio; o `estado` distingue contas aprovadas de pedidos pendentes
-// (ver lib/session.ts: getMembroAtual/requireMembroAprovado). Um mesmo `userId`
-// do better-auth pode ter uma linha `membro` por condomínio a que pertence.
+// O `perfil` de `membro` (ver lib/session.ts para o tipo `Perfil` e os
+// grupos de permissão) distingue os papéis de um utilizador dentro de UM
+// condomínio: "admin" (administrador eleito/residente), "gestor" (empresa
+// de administração profissional — mesmos poderes que "admin", rótulo
+// distinto), "condomino" (proprietário), "inquilino" (arrendatário, sem
+// acesso a dados financeiros), "fornecedor" (acesso mínimo, uso futuro) e
+// "auditor" (consulta total, sem qualquer poder de escrita). O `estado`
+// distingue contas aprovadas de pedidos pendentes (ver lib/session.ts:
+// getMembroAtual/requireMembroAprovado). Um mesmo `userId` do better-auth
+// pode ter uma linha `membro` por condomínio a que pertence — com um
+// `perfil` diferente em cada um, se for caso disso (ex. uma empresa de
+// administração é "gestor" em vários condomínios ao mesmo tempo).
 
 export const membro = pgTable(
   "membro",

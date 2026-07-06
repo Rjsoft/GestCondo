@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { PERFIL_LABEL, PERFIS } from '@/lib/perfis'
 import { toast } from 'sonner'
 
 export function PerfilSelect({ id, perfil }: { id: number; perfil: string }) {
@@ -35,8 +36,11 @@ export function PerfilSelect({ id, perfil }: { id: number; perfil: string }) {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="admin">Administrador</SelectItem>
-        <SelectItem value="condomino">Condómino</SelectItem>
+        {PERFIS.map((p) => (
+          <SelectItem key={p} value={p}>
+            {PERFIL_LABEL[p]}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   )

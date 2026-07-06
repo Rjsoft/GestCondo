@@ -2,14 +2,20 @@
 
 import { db } from '@/lib/db'
 import { ocorrencia } from '@/lib/db/schema'
-import { requireAdmin, requireMembroAprovado } from '@/lib/session'
+import {
+  requireAdmin,
+  requireMembroComEscrita,
+  temConsultaGestao,
+  temPermissaoGestao,
+} from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getOcorrencias() {
-  const m = await requireMembroAprovado()
-  // Admin vê todas as do seu condomínio; condómino vê só as suas.
-  if (m.perfil === 'admin') {
+  const m = await requireMembroComEscrita()
+  // Admin/gestor/auditor veem todas as do seu condomínio; os restantes
+  // (condómino, inquilino, fornecedor) veem só as suas.
+  if (temConsultaGestao(m)) {
     return db
       .select()
       .from(ocorrencia)
@@ -29,7 +35,8 @@ export async function getOcorrencias() {
 }
 
 export async function criarOcorrencia(formData: FormData) {
-  const m = await requireMembroAprovado()
+  // Qualquer membro aprovado com poder de escrita (todos exceto auditor).
+  const m = await requireMembroComEscrita()
 
   const titulo = String(formData.get('titulo') || '').trim()
   const descricao = String(formData.get('descricao') || '').trim()
@@ -60,7 +67,7 @@ export async function criarOcorrencia(formData: FormData) {
 const ESTADOS = ['aberta', 'em_curso', 'resolvida']
 
 export async function atualizarEstadoOcorrencia(id: number, estado: string) {
-  // Apenas admin gere o estado das ocorrências.
+  // Apenas admin/gestor gerem o estado das ocorrências.
   const admin = await requireAdmin()
   if (!ESTADOS.includes(estado)) throw new Error('Estado inválido')
   await db
@@ -77,9 +84,10 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
 }
 
 export async function eliminarOcorrencia(id: number) {
-  const m = await requireMembroAprovado()
-  // Admin pode eliminar qualquer uma do seu condomínio; condómino só as suas.
-  if (m.perfil === 'admin') {
+  const m = await requireMembroComEscrita()
+  // Admin/gestor podem eliminar qualquer uma do seu condomínio; os
+  // restantes só as suas.
+  if (temPermissaoGestao(m)) {
     await db
       .delete(ocorrencia)
       .where(

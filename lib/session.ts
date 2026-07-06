@@ -1,22 +1,37 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { condominio, membro } from '@/lib/db/schema'
+import { condominio, membro, user } from '@/lib/db/schema'
 import { asc, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
+import {
+  type EstadoMembro,
+  type MembroSessao,
+  type Perfil,
+  podeEscrever,
+  temAcessoFinanceiro,
+  temConsultaGestao,
+  temPermissaoGestao,
+} from '@/lib/perfis'
 
-export type Perfil = 'admin' | 'condomino'
-export type EstadoMembro = 'pendente' | 'aprovado'
-
-export type MembroSessao = {
-  id: number
-  condominioId: number
-  userId: string
-  nome: string
-  email: string
-  perfil: Perfil
-  estado: EstadoMembro
-  fracao: string | null
-}
+// Reexportado para não obrigar a mudar todos os imports existentes de
+// `@/lib/session` — mas CÓDIGO CLIENTE (componentes 'use client') deve
+// importar estes tipos/valores diretamente de `@/lib/perfis`, nunca daqui:
+// este ficheiro importa `@/lib/db` (Node/`pg`), que não pode ir para o
+// bundle do browser.
+export {
+  PERFIL_LABEL,
+  PERFIS,
+  PERFIS_ACESSO_FINANCEIRO,
+  PERFIS_CONSULTA_GESTAO,
+  PERFIS_GESTAO,
+  podeEscrever,
+  temAcessoFinanceiro,
+  temConsultaGestao,
+  temPermissaoGestao,
+  type EstadoMembro,
+  type MembroSessao,
+  type Perfil,
+} from '@/lib/perfis'
 
 /**
  * Obtém a sessão atual do Better Auth. Retorna null se não autenticado.
@@ -44,12 +59,16 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
 
   const { id: userId, name, email } = session.user
 
-  const existente = await db
-    .select()
-    .from(membro)
-    .where(eq(membro.userId, userId))
-    .orderBy(asc(membro.id))
-    .limit(1)
+  const [existente, [userRow]] = await Promise.all([
+    db
+      .select()
+      .from(membro)
+      .where(eq(membro.userId, userId))
+      .orderBy(asc(membro.id))
+      .limit(1),
+    db.select({ superAdmin: user.superAdmin }).from(user).where(eq(user.id, userId)).limit(1),
+  ])
+  const isSuperAdmin = userRow?.superAdmin ?? false
 
   if (existente.length > 0) {
     const m = existente[0]
@@ -62,6 +81,7 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
       perfil: (m.perfil as Perfil) ?? 'condomino',
       estado: (m.estado as EstadoMembro) ?? 'aprovado',
       fracao: m.fracao,
+      isSuperAdmin,
     }
   }
 
@@ -114,18 +134,20 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     perfil,
     estado,
     fracao: null,
+    isSuperAdmin,
   }
 }
 
 /**
  * Helper para server actions: exige sessão E que a conta já tenha sido
  * aprovada por um administrador. Usar em vez de `getMembroAtual` sempre
- * que a action expõe dados partilhados do condomínio.
+ * que a action expõe dados partilhados do condomínio. Super admins nunca
+ * ficam bloqueados por aprovação pendente.
  */
 export async function requireMembroAprovado(): Promise<MembroSessao> {
   const m = await getMembroAtual()
   if (!m) throw new Error('Não autorizado')
-  if (m.estado !== 'aprovado') {
+  if (m.estado !== 'aprovado' && !m.isSuperAdmin) {
     throw new Error('A sua conta aguarda aprovação de um administrador')
   }
   return m
@@ -141,12 +163,48 @@ export async function requireUserId(): Promise<string> {
 }
 
 /**
- * Helper para server actions: exige que o utilizador seja admin.
+ * Helper para server actions: exige poderes de administração do
+ * condomínio (perfil "admin" ou "gestor", ou super admin). Usar para
+ * qualquer escrita em dados partilhados do condomínio.
  */
 export async function requireAdmin(): Promise<MembroSessao> {
   const m = await getMembroAtual()
   if (!m) throw new Error('Não autorizado')
-  if (m.perfil !== 'admin') throw new Error('Apenas administradores')
+  if (!temPermissaoGestao(m)) throw new Error('Apenas administradores')
+  return m
+}
+
+/**
+ * Helper para server actions: exige acesso de consulta de gestão (admin,
+ * gestor ou auditor). Usar para leituras administrativas (ex. lista de
+ * condóminos) que não devem ficar visíveis a condóminos/inquilinos comuns,
+ * mas que um auditor tem de poder consultar.
+ */
+export async function requireConsultaGestao(): Promise<MembroSessao> {
+  const m = await requireMembroAprovado()
+  if (!temConsultaGestao(m)) throw new Error('Sem permissão para consultar')
+  return m
+}
+
+/**
+ * Helper para server actions: exige acesso a dados financeiros/patrimoniais
+ * (admin, gestor, condómino ou auditor — não inquilino nem fornecedor).
+ */
+export async function requireAcessoFinanceiro(): Promise<MembroSessao> {
+  const m = await requireMembroAprovado()
+  if (!temAcessoFinanceiro(m)) throw new Error('Sem permissão para consultar')
+  return m
+}
+
+/**
+ * Helper para server actions: exige uma conta aprovada com poder de
+ * escrita (todos os perfis exceto "auditor", que é só consulta).
+ */
+export async function requireMembroComEscrita(): Promise<MembroSessao> {
+  const m = await requireMembroAprovado()
+  if (!podeEscrever(m)) {
+    throw new Error('Auditores têm acesso apenas de consulta')
+  }
   return m
 }
 

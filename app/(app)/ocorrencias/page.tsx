@@ -1,4 +1,4 @@
-import { getMembroAtual } from '@/lib/session'
+import { getMembroAtual, podeEscrever, temPermissaoGestao } from '@/lib/session'
 import { getOcorrencias } from '@/app/actions/ocorrencias'
 import { PageHeader } from '@/components/page-header'
 import { NovaOcorrenciaDialog } from '@/components/ocorrencias/nova-ocorrencia-dialog'
@@ -10,7 +10,7 @@ import { Wrench } from 'lucide-react'
 
 export default async function OcorrenciasPage() {
   const membro = (await getMembroAtual())!
-  const isAdmin = membro.perfil === 'admin'
+  const isAdmin = temPermissaoGestao(membro)
   const ocorrencias = await getOcorrencias()
 
   return (
@@ -19,7 +19,7 @@ export default async function OcorrenciasPage() {
         title="Ocorrências"
         description="Pedidos de manutenção e reportes dos condóminos."
       >
-        <NovaOcorrenciaDialog />
+        {podeEscrever(membro) && <NovaOcorrenciaDialog />}
       </PageHeader>
 
       {ocorrencias.length === 0 ? (

@@ -2,12 +2,19 @@
 
 import { db } from '@/lib/db'
 import { fracao, membro } from '@/lib/db/schema'
-import { requireAdmin, requireMembroAprovado } from '@/lib/session'
+import {
+  PERFIS,
+  requireAcessoFinanceiro,
+  requireAdmin,
+  requireConsultaGestao,
+} from '@/lib/session'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getFracoes() {
-  const m = await requireMembroAprovado()
+  // Dados patrimoniais: admin, gestor, condómino ou auditor — não
+  // inquilino nem fornecedor (ver lib/session.ts).
+  const m = await requireAcessoFinanceiro()
   return db
     .select()
     .from(fracao)
@@ -56,19 +63,20 @@ export async function eliminarFracao(id: number) {
 // --- Membros / condóminos --------------------------------------------------
 
 export async function getMembros() {
-  const admin = await requireAdmin()
+  // Consulta de gestão: admin, gestor ou auditor.
+  const m = await requireConsultaGestao()
   return db
     .select()
     .from(membro)
-    .where(eq(membro.condominioId, admin.condominioId))
+    .where(eq(membro.condominioId, m.condominioId))
     .orderBy(desc(membro.createdAt))
 }
 
-const PERFIS = ['admin', 'condomino']
-
 export async function atualizarPerfilMembro(id: number, perfil: string) {
   const admin = await requireAdmin()
-  if (!PERFIS.includes(perfil)) throw new Error('Perfil inválido')
+  if (!PERFIS.includes(perfil as (typeof PERFIS)[number])) {
+    throw new Error('Perfil inválido')
+  }
   await db
     .update(membro)
     .set({ perfil })

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getMembroAtual } from '@/lib/session'
+import { getMembroAtual, temAcessoFinanceiro } from '@/lib/session'
 import { db } from '@/lib/db'
 import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
 import { desc, eq } from 'drizzle-orm'
@@ -19,9 +19,14 @@ import {
 
 export default async function DashboardPage() {
   const membro = (await getMembroAtual())!
+  // Inquilinos e fornecedores não têm acesso a dados financeiros/patrimoniais
+  // (ver lib/session.ts) — o painel só lhes mostra avisos e ocorrências.
+  const veFinancas = temAcessoFinanceiro(membro)
 
   const [movimentos, avisos, ocorrencias, fracoes] = await Promise.all([
-    db.select().from(movimento).where(eq(movimento.condominioId, membro.condominioId)),
+    veFinancas
+      ? db.select().from(movimento).where(eq(movimento.condominioId, membro.condominioId))
+      : Promise.resolve([] as (typeof movimento.$inferSelect)[]),
     db
       .select()
       .from(aviso)
@@ -34,7 +39,9 @@ export default async function DashboardPage() {
       .where(eq(ocorrencia.condominioId, membro.condominioId))
       .orderBy(desc(ocorrencia.createdAt))
       .limit(5),
-    db.select().from(fracao).where(eq(fracao.condominioId, membro.condominioId)),
+    veFinancas
+      ? db.select().from(fracao).where(eq(fracao.condominioId, membro.condominioId))
+      : Promise.resolve([] as (typeof fracao.$inferSelect)[]),
   ])
 
   const receitas = movimentos
@@ -59,25 +66,31 @@ export default async function DashboardPage() {
         description="Visão geral do estado atual do condomínio."
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Saldo atual"
-          value={formatEuro(saldo)}
-          icon={Wallet}
-          accent={saldo >= 0 ? 'text-emerald-600' : 'text-red-600'}
-        />
-        <StatCard
-          title="Receitas"
-          value={formatEuro(receitas)}
-          icon={TrendingUp}
-          accent="text-emerald-600"
-        />
-        <StatCard
-          title="Despesas"
-          value={formatEuro(despesas)}
-          icon={TrendingDown}
-          accent="text-red-600"
-        />
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${veFinancas ? 'lg:grid-cols-4' : ''}`}
+      >
+        {veFinancas && (
+          <>
+            <StatCard
+              title="Saldo atual"
+              value={formatEuro(saldo)}
+              icon={Wallet}
+              accent={saldo >= 0 ? 'text-emerald-600' : 'text-red-600'}
+            />
+            <StatCard
+              title="Receitas"
+              value={formatEuro(receitas)}
+              icon={TrendingUp}
+              accent="text-emerald-600"
+            />
+            <StatCard
+              title="Despesas"
+              value={formatEuro(despesas)}
+              icon={TrendingDown}
+              accent="text-red-600"
+            />
+          </>
+        )}
         <StatCard
           title="Ocorrências abertas"
           value={String(ocorrenciasAbertas)}
@@ -87,7 +100,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className={veFinancas ? 'lg:col-span-2' : 'lg:col-span-3'}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Megaphone className="h-4 w-4 text-primary" />
@@ -126,30 +139,32 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Building2 className="h-4 w-4 text-primary" />
-                Condomínio
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Resumo label="Frações registadas" value={String(fracoes.length)} />
-              <Resumo
-                label="Permilagem total"
-                value={`${fracoes
-                  .reduce((s, f) => s + Number(f.permilagem), 0)
-                  .toFixed(1)} ‰`}
-              />
-              <Resumo
-                label="Quotas por receber"
-                value={formatEuro(porPagar)}
-                valueClass="text-amber-600"
-              />
-            </CardContent>
-          </Card>
-        </div>
+        {veFinancas && (
+          <div className="flex flex-col gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  Condomínio
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <Resumo label="Frações registadas" value={String(fracoes.length)} />
+                <Resumo
+                  label="Permilagem total"
+                  value={`${fracoes
+                    .reduce((s, f) => s + Number(f.permilagem), 0)
+                    .toFixed(1)} ‰`}
+                />
+                <Resumo
+                  label="Quotas por receber"
+                  value={formatEuro(porPagar)}
+                  valueClass="text-amber-600"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <Card className="mt-4">

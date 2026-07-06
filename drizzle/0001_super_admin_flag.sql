@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "superAdmin" boolean DEFAULT false NOT NULL;

@@ -19,41 +19,66 @@ import {
   Menu,
   X,
 } from 'lucide-react'
-import type { Perfil } from '@/lib/session'
+import {
+  PERFIL_LABEL,
+  PERFIS_ACESSO_FINANCEIRO,
+  PERFIS_CONSULTA_GESTAO,
+  type Perfil,
+} from '@/lib/perfis'
 
 type NavItem = {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
-  adminOnly?: boolean
+  visivel?: (perfil: Perfil, isSuperAdmin: boolean) => boolean
 }
 
 const NAV: NavItem[] = [
   { href: '/', label: 'Painel', icon: LayoutDashboard },
-  { href: '/financas', label: 'Finanças', icon: Wallet },
+  {
+    href: '/financas',
+    label: 'Finanças',
+    icon: Wallet,
+    visivel: (perfil, isSuperAdmin) =>
+      isSuperAdmin || PERFIS_ACESSO_FINANCEIRO.includes(perfil),
+  },
   { href: '/avisos', label: 'Avisos', icon: Megaphone },
   { href: '/ocorrencias', label: 'Ocorrências', icon: Wrench },
   { href: '/documentos', label: 'Documentos', icon: FileText },
-  { href: '/fracoes', label: 'Frações', icon: Building2, adminOnly: true },
-  { href: '/condominos', label: 'Condóminos', icon: Users, adminOnly: true },
+  {
+    href: '/fracoes',
+    label: 'Frações',
+    icon: Building2,
+    visivel: (perfil, isSuperAdmin) =>
+      isSuperAdmin || PERFIS_ACESSO_FINANCEIRO.includes(perfil),
+  },
+  {
+    href: '/condominos',
+    label: 'Condóminos',
+    icon: Users,
+    visivel: (perfil, isSuperAdmin) =>
+      isSuperAdmin || PERFIS_CONSULTA_GESTAO.includes(perfil),
+  },
 ]
 
 export function AppShell({
   children,
   nome,
   perfil,
+  isSuperAdmin,
   condominioNome,
 }: {
   children: React.ReactNode
   nome: string
   perfil: Perfil
+  isSuperAdmin: boolean
   condominioNome: string
 }) {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
-  const items = NAV.filter((i) => !i.adminOnly || perfil === 'admin')
+  const items = NAV.filter((i) => !i.visivel || i.visivel(perfil, isSuperAdmin))
 
   const iniciais = nome
     .split(' ')
@@ -121,7 +146,7 @@ export function AppShell({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{nome}</p>
             <p className="truncate text-xs text-sidebar-foreground/60">
-              {perfil === 'admin' ? 'Administrador' : 'Condómino'}
+              {isSuperAdmin ? 'Super Admin' : PERFIL_LABEL[perfil]}
             </p>
           </div>
           <Button

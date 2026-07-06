@@ -42,7 +42,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 3. ✅ **Feito 2026-07-06** — Corrigido `pnpm lint` (T1) e os 14 erros de tipo pré-existentes de `@base-ui/react` (T2), com `ignoreBuildErrors` removido de `next.config.mjs`. Ver `TECHNICAL_DEBT.md`.
 4. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T4; a migração gerada é uma *baseline*, ler a nota sobre BDs já existentes antes de aplicar).
 5. ✅ **Feito 2026-07-06** — Redesenhado o schema para multi-tenant: entidade `condominio`, `condominioId` em todas as tabelas de dados do condomínio, e âmbito de acesso por condomínio em todas as server actions e no dashboard. Falta ainda o fluxo de produto para criar/convidar para um segundo condomínio (ver `FUNCTIONAL_GAPS.md`).
-6. Redesenhar o modelo de papéis para os 7 perfis pedidos (ver `FUNCTIONAL_GAPS.md` secção 8), com âmbito por condomínio (um utilizador pode ter papéis diferentes em condomínios diferentes).
+6. ✅ **Feito 2026-07-06** — Redesenhado o modelo de papéis para os 7 perfis pedidos (ver `FUNCTIONAL_GAPS.md` secção 8 e `SECURITY_AUDIT.md` S8), com âmbito por condomínio.
 7. Introduzir tabela e mecanismo de `audit_log`; mudar eliminações de dados financeiros para soft-delete.
 8. Configurar envio de email transacional (mínimo: reset de password, verificação de email).
 9. Adicionar `.env.example`, corrigir `.gitignore`, cabeçalhos de segurança básicos.
@@ -97,7 +97,7 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 1. ✅ `git init` + primeiro commit — feito 2026-07-06.
 2. ✅ Corrigir `pnpm lint` e os erros de tipo de `@base-ui/react`; remover `ignoreBuildErrors` — feito 2026-07-06.
 3. ✅ Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId`) — feito 2026-07-06.
-4. Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio).
+4. ✅ Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio) — feito 2026-07-06.
 5. ✅ Introduzir `drizzle-kit` com migrações — feito 2026-07-06.
 6. Implementar `audit_log` + soft-delete nas eliminações de dados financeiros.
 7. Configurar provedor de email + reset de password + verificação de email.

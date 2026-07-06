@@ -2,14 +2,14 @@
 
 import { db } from '@/lib/db'
 import { movimento } from '@/lib/db/schema'
-import { requireAdmin, requireMembroAprovado } from '@/lib/session'
+import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getMovimentos() {
-  // Dados partilhados do condomínio: todos os membros aprovados podem
-  // consultar, mas apenas os do seu próprio condomínio.
-  const m = await requireMembroAprovado()
+  // Dados financeiros: admin, gestor, condómino ou auditor — não
+  // inquilino nem fornecedor (ver lib/session.ts).
+  const m = await requireAcessoFinanceiro()
   return db
     .select()
     .from(movimento)

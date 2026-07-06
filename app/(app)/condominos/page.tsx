@@ -1,5 +1,9 @@
 import { notFound } from 'next/navigation'
-import { getMembroAtual } from '@/lib/session'
+import {
+  getMembroAtual,
+  temConsultaGestao,
+  temPermissaoGestao,
+} from '@/lib/session'
 import { getMembros } from '@/app/actions/fracoes'
 import { PageHeader } from '@/components/page-header'
 import { PerfilSelect } from '@/components/condominos/perfil-select'
@@ -15,11 +19,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatData } from '@/lib/format'
+import { PERFIL_LABEL, type Perfil } from '@/lib/session'
 import { UserCheck } from 'lucide-react'
 
 export default async function CondominosPage() {
   const membro = (await getMembroAtual())!
-  if (membro.perfil !== 'admin') notFound()
+  if (!temConsultaGestao(membro)) notFound()
+  const podeGerir = temPermissaoGestao(membro)
 
   const todos = await getMembros()
   const pendentes = todos.filter((m) => m.estado === 'pendente')
@@ -52,7 +58,7 @@ export default async function CondominosPage() {
                     {m.email} · registado em {formatData(m.createdAt)}
                   </p>
                 </div>
-                <MembroStatusActions id={m.id} />
+                {podeGerir && <MembroStatusActions id={m.id} />}
               </div>
             ))}
           </CardContent>
@@ -95,18 +101,24 @@ export default async function CondominosPage() {
                     {m.fracao || '—'}
                   </TableCell>
                   <TableCell>
-                    <PerfilSelect id={m.id} perfil={m.perfil} />
+                    {podeGerir ? (
+                      <PerfilSelect id={m.id} perfil={m.perfil} />
+                    ) : (
+                      PERFIL_LABEL[m.perfil as Perfil]
+                    )}
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {formatData(m.createdAt)}
                   </TableCell>
                   <TableCell>
-                    <EditarMembroDialog
-                      id={m.id}
-                      nome={m.nome}
-                      fracao={m.fracao}
-                      telefone={m.telefone}
-                    />
+                    {podeGerir && (
+                      <EditarMembroDialog
+                        id={m.id}
+                        nome={m.nome}
+                        fracao={m.fracao}
+                        telefone={m.telefone}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

@@ -12,7 +12,7 @@ export default async function AppLayout({
   const membro = await getMembroAtual()
   if (!membro) redirect('/sign-in')
 
-  if (membro.estado !== 'aprovado') {
+  if (membro.estado !== 'aprovado' && !membro.isSuperAdmin) {
     return (
       <>
         <PendingScreen email={membro.email} />
@@ -27,6 +27,7 @@ export default async function AppLayout({
     <AppShell
       nome={membro.nome}
       perfil={membro.perfil}
+      isSuperAdmin={membro.isSuperAdmin}
       condominioNome={condominio?.nome ?? 'Condomínio'}
     >
       {children}

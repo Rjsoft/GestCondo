@@ -118,15 +118,17 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 ## 8. Perfis de utilizador pedidos vs. existentes
 
+**Atualizado 2026-07-06:** os 7 perfis foram modelados (`lib/perfis.ts`) e ligados às permissões reais em todas as server actions e páginas.
+
 | Perfil pedido | Existe? |
 |---|---|
-| Super Admin (operador da plataforma) | ❌ |
-| Empresa de administração (gere vários condomínios) | ❌ |
-| Administrador do condomínio | ✅ (`perfil: admin`, mas sem âmbito de condomínio — hoje é "admin de tudo") |
-| Condómino proprietário | 🟡 (`perfil: condomino`, sem distinção de proprietário) |
-| Inquilino | ❌ |
-| Fornecedor externo | ❌ |
-| Auditor/consulta (leitura apenas) | ❌ |
+| Super Admin (operador da plataforma) | 🟡 Flag `user.superAdmin` existe e dá poderes de gestão/consulta em qualquer condomínio a que a pessoa também pertença como `membro`. Falta o fluxo de produto (painel cross-condomínio, onboarding de novos condomínios) — ver Fase 5 do `ROADMAP.md`. |
+| Empresa de administração (gere vários condomínios) | 🟡 `perfil: 'gestor'` tem exatamente os mesmos poderes que `admin` dentro de um condomínio, e a mesma pessoa/empresa pode ter uma linha `membro` com `perfil: 'gestor'` em vários condomínios em simultâneo (o schema já suporta isto). Falta o fluxo de onboarding para associar uma empresa a um novo condomínio — hoje só existe um condomínio por instalação (ver `SECURITY_AUDIT.md` S9). |
+| Administrador do condomínio | ✅ `perfil: 'admin'`, com âmbito por condomínio (`membro.condominioId`). |
+| Condómino proprietário | ✅ `perfil: 'condomino'` — vê dados financeiros/patrimoniais (`PERFIS_ACESSO_FINANCEIRO`). |
+| Inquilino | ✅ `perfil: 'inquilino'` — vê avisos/documentos/ocorrências, mas **não** finanças nem frações (nem no dashboard nem nas páginas dedicadas, que devolvem 404 se acedidas diretamente). |
+| Fornecedor externo | 🟡 `perfil: 'fornecedor'` existe com o mesmo acesso mínimo que inquilino. Falta o fluxo de atribuição de ocorrências/orçamentos a um fornecedor específico (P2, ver secção 4). |
+| Auditor/consulta (leitura apenas) | ✅ `perfil: 'auditor'` — vê tudo o que admin/gestor veem (incluindo a lista de condóminos), mas `requireMembroComEscrita`/`podeEscrever` bloqueia qualquer escrita (criar aviso, reportar ocorrência, aprovar condómino, etc.). |
 
 ## 9. Resumo de prioridades P0/P1 (o que bloqueia mesmo o MVP)
 

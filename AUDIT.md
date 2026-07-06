@@ -8,7 +8,7 @@
 
 **Correções feitas durante a auditoria original:** nenhuma alteração ao código-fonte foi necessária para a concluir. Para o `next build` e o smoke test HTTP correrem, foram usadas variáveis de ambiente fictícias (`DATABASE_URL`, `BETTER_AUTH_SECRET`) apenas no processo local dessa sessão — nada foi persistido no repositório.
 
-**Atualização 2026-07-06 — Fase 1 em curso:** a pedido do utilizador, avançou-se com os itens 1–3 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; e (4) o redesenho do schema multi-tenant — nova tabela `condominio`, `condominioId` em todas as tabelas de dados, isolamento aplicado em todas as server actions e no dashboard, `drizzle-kit` configurado com a primeira migração (`drizzle/0000_multi_tenant_baseline.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1, T2, T4, D1–D4) e `SECURITY_AUDIT.md` (S9, S10, S12). Estas foram as únicas alterações de código feitas desde a auditoria original.
+**Atualização 2026-07-06 — Fase 1 em curso:** a pedido do utilizador, avançou-se com os itens 1–4 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; (4) redesenho do schema multi-tenant — nova tabela `condominio`, `condominioId` em todas as tabelas de dados, isolamento aplicado em todas as server actions e no dashboard; e (5) redesenho do modelo de papéis para os 7 perfis pedidos (`admin`, `gestor`, `condomino`, `inquilino`, `fornecedor`, `auditor`, mais a flag `user.superAdmin`), com a lógica pura de permissões separada em `lib/perfis.ts` (client-safe) e aplicada em todas as leituras/escritas. `drizzle-kit` configurado com duas migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1, T2, T4, D1–D4) e `SECURITY_AUDIT.md` (S8, S9, S10, S12). Estas foram as únicas alterações de código feitas desde a auditoria original.
 
 Este documento é o índice e resumo executivo. O detalhe está nos seguintes ficheiros, todos criados nesta sessão:
 
@@ -99,7 +99,7 @@ Ver `ROADMAP.md` para o detalhe de cada fase:
 1. ✅ `git init` + primeiro commit do estado atual — feito 2026-07-06 (commit `0b9154e`, branch `main`).
 2. ✅ Corrigir `pnpm lint` e os 14 erros de tipo de `@base-ui/react`; remover `ignoreBuildErrors` — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T1/T2).
 3. ✅ Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId` em todas as tabelas) — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` D1–D4, `SECURITY_AUDIT.md` S9/S10/S12). Falta o fluxo de produto para um 2º condomínio.
-4. Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio).
+4. ✅ Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio) — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S8, `FUNCTIONAL_GAPS.md` secção 8).
 5. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06.
 6. Implementar `audit_log` + soft-delete nas eliminações de dados financeiros.
 7. Configurar provedor de email + reset de password + verificação de email.
