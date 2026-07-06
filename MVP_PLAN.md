@@ -34,7 +34,7 @@ Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não 
 
 ## 3. Testes — estado atual
 
-**Não existe nenhum teste automatizado no projeto** (nenhum `*.test.*`/`*.spec.*`, nenhum framework configurado). Toda a verificação até hoje foi manual (via UI) ou, nesta auditoria, via build + leitura de código. Isto significa **zero rede de segurança** contra regressões, em particular nas áreas mais sensíveis: quem pode ver os dados de quem.
+**Atualizado 2026-07-06:** `vitest` configurado, com 38 testes unitários cobrindo a matriz de permissões completa (`lib/perfis.test.ts`) e a formatação (`lib/format.test.ts`). Ainda **não existem testes de integração/e2e automatizados** contra uma base de dados real — mas nesta sessão, ao ligar a aplicação pela primeira vez a uma base de dados PostgreSQL real (Neon) para verificação manual, foi encontrada e corrigida uma condição de corrida real no bootstrap do primeiro condomínio (ver `SECURITY_AUDIT.md` S10) que nenhum teste unitário (sobre lógica pura) alguma vez apanharia — é exactamente o tipo de bug que só um teste de concorrência contra uma BD real revela, e é a prova mais concreta possível de que os testes de integração da secção 4.2/4.4 abaixo não são um exercício teórico.
 
 ## 4. Plano de testes proposto
 

@@ -8,7 +8,7 @@
 
 **Correções feitas durante a auditoria original:** nenhuma alteração ao código-fonte foi necessária para a concluir. Para o `next build` e o smoke test HTTP correrem, foram usadas variáveis de ambiente fictícias (`DATABASE_URL`, `BETTER_AUTH_SECRET`) apenas no processo local dessa sessão — nada foi persistido no repositório.
 
-**Atualização 2026-07-06 — Fase 1 quase fechada:** a pedido do utilizador, avançou-se com os itens 1–7 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; (4) redesenho do schema multi-tenant (`condominio` + `condominioId` em todas as tabelas, isolamento em todas as server actions e no dashboard); (5) redesenho do modelo de papéis para os 7 perfis pedidos, com a lógica pura de permissões em `lib/perfis.ts` (client-safe); (6) `audit_log` + soft-delete em `movimento`, com página `/auditoria`; e (7) email transacional (verificação de conta + reset de password) via `lib/email.ts`, com fallback para consola em desenvolvimento local e ecrãs `/esqueci-password`/`/redefinir-password`. `drizzle-kit` configurado com três migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`, `0002_audit_log_and_soft_delete.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1, T2, T4, T6, D1–D5) e `SECURITY_AUDIT.md` (S1, S2, S4, S8, S9, S10, S12, S17). Restam da Fase 1: CI mínimo, cabeçalhos de segurança (S14), e testes automatizados. Estas foram as únicas alterações de código feitas desde a auditoria original.
+**Atualização 2026-07-06 — Fase 1 praticamente fechada:** a pedido do utilizador, avançou-se com os itens 1–9 da lista de próximos passos (secção G): (1) `git init` + primeiro commit; (2) correção do `pnpm lint`; (3) correção dos 14 erros de tipo de `@base-ui/react` e remoção de `ignoreBuildErrors`; (4) redesenho do schema multi-tenant; (5) redesenho do modelo de papéis para os 7 perfis pedidos; (6) `audit_log` + soft-delete em `movimento`, com página `/auditoria`; (7) email transacional (verificação de conta + reset de password) via `lib/email.ts`; (8) CI mínimo (`.github/workflows/ci.yml`) e cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.mjs`; e (9) `vitest` + 38 testes unitários da matriz de permissões (`lib/perfis.test.ts`) e formatação (`lib/format.test.ts`). `drizzle-kit` com três migrações (`0000_multi_tenant_baseline.sql`, `0001_super_admin_flag.sql`, `0002_audit_log_and_soft_delete.sql`). Detalhe em `TECHNICAL_DEBT.md` (T1–T4, T6, D1–D5) e `SECURITY_AUDIT.md` (S1, S2, S4, S8, S9, S10, S12, S14, S17). **Único item ainda aberto da Fase 1:** testes de integração/e2e contra uma base de dados real (isolamento multi-tenant, autorização ponta-a-ponta) — o utilizador está a configurar uma instância Neon gratuita para isso. Estas foram as únicas alterações de código feitas desde a auditoria original.
 
 Este documento é o índice e resumo executivo. O detalhe está nos seguintes ficheiros, todos criados nesta sessão:
 
@@ -61,7 +61,7 @@ Ver `TECHNICAL_DEBT.md`. Resumo dos achados mais graves:
 | Problema | Gravidade | Impacto |
 |---|---|---|
 | Sem controlo de versões (não é repositório git) | Alta | Sem histórico, sem rollback, sem code review possível |
-| Sem testes automatizados | Alta | Sem rede de segurança para nenhuma alteração futura, em particular em permissões |
+| ~~Sem testes automatizados~~ — parcialmente resolvido 2026-07-06 | Alta | `vitest` + 38 testes da matriz de permissões (`lib/perfis.ts`). Falta cobertura de integração/isolamento multi-tenant (precisa de BD real) |
 | `pnpm lint` quebrado (eslint não instalado) | Média | Zero verificação estática de qualidade a correr |
 | `typescript.ignoreBuildErrors: true` esconde 13 erros de tipo reais | Média | Erros de tipo futuros (incluindo em lógica de permissões) podem passar despercebidos no build |
 ~~Sem `drizzle-kit`/migrações versionadas~~ — resolvido 2026-07-06 | Alta | Ver `TECHNICAL_DEBT.md` T4 |
@@ -88,7 +88,7 @@ Ver `SECURITY_AUDIT.md`. Resumo: **sem SQL injection, XSS ou CSRF encontrados** 
 
 Ver `ROADMAP.md` para o detalhe de cada fase:
 
-- **Fase 1 — Estabilização técnica:** git, CI, lint/typecheck reais, migrações, modelo multi-tenant, modelo de papéis, audit log + soft-delete, email transacional.
+- **Fase 1 — Estabilização técnica:** ✅ praticamente fechada em 2026-07-06 — git, CI, lint/typecheck reais, migrações, modelo multi-tenant, modelo de papéis, audit log + soft-delete, email transacional, cabeçalhos de segurança, testes unitários de permissões. Falta só testes de integração/e2e (precisam de BD real).
 - **Fase 2 — MVP funcional:** financeiro formal (dívida por fração, recibos, exportação), upload de ficheiros, proprietário/inquilino, seguro/fundo de reserva, autogestão de dados.
 - **Fase 3 — RGPD, segurança e auditoria:** textos legais, direitos do titular, retenção, MFA, DPA.
 - **Fase 4 — Funcionalidades avançadas:** Assembleias/Atas completo, reconciliação bancária, fornecedores/orçamentos de obra, mensagens internas.
@@ -103,11 +103,12 @@ Ver `ROADMAP.md` para o detalhe de cada fase:
 5. ✅ Introduzir `drizzle-kit` com migrações versionadas — feito 2026-07-06.
 6. ✅ Implementar `audit_log` + soft-delete nas eliminações de dados financeiros — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S17).
 7. ✅ Configurar provedor de email + reset de password + verificação de email — feito 2026-07-06 (ver `SECURITY_AUDIT.md` S1/S2). Falta configurar uma `RESEND_API_KEY` real antes de produção.
-8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
-9. Implementar upload de ficheiros com controlo de acesso.
-10. Construir gestão financeira formal (orçamento, dívida por fração, recibos, exportação).
-11. Construir módulo de Assembleias (projeto próprio dentro do roadmap, o maior módulo em falta).
-12. Introduzir testes automatizados, começando pela autorização e pelo isolamento multi-tenant.
+8. ✅ CI mínimo + cabeçalhos de segurança básicos — feito 2026-07-06 (`.github/workflows/ci.yml`, `SECURITY_AUDIT.md` S14).
+9. 🟡 Testes automatizados, começando pela autorização — `vitest` + 38 testes unitários da matriz de permissões (`lib/perfis.test.ts`) feito 2026-07-06. Falta o teste de isolamento multi-tenant, que precisa de uma base de dados real (o utilizador está a configurar uma instância Neon).
+10. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
+11. Implementar upload de ficheiros com controlo de acesso.
+12. Construir gestão financeira formal (orçamento, dívida por fração, recibos, exportação).
+13. Construir módulo de Assembleias (projeto próprio dentro do roadmap, o maior módulo em falta).
 
 ## H. Ficheiros criados por esta auditoria
 

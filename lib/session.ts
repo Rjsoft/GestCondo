@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { condominio, membro, user } from '@/lib/db/schema'
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import {
   type EstadoMembro,
@@ -85,55 +85,61 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     }
   }
 
-  const [condominioExistente] = await db
-    .select({ id: condominio.id })
-    .from(condominio)
-    .orderBy(asc(condominio.id))
-    .limit(1)
+  // Bootstrap: ainda não existe nenhuma linha `membro` para este userId.
+  // "Ver se já existe um condomínio, senão criar o primeiro" é um
+  // check-then-act — sem serialização, dois pedidos em paralelo (ex. duas
+  // abas a completar o primeiro login em simultâneo) podiam cada um deixar
+  // de ver o condomínio do outro e criar dois condomínios "primeiros"
+  // distintos. Um lock consultivo do Postgres (válido só dentro desta
+  // transação) serializa esta secção crítica entre pedidos concorrentes.
+  const novoMembro = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(72110)`)
 
-  let condominioId: number
-  let perfil: Perfil
-  let estado: EstadoMembro
+    const [existenteDentroDoLock] = await tx
+      .select()
+      .from(membro)
+      .where(eq(membro.userId, userId))
+      .orderBy(asc(membro.id))
+      .limit(1)
+    if (existenteDentroDoLock) return existenteDentroDoLock
 
-  if (!condominioExistente) {
-    // Primeiro utilizador do sistema: cria o condomínio e fica admin,
-    // aprovado automaticamente.
-    const [novoCondominio] = await db
-      .insert(condominio)
-      .values({ nome: 'Condomínio' })
-      .returning({ id: condominio.id })
-    condominioId = novoCondominio.id
-    perfil = 'admin'
-    estado = 'aprovado'
-  } else {
-    // Utilizadores seguintes juntam-se ao (único) condomínio existente,
-    // como condómino pendente até um admin aprovar.
-    condominioId = condominioExistente.id
-    perfil = 'condomino'
-    estado = 'pendente'
-  }
+    const [condominioExistente] = await tx
+      .select({ id: condominio.id })
+      .from(condominio)
+      .orderBy(asc(condominio.id))
+      .limit(1)
 
-  const [novo] = await db
-    .insert(membro)
-    .values({
-      condominioId,
-      userId,
-      nome: name ?? email,
-      email,
-      perfil,
-      estado,
-    })
-    .returning({ id: membro.id })
+    const condominioId = condominioExistente
+      ? condominioExistente.id
+      : (
+          await tx
+            .insert(condominio)
+            .values({ nome: 'Condomínio' })
+            .returning({ id: condominio.id })
+        )[0].id
+    // Primeiro condomínio do sistema = o seu criador fica admin, aprovado
+    // automaticamente; utilizadores seguintes juntam-se a um condomínio já
+    // existente como condómino pendente até um admin aprovar.
+    const perfil: Perfil = condominioExistente ? 'condomino' : 'admin'
+    const estado: EstadoMembro = condominioExistente ? 'pendente' : 'aprovado'
+
+    const [inserido] = await tx
+      .insert(membro)
+      .values({ condominioId, userId, nome: name ?? email, email, perfil, estado })
+      .returning()
+
+    return inserido
+  })
 
   return {
-    id: novo.id,
-    condominioId,
-    userId,
-    nome: name ?? email,
-    email,
-    perfil,
-    estado,
-    fracao: null,
+    id: novoMembro.id,
+    condominioId: novoMembro.condominioId,
+    userId: novoMembro.userId,
+    nome: novoMembro.nome,
+    email: novoMembro.email,
+    perfil: (novoMembro.perfil as Perfil) ?? 'condomino',
+    estado: (novoMembro.estado as EstadoMembro) ?? 'aprovado',
+    fracao: novoMembro.fracao,
     isSuperAdmin,
   }
 }
