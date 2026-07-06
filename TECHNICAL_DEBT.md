@@ -1,6 +1,6 @@
 # Auditoria Técnica — GestCondo
 
-Data: 2026-07-06.
+Data: 2026-07-06. **Atualização 2026-07-06 (Fase 1):** o repositório foi inicializado com git (primeiro commit `0b9154e`) e o `pnpm lint` foi corrigido (T1, ver abaixo) — os restantes achados desta secção continuam por endereçar.
 
 ## 1. Stack e arquitetura
 
@@ -10,7 +10,7 @@ Data: 2026-07-06.
 - **Autenticação:** better-auth 1.6.23, email+password apenas.
 - **UI:** Tailwind CSS v4 + `@base-ui/react` (primitivos, via um wrapper ao estilo shadcn) + `lucide-react`.
 - **Sem backend separado**: tudo corre dentro do próprio Next.js via Server Actions (`app/actions/*.ts`) e uma única rota de API (`app/api/auth/[...all]/route.ts`, exclusiva do better-auth). Não há uma camada de "serviço"/domínio separada da camada de acesso a dados — as server actions falam diretamente com o Drizzle.
-- **Sem controlo de versões**: o diretório **não é um repositório git**. Não há histórico, não há forma de reverter uma alteração, não há possibilidade de code review via PR, nem de CI ligado a commits.
+- **Controlo de versões:** ✅ resolvido 2026-07-06 — repositório git inicializado localmente (commit inicial `0b9154e`, branch `main`). Ainda sem remoto configurado, sem CI ligado a commits, e sem processo de code review — ver Fase 1 do `ROADMAP.md`.
 - **Sem CI/CD**: não existe `.github/workflows` nem qualquer outro pipeline.
 - **Sem `README.md`** nem `LICENSE`.
 
@@ -32,7 +32,7 @@ Dívida técnica concreta encontrada:
 
 | # | Achado | Gravidade | Recomendação |
 |---|---|---|---|
-| T1 | `pnpm lint` está completamente quebrado | Média | `eslint` está referenciado em `package.json` (`"lint": "eslint ."`) mas **não está instalado como dependência** e não existe nenhum ficheiro de configuração (`.eslintrc*`/`eslint.config.*`). O comando falha com `'eslint' is not recognized`. Nunca correu com sucesso desde a criação do projeto, provavelmente. | Instalar `eslint` + `eslint-config-next` (compatível com Next 16) e um `eslint.config.mjs` mínimo. |
+| T1 | ~~`pnpm lint` está completamente quebrado~~ **Resolvido 2026-07-06** | Média | `eslint` estava referenciado em `package.json` mas não instalado, sem ficheiro de configuração. Corrigido: adicionados `eslint@9` + `eslint-config-next@16.2.6`; `eslint.config.mjs` importa diretamente os arrays de configuração flat nativos `eslint-config-next/core-web-vitals` e `eslint-config-next/typescript`. **Nota:** a abordagem "padrão" (`FlatCompat` + `compat.extends('next/core-web-vitals', 'next/typescript')`, como o `create-next-app` gera por omissão) falha sob pnpm com `TypeError: Converting circular structure to JSON` — colisão entre a validação de schema legada do `@eslint/eslintrc` e a auto-referência interna de `eslint-plugin-react@7.37+` em `configs.flat`. Evitar reintroduzir `FlatCompat` neste projeto. `pnpm run lint` corre agora sem erros nem avisos (foram também corrigidas 3 variáveis não usadas encontradas: `eq`/`Badge` em `app/(app)/page.tsx` e a prop `email` não utilizada em `components/app-shell.tsx`). | Manter a configuração atual; rever ao atualizar `eslint-config-next`/`eslint-plugin-react` no futuro. |
 | T2 | 13 erros de tipo reais, escondidos por `ignoreBuildErrors` | Média | `npx tsc --noEmit` reporta 13 erros, todos por incompatibilidade entre a versão instalada de `@base-ui/react` (1.5.0) e o padrão de uso `asChild`/`onValueChange` nos componentes gerados (`DialogTrigger asChild`, `Select onValueChange`). Afeta ficheiros pré-existentes (`novo-aviso-dialog.tsx`, `novo-movimento-dialog.tsx`, `movimento-actions.tsx`) e todos os módulos novos criados nesta sessão, que replicaram fielmente o mesmo padrão para consistência. | Alinhar a versão do `@base-ui/react` com a API que o código espera, ou ajustar os wrappers em `components/ui/dialog.tsx`/`select.tsx` para a API atual da livraria — depois, remover `ignoreBuildErrors`. |
 | T3 | Sem testes de nenhum tipo | Alta | Nenhum framework de testes (`vitest`/`jest`/`playwright`) está configurado; nenhum ficheiro `*.test.*`/`*.spec.*` existe. | Ver `MVP_PLAN.md`, secção de testes. |
 | T4 | Sem `drizzle-kit`/migrações versionadas | Alta | Alterações ao schema (como a adicionada nesta sessão) não têm nenhum mecanismo reprodutível de aplicação à BD dentro do repositório. | Introduzir `drizzle-kit` com pasta `drizzle/migrations` versionada, mesmo que a plataforma de deploy também sincronize automaticamente — para ter um histórico auditável de alterações de schema. |
@@ -48,7 +48,7 @@ Dívida técnica concreta encontrada:
 | `tsc --noEmit` | ⚠️ 13 erros (ver T2), todos pré-existentes ao mesmo padrão, nenhum nas partes de lógica de negócio. |
 | `next build` (com `DATABASE_URL`/`BETTER_AUTH_SECRET` fictícios só para permitir o build) | ✅ Sucesso. Todas as rotas compilam e ficam corretamente marcadas como dinâmicas (`ƒ`). |
 | `next dev` + pedidos HTTP de fumo | ✅ `/sign-in` e `/sign-up` devolvem 200; `/` (sem sessão) devolve 307 para `/sign-in`, confirmando que o gate de autenticação funciona sem precisar de ligação real à BD para visitantes anónimos. |
-| `pnpm run lint` | ❌ Falha — `eslint` não instalado (T1). |
+| `pnpm run lint` | ✅ Corrigido 2026-07-06 (T1) — 0 erros, 0 avisos. |
 | `pnpm audit` | ⚠️ 2 vulnerabilidades **moderadas**, ambas do mesmo CVE em `postcss@8.5.6` (via `shadcn`/`@tailwindcss/postcss`), corrigido em `>=8.5.10`. Sem vulnerabilidades altas/críticas. É uma dependência de build (não corre em produção no browser/servidor de forma exposta), pelo que o risco prático é baixo, mas a correção é trivial (bump de versão). |
 | Testes automatizados | N/A — não existem. |
 | Verificação de ficheiros sensíveis expostos | ✅ Nenhum `.env`, chave ou token encontrado no repositório. |

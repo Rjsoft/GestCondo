@@ -37,9 +37,9 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 
 ## Fase 1 — Estabilização técnica (fundação, antes de qualquer nova feature de produto)
 
-1. Inicializar repositório git; primeiro commit do estado atual.
+1. ✅ **Feito 2026-07-06** — Inicializar repositório git; primeiro commit do estado atual (`0b9154e`, branch `main`).
 2. Configurar CI mínimo (lint + typecheck + build) — mesmo que corra só localmente para já.
-3. Corrigir `pnpm lint` (instalar `eslint`/config) e os 13 erros de tipo pré-existentes; remover `ignoreBuildErrors`.
+3. 🟡 **Parcial — feito 2026-07-06** — Corrigido `pnpm lint` (instalado `eslint`/`eslint-config-next`, ver `TECHNICAL_DEBT.md` T1). Faltam ainda os 13 erros de tipo pré-existentes (`@base-ui/react`) e remover `ignoreBuildErrors`.
 4. Introduzir `drizzle-kit` com migrações versionadas.
 5. Redesenhar o schema para multi-tenant: entidade `condominio`, `condominioId` em todas as tabelas de dados do condomínio, e âmbito de acesso por condomínio em todas as server actions.
 6. Redesenhar o modelo de papéis para os 7 perfis pedidos (ver `FUNCTIONAL_GAPS.md` secção 8), com âmbito por condomínio (um utilizador pode ter papéis diferentes em condomínios diferentes).
@@ -94,8 +94,8 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 
 ## Lista concreta de próximos passos (ordem de execução recomendada)
 
-1. `git init` + primeiro commit.
-2. Corrigir `pnpm lint` e os erros de tipo de `@base-ui/react`; remover `ignoreBuildErrors`.
+1. ✅ `git init` + primeiro commit — feito 2026-07-06.
+2. 🟡 Corrigir `pnpm lint` — feito 2026-07-06; falta ainda corrigir os erros de tipo de `@base-ui/react` e remover `ignoreBuildErrors`.
 3. Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId`) — a decisão de modelo de dados mais cara de adiar.
 4. Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio).
 5. Introduzir `drizzle-kit` com migrações.
