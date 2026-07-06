@@ -15,6 +15,13 @@
       "when": 1783349425619,
       "tag": "0001_super_admin_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783349997231,
+      "tag": "0002_audit_log_and_soft_delete",
+      "breakpoints": true
     }
   ]
 }

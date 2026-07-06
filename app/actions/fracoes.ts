@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { fracao, membro } from '@/lib/db/schema'
+import { registarAuditoria } from '@/lib/audit'
 import {
   PERFIS,
   requireAcessoFinanceiro,
@@ -36,15 +37,26 @@ export async function criarFracao(formData: FormData) {
     throw new Error('Preencha a identificação e o proprietário')
   }
 
-  await db.insert(fracao).values({
-    condominioId: admin.condominioId,
-    userId: admin.userId,
-    identificacao,
-    proprietario,
-    permilagem,
-    contactoEmail: contactoEmail || null,
-    contactoTelefone: contactoTelefone || null,
-    notas: notas || null,
+  const [nova] = await db
+    .insert(fracao)
+    .values({
+      condominioId: admin.condominioId,
+      userId: admin.userId,
+      identificacao,
+      proprietario,
+      permilagem,
+      contactoEmail: contactoEmail || null,
+      contactoTelefone: contactoTelefone || null,
+      notas: notas || null,
+    })
+    .returning({ id: fracao.id })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'fracao',
+    entidadeId: nova.id,
+    detalhes: `${identificacao} — ${proprietario}`,
   })
 
   revalidatePath('/fracoes')
@@ -56,6 +68,14 @@ export async function eliminarFracao(id: number) {
   await db
     .delete(fracao)
     .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'fracao',
+    entidadeId: id,
+  })
+
   revalidatePath('/fracoes')
   revalidatePath('/')
 }
@@ -81,6 +101,15 @@ export async function atualizarPerfilMembro(id: number, perfil: string) {
     .update(membro)
     .set({ perfil })
     .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'membro',
+    entidadeId: id,
+    detalhes: `Perfil alterado para "${perfil}"`,
+  })
+
   revalidatePath('/condominos')
 }
 
@@ -90,6 +119,14 @@ export async function aprovarMembro(id: number) {
     .update(membro)
     .set({ estado: 'aprovado' })
     .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'aprovar',
+    entidade: 'membro',
+    entidadeId: id,
+  })
+
   revalidatePath('/condominos')
 }
 
@@ -98,6 +135,14 @@ export async function rejeitarMembro(id: number) {
   await db
     .delete(membro)
     .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'rejeitar',
+    entidade: 'membro',
+    entidadeId: id,
+  })
+
   revalidatePath('/condominos')
 }
 
@@ -114,5 +159,13 @@ export async function atualizarMembro(formData: FormData) {
     .update(membro)
     .set({ nome, fracao: fracaoTxt || null, telefone: telefone || null })
     .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'membro',
+    entidadeId: id,
+  })
+
   revalidatePath('/condominos')
 }

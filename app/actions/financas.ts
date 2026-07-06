@@ -2,8 +2,9 @@
 
 import { db } from '@/lib/db'
 import { movimento } from '@/lib/db/schema'
+import { registarAuditoria } from '@/lib/audit'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getMovimentos() {
@@ -13,7 +14,12 @@ export async function getMovimentos() {
   return db
     .select()
     .from(movimento)
-    .where(eq(movimento.condominioId, m.condominioId))
+    .where(
+      and(
+        eq(movimento.condominioId, m.condominioId),
+        isNull(movimento.deletedAt),
+      ),
+    )
     .orderBy(desc(movimento.data))
 }
 
@@ -31,15 +37,26 @@ export async function criarMovimento(formData: FormData) {
     throw new Error('Preencha todos os campos obrigatórios')
   }
 
-  await db.insert(movimento).values({
-    condominioId: admin.condominioId,
-    userId: admin.userId,
-    tipo,
-    categoria,
-    descricao,
-    valor,
-    pago,
-    ...(dataStr ? { data: new Date(dataStr) } : {}),
+  const [novo] = await db
+    .insert(movimento)
+    .values({
+      condominioId: admin.condominioId,
+      userId: admin.userId,
+      tipo,
+      categoria,
+      descricao,
+      valor,
+      pago,
+      ...(dataStr ? { data: new Date(dataStr) } : {}),
+    })
+    .returning({ id: movimento.id })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'movimento',
+    entidadeId: novo.id,
+    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)`,
   })
 
   revalidatePath('/financas')
@@ -48,9 +65,20 @@ export async function criarMovimento(formData: FormData) {
 
 export async function eliminarMovimento(id: number) {
   const admin = await requireAdmin()
+  // Soft-delete: registos financeiros têm obrigação legal de retenção —
+  // nunca eliminar fisicamente (ver comentário em lib/db/schema.ts).
   await db
-    .delete(movimento)
+    .update(movimento)
+    .set({ deletedAt: new Date() })
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'movimento',
+    entidadeId: id,
+  })
+
   revalidatePath('/financas')
   revalidatePath('/')
 }
@@ -61,5 +89,14 @@ export async function alternarPago(id: number, pago: boolean) {
     .update(movimento)
     .set({ pago })
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'movimento',
+    entidadeId: id,
+    detalhes: pago ? 'Marcado como pago' : 'Marcado como pendente',
+  })
+
   revalidatePath('/financas')
 }

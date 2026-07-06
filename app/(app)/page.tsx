@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { getMembroAtual, temAcessoFinanceiro } from '@/lib/session'
 import { db } from '@/lib/db'
 import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PrioridadeBadge, EstadoBadge } from '@/components/badges'
@@ -25,7 +25,15 @@ export default async function DashboardPage() {
 
   const [movimentos, avisos, ocorrencias, fracoes] = await Promise.all([
     veFinancas
-      ? db.select().from(movimento).where(eq(movimento.condominioId, membro.condominioId))
+      ? db
+          .select()
+          .from(movimento)
+          .where(
+            and(
+              eq(movimento.condominioId, membro.condominioId),
+              isNull(movimento.deletedAt),
+            ),
+          )
       : Promise.resolve([] as (typeof movimento.$inferSelect)[]),
     db
       .select()

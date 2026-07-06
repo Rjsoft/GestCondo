@@ -15,6 +15,7 @@ import {
   Users,
   Wrench,
   FileText,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -56,6 +57,13 @@ const NAV: NavItem[] = [
     href: '/condominos',
     label: 'Condóminos',
     icon: Users,
+    visivel: (perfil, isSuperAdmin) =>
+      isSuperAdmin || PERFIS_CONSULTA_GESTAO.includes(perfil),
+  },
+  {
+    href: '/auditoria',
+    label: 'Auditoria',
+    icon: ShieldCheck,
     visivel: (perfil, isSuperAdmin) =>
       isSuperAdmin || PERFIS_CONSULTA_GESTAO.includes(perfil),
   },

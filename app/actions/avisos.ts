@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { aviso } from '@/lib/db/schema'
+import { registarAuditoria } from '@/lib/audit'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -26,13 +27,24 @@ export async function criarAviso(formData: FormData) {
     throw new Error('Preencha o título e o conteúdo')
   }
 
-  await db.insert(aviso).values({
-    condominioId: admin.condominioId,
-    userId: admin.userId,
-    autorNome: admin.nome,
-    titulo,
-    conteudo,
-    prioridade,
+  const [novo] = await db
+    .insert(aviso)
+    .values({
+      condominioId: admin.condominioId,
+      userId: admin.userId,
+      autorNome: admin.nome,
+      titulo,
+      conteudo,
+      prioridade,
+    })
+    .returning({ id: aviso.id })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'aviso',
+    entidadeId: novo.id,
+    detalhes: titulo,
   })
 
   revalidatePath('/avisos')
@@ -44,6 +56,14 @@ export async function eliminarAviso(id: number) {
   await db
     .delete(aviso)
     .where(and(eq(aviso.id, id), eq(aviso.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'aviso',
+    entidadeId: id,
+  })
+
   revalidatePath('/avisos')
   revalidatePath('/')
 }

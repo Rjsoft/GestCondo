@@ -151,7 +151,11 @@ export const fracao = pgTable(
   (t) => [index("fracao_condominio_idx").on(t.condominioId)],
 )
 
-// Movimentos financeiros: quotas (receita) e despesas
+// Movimentos financeiros: quotas (receita) e despesas.
+// `deletedAt` implementa soft-delete: registos financeiros têm obrigação
+// legal de retenção (contabilística/fiscal) independente do RGPD, pelo que
+// "eliminar" um movimento (app/actions/financas.ts) marca `deletedAt` em
+// vez de fazer DELETE físico. Todas as leituras filtram `deletedAt is null`.
 export const movimento = pgTable(
   "movimento",
   {
@@ -171,6 +175,7 @@ export const movimento = pgTable(
     data: timestamp("data").notNull().defaultNow(),
     pago: boolean("pago").notNull().default(true),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    deletedAt: timestamp("deletedAt"),
   },
   (t) => [index("movimento_condominio_idx").on(t.condominioId)],
 )
@@ -231,4 +236,31 @@ export const documento = pgTable(
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (t) => [index("documento_condominio_idx").on(t.condominioId)],
+)
+
+// Registo de auditoria: quem fez o quê, quando, a que entidade. Escrito
+// pelas próprias server actions (ver lib/audit.ts) sempre que uma ação
+// sensível é executada (criar/atualizar/eliminar dados partilhados,
+// aprovar/rejeitar condóminos, etc.). Consultável por admin/gestor/auditor
+// (ver app/actions/auditoria.ts). Nunca é alterado nem apagado pela
+// aplicação — é ele próprio o rasto de auditoria.
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    actorUserId: text("actorUserId").notNull(),
+    actorNome: text("actorNome").notNull(),
+    acao: text("acao").notNull(), // "criar" | "atualizar" | "eliminar" | "aprovar" | "rejeitar"
+    entidade: text("entidade").notNull(), // "movimento" | "aviso" | "documento" | "fracao" | "membro" | "ocorrencia"
+    entidadeId: integer("entidadeId").notNull(),
+    detalhes: text("detalhes"), // resumo legível opcional, texto livre
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("audit_log_condominio_idx").on(t.condominioId),
+    index("audit_log_entidade_idx").on(t.entidade, t.entidadeId),
+  ],
 )

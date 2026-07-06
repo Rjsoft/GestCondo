@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { ocorrencia } from '@/lib/db/schema'
+import { registarAuditoria } from '@/lib/audit'
 import {
   requireAdmin,
   requireMembroComEscrita,
@@ -48,16 +49,27 @@ export async function criarOcorrencia(formData: FormData) {
     throw new Error('Preencha o título e a descrição')
   }
 
-  await db.insert(ocorrencia).values({
-    condominioId: m.condominioId,
-    userId: m.userId,
-    reporterNome: m.nome,
-    titulo,
-    descricao,
-    local: local || null,
-    categoria,
-    prioridade,
-    estado: 'aberta',
+  const [nova] = await db
+    .insert(ocorrencia)
+    .values({
+      condominioId: m.condominioId,
+      userId: m.userId,
+      reporterNome: m.nome,
+      titulo,
+      descricao,
+      local: local || null,
+      categoria,
+      prioridade,
+      estado: 'aberta',
+    })
+    .returning({ id: ocorrencia.id })
+
+  await registarAuditoria({
+    actor: m,
+    acao: 'criar',
+    entidade: 'ocorrencia',
+    entidadeId: nova.id,
+    detalhes: titulo,
   })
 
   revalidatePath('/ocorrencias')
@@ -79,6 +91,15 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
         eq(ocorrencia.condominioId, admin.condominioId),
       ),
     )
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'ocorrencia',
+    entidadeId: id,
+    detalhes: `Estado alterado para "${estado}"`,
+  })
+
   revalidatePath('/ocorrencias')
   revalidatePath('/')
 }
@@ -104,5 +125,13 @@ export async function eliminarOcorrencia(id: number) {
         ),
       )
   }
+
+  await registarAuditoria({
+    actor: m,
+    acao: 'eliminar',
+    entidade: 'ocorrencia',
+    entidadeId: id,
+  })
+
   revalidatePath('/ocorrencias')
 }

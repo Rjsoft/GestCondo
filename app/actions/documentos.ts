@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { documento } from '@/lib/db/schema'
+import { registarAuditoria } from '@/lib/audit'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -30,13 +31,24 @@ export async function criarDocumento(formData: FormData) {
     throw new Error('O link deve começar por http:// ou https://')
   }
 
-  await db.insert(documento).values({
-    condominioId: admin.condominioId,
-    userId: admin.userId,
-    titulo,
-    categoria,
-    descricao: descricao || null,
-    url: url || null,
+  const [novo] = await db
+    .insert(documento)
+    .values({
+      condominioId: admin.condominioId,
+      userId: admin.userId,
+      titulo,
+      categoria,
+      descricao: descricao || null,
+      url: url || null,
+    })
+    .returning({ id: documento.id })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'documento',
+    entidadeId: novo.id,
+    detalhes: titulo,
   })
 
   revalidatePath('/documentos')
@@ -47,5 +59,13 @@ export async function eliminarDocumento(id: number) {
   await db
     .delete(documento)
     .where(and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'documento',
+    entidadeId: id,
+  })
+
   revalidatePath('/documentos')
 }
