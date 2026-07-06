@@ -44,11 +44,9 @@ export function NovoMovimentoDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Novo movimento
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="h-4 w-4" />
+        Novo movimento
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -61,7 +59,10 @@ export function NovoMovimentoDialog() {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <Label>Tipo</Label>
-              <Select value={tipo} onValueChange={setTipo}>
+              <Select
+                value={tipo}
+                onValueChange={(value) => value && setTipo(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

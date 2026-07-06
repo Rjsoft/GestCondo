@@ -57,11 +57,9 @@ export function NovaOcorrenciaDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Reportar ocorrência
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="h-4 w-4" />
+        Reportar ocorrência
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -97,7 +95,10 @@ export function NovaOcorrenciaDialog() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>Categoria</Label>
-              <Select value={categoria} onValueChange={setCategoria}>
+              <Select
+                value={categoria}
+                onValueChange={(value) => value && setCategoria(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -113,7 +114,10 @@ export function NovaOcorrenciaDialog() {
           </div>
           <div className="flex flex-col gap-2">
             <Label>Prioridade</Label>
-            <Select value={prioridade} onValueChange={setPrioridade}>
+            <Select
+              value={prioridade}
+              onValueChange={(value) => value && setPrioridade(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -46,11 +46,9 @@ export function NovoAvisoDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Novo aviso
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="h-4 w-4" />
+        Novo aviso
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -76,7 +74,10 @@ export function NovoAvisoDialog() {
           </div>
           <div className="flex flex-col gap-2">
             <Label>Prioridade</Label>
-            <Select value={prioridade} onValueChange={setPrioridade}>
+            <Select
+              value={prioridade}
+              onValueChange={(value) => value && setPrioridade(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

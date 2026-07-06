@@ -53,11 +53,9 @@ export function NovoDocumentoDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Novo documento
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="h-4 w-4" />
+        Novo documento
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -79,7 +77,10 @@ export function NovoDocumentoDialog() {
           </div>
           <div className="flex flex-col gap-2">
             <Label>Categoria</Label>
-            <Select value={categoria} onValueChange={setCategoria}>
+            <Select
+              value={categoria}
+              onValueChange={(value) => value && setCategoria(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

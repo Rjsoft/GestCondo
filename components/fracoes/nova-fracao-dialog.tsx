@@ -36,11 +36,9 @@ export function NovaFracaoDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Nova fração
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="h-4 w-4" />
+        Nova fração
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

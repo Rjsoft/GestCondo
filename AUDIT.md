@@ -8,7 +8,7 @@
 
 **Correções feitas durante a auditoria original:** nenhuma alteração ao código-fonte foi necessária para a concluir. Para o `next build` e o smoke test HTTP correrem, foram usadas variáveis de ambiente fictícias (`DATABASE_URL`, `BETTER_AUTH_SECRET`) apenas no processo local dessa sessão — nada foi persistido no repositório.
 
-**Atualização 2026-07-06 — início da Fase 1:** a pedido do utilizador, avançou-se com os dois primeiros itens da lista de próximos passos (secção G): `git init` + primeiro commit (`0b9154e`, branch `main`) e a correção do `pnpm lint` (instalação de `eslint`/`eslint-config-next`, `eslint.config.mjs` novo, 3 variáveis não usadas removidas — detalhe em `TECHNICAL_DEBT.md` T1). Estas foram as únicas alterações de código feitas desde a auditoria original.
+**Atualização 2026-07-06 — início da Fase 1:** a pedido do utilizador, avançou-se com os dois primeiros itens da lista de próximos passos (secção G): (1) `git init` + primeiro commit (`0b9154e`, branch `main`); (2) correção do `pnpm lint` (instalação de `eslint`/`eslint-config-next`, `eslint.config.mjs` novo, 3 variáveis não usadas removidas); (3) correção dos 14 erros de tipo de `@base-ui/react` (troca de `asChild` por `render={<Componente />}` e ajuste dos `onValueChange` dos `Select`) e remoção de `ignoreBuildErrors` de `next.config.mjs` — detalhe em `TECHNICAL_DEBT.md` T1/T2. Estas foram as únicas alterações de código feitas desde a auditoria original.
 
 Este documento é o índice e resumo executivo. O detalhe está nos seguintes ficheiros, todos criados nesta sessão:
 
@@ -97,7 +97,7 @@ Ver `ROADMAP.md` para o detalhe de cada fase:
 ## G. Lista concreta de próximos passos (por ordem)
 
 1. ✅ `git init` + primeiro commit do estado atual — feito 2026-07-06 (commit `0b9154e`, branch `main`).
-2. 🟡 Corrigir `pnpm lint` — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T1). Falta ainda corrigir os 13 erros de tipo de `@base-ui/react` e remover `ignoreBuildErrors`.
+2. ✅ Corrigir `pnpm lint` e os 14 erros de tipo de `@base-ui/react`; remover `ignoreBuildErrors` — feito 2026-07-06 (ver `TECHNICAL_DEBT.md` T1/T2).
 3. Desenhar e implementar o schema multi-tenant (`condominio` + `condominioId` em todas as tabelas).
 4. Redesenhar o modelo de papéis (7 perfis, com âmbito por condomínio).
 5. Introduzir `drizzle-kit` com migrações versionadas.

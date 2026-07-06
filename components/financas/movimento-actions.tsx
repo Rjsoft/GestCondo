@@ -47,11 +47,11 @@ export function MovimentoActions({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={pending}>
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Ações</span>
-        </Button>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon" disabled={pending} />}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+        <span className="sr-only">Ações</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {tipo === 'receita' && (

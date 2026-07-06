@@ -62,7 +62,11 @@ export function OcorrenciaActions({
   return (
     <div className="flex shrink-0 items-center gap-2">
       {isAdmin && (
-        <Select value={estado} onValueChange={mudarEstado} disabled={pending}>
+        <Select
+          value={estado}
+          onValueChange={(value) => value && mudarEstado(value)}
+          disabled={pending}
+        >
           <SelectTrigger size="sm">
             <SelectValue />
           </SelectTrigger>

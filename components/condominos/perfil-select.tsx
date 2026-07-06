@@ -26,7 +26,11 @@ export function PerfilSelect({ id, perfil }: { id: number; perfil: string }) {
   }
 
   return (
-    <Select value={perfil} onValueChange={mudar} disabled={pending}>
+    <Select
+      value={perfil}
+      onValueChange={(value) => value && mudar(value)}
+      disabled={pending}
+    >
       <SelectTrigger size="sm">
         <SelectValue />
       </SelectTrigger>
