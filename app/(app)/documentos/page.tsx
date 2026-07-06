@@ -1,4 +1,4 @@
-import { getMembroAtual, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
 import { getDocumentos } from '@/app/actions/documentos'
 import { PageHeader } from '@/components/page-header'
 import { NovoDocumentoDialog } from '@/components/documentos/novo-documento-dialog'
@@ -16,7 +16,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
 }
 
 export default async function DocumentosPage() {
-  const membro = (await getMembroAtual())!
+  const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
   const documentos = await getDocumentos()
 

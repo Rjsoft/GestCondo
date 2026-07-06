@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getMembroAtual, temConsultaGestao } from '@/lib/session'
+import { requireMembroPagina, temConsultaGestao } from '@/lib/session'
 import { getAuditLog } from '@/app/actions/auditoria'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,7 +32,7 @@ const ENTIDADE_LABEL: Record<string, string> = {
 }
 
 export default async function AuditoriaPage() {
-  const membro = (await getMembroAtual())!
+  const membro = await requireMembroPagina()
   if (!temConsultaGestao(membro)) notFound()
 
   const registos = await getAuditLog()

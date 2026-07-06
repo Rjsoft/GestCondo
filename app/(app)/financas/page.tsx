@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getMembroAtual, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import { getMovimentos } from '@/app/actions/financas'
 import { PageHeader } from '@/components/page-header'
 import { NovoMovimentoDialog } from '@/components/financas/novo-movimento-dialog'
@@ -19,7 +19,7 @@ import { formatEuro, formatData } from '@/lib/format'
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 
 export default async function FinancasPage() {
-  const membro = (await getMembroAtual())!
+  const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
   const movimentos = await getMovimentos()

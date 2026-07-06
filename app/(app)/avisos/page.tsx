@@ -1,4 +1,4 @@
-import { getMembroAtual, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
 import { getAvisos } from '@/app/actions/avisos'
 import { PageHeader } from '@/components/page-header'
 import { NovoAvisoDialog } from '@/components/avisos/novo-aviso-dialog'
@@ -9,7 +9,7 @@ import { formatDataHora } from '@/lib/format'
 import { Megaphone } from 'lucide-react'
 
 export default async function AvisosPage() {
-  const membro = (await getMembroAtual())!
+  const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
   const avisos = await getAvisos()
 

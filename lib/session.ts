@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { condominio, membro, user } from '@/lib/db/schema'
 import { asc, eq, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import {
   type EstadoMembro,
   type MembroSessao,
@@ -142,6 +143,21 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     fracao: novoMembro.fracao,
     isSuperAdmin,
   }
+}
+
+/**
+ * Helper para páginas (Server Components): garante uma sessão válida,
+ * redirecionando para /sign-in em vez de rebentar. Usar sempre no topo de
+ * uma página em vez de `(await getMembroAtual())!` — essa asserção não-nula
+ * está errada: `getMembroAtual()` pode legitimamente devolver `null` (ex.
+ * sessão expirou entre o pedido do layout e o da própria página), e sem
+ * este guard a página rebenta com "Cannot read properties of null" em vez
+ * de simplesmente reenviar para o login.
+ */
+export async function requireMembroPagina(): Promise<MembroSessao> {
+  const m = await getMembroAtual()
+  if (!m) redirect('/sign-in')
+  return m
 }
 
 /**

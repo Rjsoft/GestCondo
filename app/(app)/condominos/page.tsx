@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import {
-  getMembroAtual,
+  requireMembroPagina,
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
@@ -23,7 +23,7 @@ import { PERFIL_LABEL, type Perfil } from '@/lib/session'
 import { UserCheck } from 'lucide-react'
 
 export default async function CondominosPage() {
-  const membro = (await getMembroAtual())!
+  const membro = await requireMembroPagina()
   if (!temConsultaGestao(membro)) notFound()
   const podeGerir = temPermissaoGestao(membro)
 

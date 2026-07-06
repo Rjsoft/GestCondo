@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getMembroAtual, temAcessoFinanceiro } from '@/lib/session'
+import { requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { db } from '@/lib/db'
 import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
 import { and, desc, eq, isNull } from 'drizzle-orm'
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 
 export default async function DashboardPage() {
-  const membro = (await getMembroAtual())!
+  const membro = await requireMembroPagina()
   // Inquilinos e fornecedores não têm acesso a dados financeiros/patrimoniais
   // (ver lib/session.ts) — o painel só lhes mostra avisos e ocorrências.
   const veFinancas = temAcessoFinanceiro(membro)
