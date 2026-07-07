@@ -81,7 +81,7 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
       email: m.email,
       perfil: (m.perfil as Perfil) ?? 'condomino',
       estado: (m.estado as EstadoMembro) ?? 'aprovado',
-      fracao: m.fracao,
+      fracaoId: m.fracaoId,
       isSuperAdmin,
     }
   }
@@ -140,7 +140,7 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     email: novoMembro.email,
     perfil: (novoMembro.perfil as Perfil) ?? 'condomino',
     estado: (novoMembro.estado as EstadoMembro) ?? 'aprovado',
-    fracao: novoMembro.fracao,
+    fracaoId: novoMembro.fracaoId,
     isSuperAdmin,
   }
 }

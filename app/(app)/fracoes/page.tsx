@@ -1,5 +1,10 @@
 import { notFound } from 'next/navigation'
-import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
+import {
+  requireMembroPagina,
+  temAcessoFinanceiro,
+  temConsultaGestao,
+  temPermissaoGestao,
+} from '@/lib/session'
 import { getFracoes } from '@/app/actions/fracoes'
 import { PageHeader } from '@/components/page-header'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
@@ -18,6 +23,11 @@ export default async function FracoesPage() {
   const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
+  // Contactos pessoais (email/telefone) só são mostrados a quem gere o
+  // condomínio ou audita — ver a mesma decisão em getFracoes()
+  // (SECURITY_AUDIT.md S13). Para os restantes, getFracoes() já devolve
+  // esses campos como null; aqui só se decide esconder a própria coluna.
+  const veContactos = temConsultaGestao(membro)
   const fracoes = await getFracoes()
 
   return (
@@ -36,9 +46,9 @@ export default async function FracoesPage() {
               <TableRow>
                 <TableHead>Identificação</TableHead>
                 <TableHead>Proprietário</TableHead>
-                <TableHead className="hidden sm:table-cell">
-                  Contacto
-                </TableHead>
+                {veContactos && (
+                  <TableHead className="hidden sm:table-cell">Contacto</TableHead>
+                )}
                 <TableHead className="text-right">Permilagem</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
@@ -47,7 +57,7 @@ export default async function FracoesPage() {
               {fracoes.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={isAdmin ? 5 : 4}
+                    colSpan={2 + (veContactos ? 1 : 0) + 1 + (isAdmin ? 1 : 0)}
                     className="py-10 text-center text-muted-foreground"
                   >
                     Ainda não existem frações registadas.
@@ -60,17 +70,19 @@ export default async function FracoesPage() {
                     {f.identificacao}
                   </TableCell>
                   <TableCell>{f.proprietario}</TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {f.contactoEmail || f.contactoTelefone ? (
-                      <span>
-                        {f.contactoEmail}
-                        {f.contactoEmail && f.contactoTelefone ? ' · ' : ''}
-                        {f.contactoTelefone}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </TableCell>
+                  {veContactos && (
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {f.contactoEmail || f.contactoTelefone ? (
+                        <span>
+                          {f.contactoEmail}
+                          {f.contactoEmail && f.contactoTelefone ? ' · ' : ''}
+                          {f.contactoTelefone}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right">
                     {Number(f.permilagem).toFixed(2)} ‰
                   </TableCell>

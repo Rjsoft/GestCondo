@@ -8,6 +8,7 @@ import {
   requireAcessoFinanceiro,
   requireAdmin,
   requireConsultaGestao,
+  temConsultaGestao,
 } from '@/lib/session'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -16,11 +17,21 @@ export async function getFracoes() {
   // Dados patrimoniais: admin, gestor, condómino ou auditor — não
   // inquilino nem fornecedor (ver lib/session.ts).
   const m = await requireAcessoFinanceiro()
-  return db
+  const linhas = await db
     .select()
     .from(fracao)
     .where(eq(fracao.condominioId, m.condominioId))
     .orderBy(asc(fracao.identificacao))
+
+  // Contactos pessoais (email/telefone do proprietário) só para quem gere
+  // o condomínio ou audita — um condómino comum não precisa de ver o
+  // contacto pessoal de todos os outros proprietários (SECURITY_AUDIT.md
+  // S13 / minimização de dados RGPD). Feito aqui e não com um `select`
+  // mais restrito na query para manter o mesmo formato de linha em todos
+  // os consumidores (ex. o mapa de saldos); os dados nunca chegam ao
+  // cliente de qualquer forma quando o utilizador não tem permissão.
+  if (temConsultaGestao(m)) return linhas
+  return linhas.map((f) => ({ ...f, contactoEmail: null, contactoTelefone: null }))
 }
 
 export async function getFracaoPorId(id: number) {
@@ -160,14 +171,27 @@ export async function atualizarMembro(formData: FormData) {
   const admin = await requireAdmin()
   const id = Number(formData.get('id'))
   const nome = String(formData.get('nome') || '').trim()
-  const fracaoTxt = String(formData.get('fracao') || '').trim()
+  const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
   const telefone = String(formData.get('telefone') || '').trim()
 
   if (!id || !nome) throw new Error('Dados inválidos')
 
+  let fracaoId: number | null = null
+  if (fracaoIdRaw) {
+    // Confirma que a fração pertence ao mesmo condomínio do admin, para
+    // nunca se poder ligar um membro a uma fração de outro condomínio.
+    const [f] = await db
+      .select({ id: fracao.id })
+      .from(fracao)
+      .where(and(eq(fracao.id, Number(fracaoIdRaw)), eq(fracao.condominioId, admin.condominioId)))
+      .limit(1)
+    if (!f) throw new Error('Fração inválida')
+    fracaoId = f.id
+  }
+
   await db
     .update(membro)
-    .set({ nome, fracao: fracaoTxt || null, telefone: telefone || null })
+    .set({ nome, fracaoId, telefone: telefone || null })
     .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
 
   await registarAuditoria({

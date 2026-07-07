@@ -21,7 +21,7 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 - **Não existe qualquer documentação de base legal** por tipo de tratamento. Para a generalidade dos dados de gestão de condomínio (quotas, frações, contactos do administrador), a base legal previsível é **execução de contrato/obrigação legal** (regime da propriedade horizontal, Código Civil arts. 1430º e seguintes), não consentimento — o que é bom (não depende de opt-in revogável), mas **tem de ser documentado formalmente**, nomeadamente num Registo de Atividades de Tratamento (art. 30º RGPD).
 - **Sem separação entre dados obrigatórios e opcionais** nos formulários (`components/fracoes/nova-fracao-dialog.tsx`, `components/condominos/editar-membro-dialog.tsx`) — telefone e email de contacto não estão marcados como opcionais ao utilizador nem existe explicação da finalidade no momento da recolha (princípio da transparência, art. 13º).
-- **Sem minimização visível**: `getFracoes()` devolve todos os campos de contacto a todos os membros aprovados (ver `SECURITY_AUDIT.md` S13) — isto é tratamento além da finalidade mínima necessária para a generalidade dos condóminos.
+- **Minimização de contactos — resolvido 2026-07-07**: `getFracoes()` só devolve `contactoEmail`/`contactoTelefone` reais a quem gere o condomínio ou audita; condómino/inquilino/fornecedor recebem esses campos como `null` (ver `SECURITY_AUDIT.md` S13).
 
 ## 3. Direitos dos titulares — estado atual
 
@@ -84,7 +84,7 @@ Não existe nenhum destes ecrãs/documentos na aplicação:
 - [ ] Mecanismo de pedido de oposição/limitação, mesmo que processado manualmente numa fase inicial
 
 ### Segurança e minimização (cruzar com `SECURITY_AUDIT.md`)
-- [ ] Controlo de acesso a contactos pessoais restrito ao necessário (inquilino/fornecedor já não veem dados financeiros/patrimoniais desde 2026-07-06, mas contactos de outros proprietários continuam visíveis a todos os condóminos)
+- [x] Controlo de acesso a contactos pessoais restrito ao necessário — 2026-07-07 (só admin/gestor/auditor veem contactos reais; inquilino/fornecedor já não veem dados financeiros/patrimoniais desde 2026-07-06)
 - [x] Isolamento multi-condomínio implementado — 2026-07-06 (schema + todas as queries; falta o fluxo de onboarding para um 2º condomínio, ver `FUNCTIONAL_GAPS.md`)
 - [ ] Cifra em trânsito (HTTPS obrigatório em produção) e em repouso (a confirmar com o provedor de BD)
 - [x] Log de auditoria de acessos/alterações a dados pessoais e financeiros — 2026-07-06 (`audit_log`, página `/auditoria`)

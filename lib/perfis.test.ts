@@ -18,7 +18,7 @@ function membro(perfil: Perfil, isSuperAdmin = false): MembroSessao {
     email: 'teste@exemplo.pt',
     perfil,
     estado: 'aprovado',
-    fracao: null,
+    fracaoId: null,
     isSuperAdmin,
   }
 }

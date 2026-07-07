@@ -4,7 +4,7 @@ import {
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
-import { getMembros } from '@/app/actions/fracoes'
+import { getFracoes, getMembros } from '@/app/actions/fracoes'
 import { PageHeader } from '@/components/page-header'
 import { PerfilSelect } from '@/components/condominos/perfil-select'
 import { EditarMembroDialog } from '@/components/condominos/editar-membro-dialog'
@@ -27,9 +27,10 @@ export default async function CondominosPage() {
   if (!temConsultaGestao(membro)) notFound()
   const podeGerir = temPermissaoGestao(membro)
 
-  const todos = await getMembros()
+  const [todos, fracoes] = await Promise.all([getMembros(), getFracoes()])
   const pendentes = todos.filter((m) => m.estado === 'pendente')
   const membros = todos.filter((m) => m.estado === 'aprovado')
+  const fracaoPorId = new Map(fracoes.map((f) => [f.id, f.identificacao]))
 
   return (
     <div>
@@ -98,7 +99,7 @@ export default async function CondominosPage() {
                     {m.email}
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {m.fracao || '—'}
+                    {m.fracaoId ? (fracaoPorId.get(m.fracaoId) ?? '—') : '—'}
                   </TableCell>
                   <TableCell>
                     {podeGerir ? (
@@ -115,8 +116,9 @@ export default async function CondominosPage() {
                       <EditarMembroDialog
                         id={m.id}
                         nome={m.nome}
-                        fracao={m.fracao}
+                        fracaoId={m.fracaoId}
                         telefone={m.telefone}
+                        fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
                       />
                     )}
                   </TableCell>

@@ -117,7 +117,14 @@ export const membro = pgTable(
     email: text("email").notNull(),
     perfil: text("perfil").notNull().default("condomino"),
     estado: text("estado").notNull().default("aprovado"),
-    fracao: text("fracao"), // identificação da fração, ex: "2ºEsq"
+    // Ligação real à fração (substituiu, em 2026-07-07, um campo de texto
+    // livre sem qualquer validação). Um "condomino" com fracaoId=X é o
+    // proprietário de X; um "inquilino" com fracaoId=X é o arrendatário de
+    // X — a mesma fração pode ter várias linhas membro associadas (ex.
+    // proprietário e inquilino em simultâneo, cada um com a sua conta).
+    fracaoId: integer("fracaoId").references(() => fracao.id, {
+      onDelete: "set null",
+    }),
     telefone: text("telefone"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
@@ -126,6 +133,7 @@ export const membro = pgTable(
     // corrida de duplicação descrita em SECURITY_AUDIT.md S10).
     uniqueIndex("membro_user_condominio_idx").on(t.userId, t.condominioId),
     index("membro_condominio_idx").on(t.condominioId),
+    index("membro_fracao_idx").on(t.fracaoId),
   ],
 )
 

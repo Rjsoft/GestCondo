@@ -74,7 +74,9 @@ export type MembroSessao = {
   email: string
   perfil: Perfil
   estado: EstadoMembro
-  fracao: string | null
+  /** Fração de que este membro é proprietário (perfil condomino) ou
+   * arrendatário (perfil inquilino). `null` se ainda não associado. */
+  fracaoId: number | null
   /** Operador da plataforma — ver comentário acima de `Perfil`. */
   isSuperAdmin: boolean
 }

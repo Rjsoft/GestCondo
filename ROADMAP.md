@@ -54,7 +54,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 
 1. 🟡 **Em curso desde 2026-07-07** — Gestão financeira formal: orçamento anual (valor global, sem rubricas), dívida por fração/mapa de saldos ✅, recibo imprimível ✅, exportação CSV ✅ (não `.xlsx`/PDF real). Falta: geração automática de quotas, rateio por permilagem, juros, reconciliação bancária.
 2. Upload de ficheiros com controlo de acesso (documentos, faturas, fotos de ocorrências).
-3. Distinção proprietário/inquilino e correção da exposição de contactos pessoais.
+3. ✅ **Feito 2026-07-07** — Distinção proprietário/inquilino (`membro.fracaoId`, liga um `membro` condomino ou inquilino à sua fração) e correção da exposição de contactos pessoais (`SECURITY_AUDIT.md` S13).
 4. Seguro obrigatório e fundo de reserva como entidades geridas (não texto livre).
 5. Notificações por email para avisos importantes e novas ocorrências.
 6. Autogestão de dados pessoais pelo condómino (ver os seus dados, corrigir contacto).

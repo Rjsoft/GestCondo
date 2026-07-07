@@ -1,0 +1,1 @@
+ALTER TABLE "membro" DROP COLUMN "fracao";
