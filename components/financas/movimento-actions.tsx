@@ -1,6 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
+import Link from 'next/link'
 import { eliminarMovimento, alternarPago } from '@/app/actions/financas'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Trash2, CheckCircle2, Circle } from 'lucide-react'
+import { MoreHorizontal, Trash2, CheckCircle2, Circle, Receipt } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function MovimentoActions({
@@ -54,6 +55,12 @@ export function MovimentoActions({
         <span className="sr-only">Ações</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {tipo === 'receita' && (
+          <DropdownMenuItem render={<Link href={`/financas/recibo/${id}`} />}>
+            <Receipt className="h-4 w-4" />
+            Ver recibo
+          </DropdownMenuItem>
+        )}
         {tipo === 'receita' && (
           <DropdownMenuItem onClick={marcar}>
             {pago ? (

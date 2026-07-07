@@ -1,10 +1,10 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { movimento } from '@/lib/db/schema'
+import { fracao, movimento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getMovimentos() {
@@ -23,6 +23,65 @@ export async function getMovimentos() {
     .orderBy(desc(movimento.data))
 }
 
+/**
+ * Um único movimento (para o recibo). Devolve `null` em vez de lançar se
+ * não existir ou não pertencer ao condomínio do membro atual — a página do
+ * recibo trata isso como "não encontrado", não como erro.
+ */
+export async function getMovimentoPorId(id: number) {
+  const m = await requireAcessoFinanceiro()
+  const [mov] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, m.condominioId)))
+    .limit(1)
+  return mov ?? null
+}
+
+/**
+ * Mapa de saldos: para cada fração, quanto foi lançado em quotas (receitas
+ * ligadas a essa fração), quanto já foi pago, e quanto está em dívida.
+ * Responde diretamente a "quanto deve o 2ºEsq?" — a peça financeira mais
+ * pedida na auditoria (FUNCTIONAL_GAPS.md secção 3).
+ */
+export async function getMapaSaldos() {
+  const m = await requireAcessoFinanceiro()
+
+  const [fracoes, quotas] = await Promise.all([
+    db
+      .select()
+      .from(fracao)
+      .where(eq(fracao.condominioId, m.condominioId))
+      .orderBy(asc(fracao.identificacao)),
+    db
+      .select()
+      .from(movimento)
+      .where(
+        and(
+          eq(movimento.condominioId, m.condominioId),
+          eq(movimento.tipo, 'receita'),
+          isNull(movimento.deletedAt),
+        ),
+      ),
+  ])
+
+  return fracoes.map((f) => {
+    const quotasDaFracao = quotas.filter((q) => q.fracaoId === f.id)
+    const totalLancado = quotasDaFracao.reduce((s, q) => s + Number(q.valor), 0)
+    const totalPago = quotasDaFracao
+      .filter((q) => q.pago)
+      .reduce((s, q) => s + Number(q.valor), 0)
+    return {
+      fracaoId: f.id,
+      identificacao: f.identificacao,
+      proprietario: f.proprietario,
+      totalLancado,
+      totalPago,
+      emDivida: totalLancado - totalPago,
+    }
+  })
+}
+
 export async function criarMovimento(formData: FormData) {
   const admin = await requireAdmin()
 
@@ -32,9 +91,17 @@ export async function criarMovimento(formData: FormData) {
   const valor = String(formData.get('valor') || '0')
   const dataStr = String(formData.get('data') || '')
   const pago = formData.get('pago') === 'on' || formData.get('pago') === 'true'
+  const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
+  const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
 
   if (!categoria || !descricao || !valor) {
     throw new Error('Preencha todos os campos obrigatórios')
+  }
+  // Uma quota (receita) tem de estar ligada a uma fração para se poder
+  // calcular a dívida por fração (ver getMapaSaldos); despesas são gerais
+  // do condomínio e não precisam de fração.
+  if (tipo === 'receita' && !fracaoId) {
+    throw new Error('Selecione a fração a que esta quota diz respeito')
   }
 
   const [novo] = await db
@@ -47,6 +114,7 @@ export async function criarMovimento(formData: FormData) {
       descricao,
       valor,
       pago,
+      fracaoId: tipo === 'receita' ? fracaoId : null,
       ...(dataStr ? { data: new Date(dataStr) } : {}),
     })
     .returning({ id: movimento.id })

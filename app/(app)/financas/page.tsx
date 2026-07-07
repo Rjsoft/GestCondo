@@ -1,28 +1,25 @@
 import { notFound } from 'next/navigation'
 import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
-import { getMovimentos } from '@/app/actions/financas'
+import { getMapaSaldos, getMovimentos } from '@/app/actions/financas'
+import { getOrcamentos } from '@/app/actions/orcamentos'
+import { getFracoes } from '@/app/actions/fracoes'
 import { PageHeader } from '@/components/page-header'
-import { NovoMovimentoDialog } from '@/components/financas/novo-movimento-dialog'
-import { MovimentoActions } from '@/components/financas/movimento-actions'
-import { TipoMovimentoBadge } from '@/components/badges'
+import { FinancasTabs } from '@/components/financas/financas-tabs'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { formatEuro, formatData } from '@/lib/format'
+import { formatEuro } from '@/lib/format'
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 
 export default async function FinancasPage() {
   const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
-  const movimentos = await getMovimentos()
+
+  const [movimentos, mapaSaldos, orcamentos, fracoes] = await Promise.all([
+    getMovimentos(),
+    getMapaSaldos(),
+    getOrcamentos(),
+    getFracoes(),
+  ])
 
   const receitas = movimentos
     .filter((m) => m.tipo === 'receita')
@@ -36,10 +33,8 @@ export default async function FinancasPage() {
     <div>
       <PageHeader
         title="Finanças"
-        description="Quotas, despesas e saldo do condomínio."
-      >
-        {isAdmin && <NovoMovimentoDialog />}
-      </PageHeader>
+        description="Quotas, despesas, dívidas por fração e orçamento do condomínio."
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
@@ -81,87 +76,13 @@ export default async function FinancasPage() {
         </Card>
       </div>
 
-      <Card className="mt-4">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="hidden sm:table-cell">Descrição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                {isAdmin && <TableHead className="w-10" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {movimentos.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={isAdmin ? 7 : 6}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    Ainda não existem movimentos registados.
-                  </TableCell>
-                </TableRow>
-              )}
-              {movimentos.map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">
-                    {formatData(m.data)}
-                  </TableCell>
-                  <TableCell className="font-medium">{m.categoria}</TableCell>
-                  <TableCell className="hidden max-w-xs truncate text-muted-foreground sm:table-cell">
-                    {m.descricao}
-                  </TableCell>
-                  <TableCell>
-                    <TipoMovimentoBadge tipo={m.tipo} />
-                  </TableCell>
-                  <TableCell>
-                    {m.tipo === 'receita' ? (
-                      m.pago ? (
-                        <Badge
-                          variant="outline"
-                          className="border-emerald-200 bg-emerald-100 text-emerald-800"
-                        >
-                          Pago
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="border-amber-200 bg-amber-100 text-amber-800"
-                        >
-                          Pendente
-                        </Badge>
-                      )
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell
-                    className={`text-right font-medium ${
-                      m.tipo === 'receita' ? 'text-emerald-600' : 'text-red-600'
-                    }`}
-                  >
-                    {m.tipo === 'receita' ? '+' : '−'}
-                    {formatEuro(Number(m.valor))}
-                  </TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      <MovimentoActions
-                        id={m.id}
-                        pago={m.pago}
-                        tipo={m.tipo}
-                      />
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <FinancasTabs
+        movimentos={movimentos}
+        mapaSaldos={mapaSaldos}
+        orcamentos={orcamentos}
+        fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
+        isAdmin={isAdmin}
+      />
     </div>
   )
 }

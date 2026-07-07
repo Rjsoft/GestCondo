@@ -24,18 +24,23 @@ import {
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function NovoMovimentoDialog() {
+type FracaoOpcao = { id: number; identificacao: string }
+
+export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
   const [open, setOpen] = useState(false)
   const [tipo, setTipo] = useState('despesa')
+  const [fracaoId, setFracaoId] = useState('')
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
     formData.set('tipo', tipo)
+    if (tipo === 'receita') formData.set('fracaoId', fracaoId)
     startTransition(async () => {
       try {
         await criarMovimento(formData)
         toast.success('Movimento registado')
         setOpen(false)
+        setFracaoId('')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao registar')
       }
@@ -86,6 +91,33 @@ export function NovoMovimentoDialog() {
             </div>
           </div>
 
+          {tipo === 'receita' && (
+            <div className="flex flex-col gap-2">
+              <Label>Fração</Label>
+              <Select
+                value={fracaoId}
+                onValueChange={(value) => value && setFracaoId(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a fração" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fracoes.map((f) => (
+                    <SelectItem key={f.id} value={String(f.id)}>
+                      {f.identificacao}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fracoes.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Ainda não existem frações registadas — registe uma fração
+                  antes de lançar uma quota.
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria">Categoria</Label>
             <Input
@@ -126,7 +158,10 @@ export function NovoMovimentoDialog() {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button
+              type="submit"
+              disabled={pending || (tipo === 'receita' && !fracaoId)}
+            >
               {pending ? 'A guardar...' : 'Guardar movimento'}
             </Button>
           </DialogFooter>

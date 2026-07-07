@@ -180,6 +180,30 @@ export const movimento = pgTable(
   (t) => [index("movimento_condominio_idx").on(t.condominioId)],
 )
 
+// Orçamento anual aprovado do condomínio. Por agora um valor global por
+// ano (sem rubricas discriminadas nem geração automática de quotas a
+// partir dele) — ver FUNCTIONAL_GAPS.md para o que falta (rubricas,
+// orçamento previsto vs. executado, geração automática de quotas mensais
+// por fração a partir da permilagem).
+export const orcamento = pgTable(
+  "orcamento",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    ano: integer("ano").notNull(),
+    valorAnual: numeric("valorAnual", { precision: 12, scale: 2 }).notNull(),
+    notas: text("notas"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("orcamento_condominio_idx").on(t.condominioId),
+    uniqueIndex("orcamento_condominio_ano_idx").on(t.condominioId, t.ano),
+  ],
+)
+
 // Avisos / comunicados
 export const aviso = pgTable(
   "aviso",

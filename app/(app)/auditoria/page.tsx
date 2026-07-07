@@ -29,6 +29,7 @@ const ENTIDADE_LABEL: Record<string, string> = {
   fracao: 'Fração',
   membro: 'Condómino',
   ocorrencia: 'Ocorrência',
+  orcamento: 'Orçamento',
 }
 
 export default async function AuditoriaPage() {

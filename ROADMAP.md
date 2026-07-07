@@ -52,7 +52,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 
 ## Fase 2 — MVP funcional (utilizável por um condomínio real, um só administrador)
 
-1. Gestão financeira formal: orçamento anual, dívida por fração/condómino, recibos, exportação PDF/Excel, mapa de saldos.
+1. 🟡 **Em curso desde 2026-07-07** — Gestão financeira formal: orçamento anual (valor global, sem rubricas), dívida por fração/mapa de saldos ✅, recibo imprimível ✅, exportação CSV ✅ (não `.xlsx`/PDF real). Falta: geração automática de quotas, rateio por permilagem, juros, reconciliação bancária.
 2. Upload de ficheiros com controlo de acesso (documentos, faturas, fotos de ocorrências).
 3. Distinção proprietário/inquilino e correção da exposição de contactos pessoais.
 4. Seguro obrigatório e fundo de reserva como entidades geridas (não texto livre).
@@ -107,7 +107,7 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 7c. ✅ Testes automatizados — `vitest` + 38 testes unitários de permissões, mais o teste de integração de isolamento multi-tenant (item 12) feito 2026-07-06 contra a BD Neon real do utilizador.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
 9. Implementar upload de ficheiros com controlo de acesso.
-10. Construir gestão financeira formal (orçamento, dívida por fração, recibos, exportação).
+10. 🟡 Construir gestão financeira formal — feito 2026-07-07: orçamento anual (valor global), dívida por fração/mapa de saldos, recibo imprimível, exportação CSV (ver `FUNCTIONAL_GAPS.md` secção 3). Falta: geração automática de quotas a partir do orçamento, rateio por permilagem, juros/penalizações, reconciliação bancária, exportação `.xlsx`/PDF real.
 11. Construir módulo de Assembleias (o maior módulo em falta, tratar como projeto próprio dentro do roadmap).
 12. ✅ Introduzir testes cobrindo isolamento multi-tenant e permissões — feito 2026-07-06 (`lib/perfis.test.ts` para permissões; `lib/db/tenant-isolation.dbtest.ts` para isolamento entre condomínios, corrido contra uma BD Neon real dentro de uma transação sempre revertida).
 

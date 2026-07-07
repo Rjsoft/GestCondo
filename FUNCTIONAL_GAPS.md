@@ -6,7 +6,7 @@ Data: 2026-07-06. Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em fa
 
 O que existe hoje cobre uma fatia pequena e bem construída de **gestão administrativa básica de um único condomínio**: finanças simples, avisos, ocorrências, frações, condóminos com fluxo de aprovação. **Não existe nenhuma noção de "condomínio" como entidade** (ver `SECURITY_AUDIT.md` S9) — logo tudo abaixo assume, implicitamente, que isto teria de ser reconstruído sobre uma base multi-tenant antes de ser vendável a mais do que um condomínio.
 
-Módulos inteiros pedidos como essenciais para o mercado português — **Assembleias** e **gestão financeira formal** (orçamentos, dívidas por fração, recibos) — estão **completamente ausentes** (0%), não parcialmente feitos.
+Módulo inteiro pedido como essencial para o mercado português — **Assembleias** — está **completamente ausente** (0%). **Gestão financeira formal** (orçamentos, dívidas por fração, recibos, exportação) ganhou uma primeira versão em 2026-07-07 — ver secção 3 — mas ainda falta geração automática de quotas, rateio por permilagem, juros/reconciliação bancária e exportação em formato `.xlsx`/PDF real.
 
 ---
 
@@ -53,20 +53,20 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
-| Orçamento anual | ❌ Em falta | Só existem lançamentos ad-hoc (`movimento`), sem conceito de orçamento previsto vs. executado. | **P1** |
-| Quotas ordinárias | 🟡 Parcial | Um `movimento` do tipo `receita` genérico, sem gerar automaticamente uma quota por fração/mês a partir da permilagem. | P1 |
+| Orçamento anual | 🟡 Parcial — implementado 2026-07-07 | Nova tabela `orcamento` (ano, valor anual, notas), um por condomínio/ano, gerida em `/financas` (separador "Orçamentos"). **Falta ainda**: rubricas discriminadas (só um valor global), orçamento previsto vs. executado, e geração automática de quotas mensais a partir dele. | P1 → P2 |
+| Quotas ordinárias | 🟡 Parcial | Um `movimento` do tipo `receita`, agora **obrigatoriamente ligado a uma fração** (`criarMovimento` valida isto — ver `app/actions/financas.ts`), mas sem gerar automaticamente uma quota por fração/mês a partir da permilagem/orçamento — continua a ser lançamento manual um a um. | P1 |
 | Quotas extraordinárias | ❌ Em falta | Sem distinção de ordinária/extraordinária nem ligação a uma deliberação de assembleia que a aprove. | P1 |
 | Despesas comuns | 🟡 Parcial | `movimento` tipo `despesa`, categoria livre, sem rateio automático por permilagem. | P1 |
 | Fundo comum de reserva | ❌ Em falta | Ver secção 1. | **P1** |
-| Dívidas por condómino/fração | ❌ Em falta | Não há nenhum "livro-razão" por fração — só o agregado receitas/despesas do condomínio inteiro. Não é possível hoje responder "quanto deve o 2ºEsq?". | **P1** |
+| Dívidas por condómino/fração | ✅ Implementado 2026-07-07 | Separador "Dívidas por fração" em `/financas` (`getMapaSaldos()`): para cada fração, quotas lançadas − quotas pagas = dívida. Responde diretamente a "quanto deve o 2ºEsq?". Verificado com um teste de integração real (`lib/db/mapa-saldos.dbtest.ts`) contra o tipo `numeric` do Postgres. | — |
 | Juros/penalizações por atraso | ❌ Em falta | Sem suporte, e a taxa/possibilidade depende do regulamento do condomínio — teria de ser configurável. | P2 |
-| Recibos | ❌ Em falta | Sem geração de recibo por pagamento. | P1 |
+| Recibos | ✅ Implementado 2026-07-07 | Página `/financas/recibo/[id]` (só para movimentos tipo receita) com identificação do condomínio/fração/proprietário/valor e botão "Imprimir / guardar em PDF" (via impressão do browser — sem biblioteca de PDF nova). Acessível a partir do menu de ações de cada movimento. | — |
 | Pagamentos | 🟡 Parcial | Só um booleano `pago` no movimento, sem registo de meio de pagamento, referência multibanco, data de liquidação distinta da data do lançamento. | P1 |
 | Reconciliação bancária | ❌ Em falta | Sem importação de extrato bancário nem qualquer conciliação. | P2 |
-| Relatórios financeiros | ❌ Em falta | Só 3 cartões (receitas/despesas/saldo) na página de finanças — sem relatório por período, por categoria, por fração. | P1 |
-| Exportação Excel/PDF | ❌ Em falta | Nenhuma exportação em nenhuma página. | **P1** (frequentemente exigido por lei/assembleia para prestação de contas) |
+| Relatórios financeiros | 🟡 Parcial | 3 cartões (receitas/despesas/saldo) mais o mapa de saldos por fração — ainda sem relatório por período/categoria. | P1 |
+| Exportação Excel/PDF | 🟡 Parcial — implementado 2026-07-07 | Botão "Exportar CSV" na lista de movimentos (abre corretamente no Excel, com BOM UTF-8 para acentos/€). **Não é um `.xlsx` real nem PDF** — decisão deliberada para não introduzir uma dependência nova sem poder testá-la visualmente nesta sessão; CSV cobre a necessidade de prestação de contas com risco mínimo. | P2 (evoluir para `.xlsx`/PDF se necessário) |
 | Declarações de dívida | ❌ Em falta | Documento formal exigido em compra/venda de fração (para saber se há dívidas de quotas). | P2 |
-| Mapas de saldos | ❌ Em falta | Ver dívidas por fração. | P1 |
+| Mapas de saldos | ✅ Implementado 2026-07-07 | Ver dívidas por fração, acima — é a mesma funcionalidade. | — |
 
 ## 4. Ocorrências e manutenção
 

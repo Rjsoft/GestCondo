@@ -23,6 +23,16 @@ export async function getFracoes() {
     .orderBy(asc(fracao.identificacao))
 }
 
+export async function getFracaoPorId(id: number) {
+  const m = await requireAcessoFinanceiro()
+  const [f] = await db
+    .select()
+    .from(fracao)
+    .where(and(eq(fracao.id, id), eq(fracao.condominioId, m.condominioId)))
+    .limit(1)
+  return f ?? null
+}
+
 export async function criarFracao(formData: FormData) {
   const admin = await requireAdmin()
 

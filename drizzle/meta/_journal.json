@@ -22,6 +22,13 @@
       "when": 1783349997231,
       "tag": "0002_audit_log_and_soft_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783405549319,
+      "tag": "0003_orcamento_anual",
+      "breakpoints": true
     }
   ]
 }
