@@ -6,7 +6,7 @@ Data: 2026-07-06. Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em fa
 
 O que existe hoje cobre uma fatia pequena e bem construída de **gestão administrativa básica de um único condomínio**: finanças simples, avisos, ocorrências, frações, condóminos com fluxo de aprovação. **Não existe nenhuma noção de "condomínio" como entidade** (ver `SECURITY_AUDIT.md` S9) — logo tudo abaixo assume, implicitamente, que isto teria de ser reconstruído sobre uma base multi-tenant antes de ser vendável a mais do que um condomínio.
 
-Módulo inteiro pedido como essencial para o mercado português — **Assembleias** — está **completamente ausente** (0%). **Gestão financeira formal** (orçamentos, dívidas por fração, recibos, exportação) ganhou uma primeira versão em 2026-07-07 — ver secção 3 — mas ainda falta geração automática de quotas, rateio por permilagem, juros/reconciliação bancária e exportação em formato `.xlsx`/PDF real.
+Módulo inteiro pedido como essencial para o mercado português — **Assembleias** — está **completamente ausente** (0%). **Gestão financeira formal** (orçamentos, dívidas por fração, recibos, exportação, seguro obrigatório, fundo de reserva) ganhou uma primeira versão em 2026-07-07/08 — ver secção 3 — mas ainda falta geração automática de quotas, rateio por permilagem, juros/reconciliação bancária e exportação em formato `.xlsx`/PDF real.
 
 ---
 
@@ -24,8 +24,8 @@ Módulo inteiro pedido como essencial para o mercado português — **Assembleia
 | Histórico de titularidade | ❌ Em falta | Alterar `fracao.proprietario` sobrescreve o valor anterior sem histórico — perde-se o registo de quem era o proprietário antes de uma venda, relevante para apurar responsabilidade por dívidas. | P2 |
 | Documentos do prédio | 🟡 Parcial | `app/(app)/documentos/page.tsx` guarda título/categoria/link, mas sem upload real (ver secção Documentos abaixo). | P1 |
 | Regulamento do condomínio | ❌ Em falta | Poderia viver como uma categoria de documento, mas não há nenhum tratamento especial (ex. necessidade de aceitação/leitura por condómino). | P2 |
-| Seguro obrigatório | ❌ Em falta | Sem modelo de dados para apólice, seguradora, cobertura, validade — obrigação legal do condomínio em Portugal (seguro contra incêndio, art. 1429º CC) sem qualquer suporte, nem sequer como documento com data de validade e alerta de renovação. | **P1** |
-| Fundo comum de reserva | ❌ Em falta | Obrigatório por lei (DL nº 268/94, com a % mínima de quota destinada ao fundo). Hoje é apenas um número implícito na diferença receitas−despesas do dashboard, sem conta própria nem obrigatoriedade de segregação. | **P1** |
+| Seguro obrigatório | ✅ Implementado 2026-07-08 | Entidade `seguro` própria (seguradora, apólice, tipo, validade, prémio), gerida em `/financas` (separador "Seguro"), com aviso visual quando a apólice expirou ou expira nos próximos 30 dias. Falta ainda anexar o documento da apólice (depende de upload de ficheiros). | — |
+| Fundo comum de reserva | ✅ Implementado 2026-07-08 | Movimentos podem ser marcados com `destino: "reserva"` em vez de `"geral"` e passam a ser seguidos numa conta própria (`getSaldoFundoReserva()`), visível no dashboard e em `/financas`, excluída do saldo da conta corrente normal. Falta ainda impor por regra a % mínima de quota destinada ao fundo (DL nº 268/94) — hoje a segregação é manual, por lançamento. | P2 (automatizar o cálculo da % mínima) |
 
 ## 2. Assembleias — 0% implementado
 
@@ -57,7 +57,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Quotas ordinárias | 🟡 Parcial | Um `movimento` do tipo `receita`, agora **obrigatoriamente ligado a uma fração** (`criarMovimento` valida isto — ver `app/actions/financas.ts`), mas sem gerar automaticamente uma quota por fração/mês a partir da permilagem/orçamento — continua a ser lançamento manual um a um. | P1 |
 | Quotas extraordinárias | ❌ Em falta | Sem distinção de ordinária/extraordinária nem ligação a uma deliberação de assembleia que a aprove. | P1 |
 | Despesas comuns | 🟡 Parcial | `movimento` tipo `despesa`, categoria livre, sem rateio automático por permilagem. | P1 |
-| Fundo comum de reserva | ❌ Em falta | Ver secção 1. | **P1** |
+| Fundo comum de reserva | ✅ Implementado 2026-07-08 | Ver secção 1. | — |
 | Dívidas por condómino/fração | ✅ Implementado 2026-07-07 | Separador "Dívidas por fração" em `/financas` (`getMapaSaldos()`): para cada fração, quotas lançadas − quotas pagas = dívida. Responde diretamente a "quanto deve o 2ºEsq?". Verificado com um teste de integração real (`lib/db/mapa-saldos.dbtest.ts`) contra o tipo `numeric` do Postgres. | — |
 | Juros/penalizações por atraso | ❌ Em falta | Sem suporte, e a taxa/possibilidade depende do regulamento do condomínio — teria de ser configurável. | P2 |
 | Recibos | ✅ Implementado 2026-07-07 | Página `/financas/recibo/[id]` (só para movimentos tipo receita) com identificação do condomínio/fração/proprietário/valor e botão "Imprimir / guardar em PDF" (via impressão do browser — sem biblioteca de PDF nova). Acessível a partir do menu de ações de cada movimento. | — |
@@ -139,6 +139,6 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 5. **P1** — Upload de ficheiros (documentos, faturas, fotos de ocorrências) com controlo de acesso.
 6. **P1** — Envio de email (mínimo: reset de password, convocatórias, avisos importantes).
 7. **P1** — Distinção proprietário/inquilino e correção da exposição de contactos.
-8. **P1** — Seguro obrigatório e fundo de reserva como entidades próprias, não texto livre/implícito.
+8. ~~**P1** — Seguro obrigatório e fundo de reserva como entidades próprias, não texto livre/implícito.~~ **Resolvido 2026-07-08.**
 
 Tudo o que está classificado P2/P3 é razoável adiar para depois de um MVP fechado, mas **nenhum item P1 pode ficar de fora de uma versão vendável a uma administração de condomínios real em Portugal** — a ausência de Assembleias/Atas, em particular, torna a aplicação inadequada ao seu propósito declarado, por mais polida que a parte de finanças/avisos já esteja.
