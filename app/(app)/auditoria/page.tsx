@@ -30,6 +30,7 @@ const ENTIDADE_LABEL: Record<string, string> = {
   membro: 'Condómino',
   ocorrencia: 'Ocorrência',
   orcamento: 'Orçamento',
+  seguro: 'Seguro',
 }
 
 export default async function AuditoriaPage() {

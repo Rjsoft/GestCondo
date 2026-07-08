@@ -52,16 +52,22 @@ export default async function DashboardPage() {
       : Promise.resolve([] as (typeof fracao.$inferSelect)[]),
   ])
 
-  const receitas = movimentos
+  // Conta corrente do condomínio: exclui o fundo de reserva, que é
+  // obrigatório por lei e é seguido à parte (ver app/actions/financas.ts).
+  const movimentosGeral = movimentos.filter((m) => m.destino !== 'reserva')
+  const receitas = movimentosGeral
     .filter((m) => m.tipo === 'receita')
     .reduce((s, m) => s + Number(m.valor), 0)
-  const despesas = movimentos
+  const despesas = movimentosGeral
     .filter((m) => m.tipo === 'despesa')
     .reduce((s, m) => s + Number(m.valor), 0)
   const saldo = receitas - despesas
   const porPagar = movimentos
     .filter((m) => m.tipo === 'receita' && !m.pago)
     .reduce((s, m) => s + Number(m.valor), 0)
+  const saldoReserva = movimentos
+    .filter((m) => m.destino === 'reserva')
+    .reduce((s, m) => s + (m.tipo === 'receita' ? Number(m.valor) : -Number(m.valor)), 0)
 
   const ocorrenciasAbertas = ocorrencias.filter(
     (o) => o.estado !== 'resolvida',
@@ -168,6 +174,11 @@ export default async function DashboardPage() {
                   label="Quotas por receber"
                   value={formatEuro(porPagar)}
                   valueClass="text-amber-600"
+                />
+                <Resumo
+                  label="Fundo de reserva"
+                  value={formatEuro(saldoReserva)}
+                  valueClass="text-sky-600"
                 />
               </CardContent>
             </Card>

@@ -24,6 +24,34 @@ export async function getMovimentos() {
 }
 
 /**
+ * Saldo do fundo de reserva (movimentos com destino "reserva"). O fundo de
+ * reserva é obrigatório por lei (art.º 4.º do DL n.º 268/94) e segue-se à
+ * parte das contas correntes do condomínio — nunca somado às quotas normais.
+ */
+export async function getSaldoFundoReserva() {
+  const m = await requireAcessoFinanceiro()
+  const movimentosReserva = await db
+    .select()
+    .from(movimento)
+    .where(
+      and(
+        eq(movimento.condominioId, m.condominioId),
+        eq(movimento.destino, 'reserva'),
+        isNull(movimento.deletedAt),
+      ),
+    )
+
+  const receitas = movimentosReserva
+    .filter((mv) => mv.tipo === 'receita')
+    .reduce((s, mv) => s + Number(mv.valor), 0)
+  const despesas = movimentosReserva
+    .filter((mv) => mv.tipo === 'despesa')
+    .reduce((s, mv) => s + Number(mv.valor), 0)
+
+  return { receitas, despesas, saldo: receitas - despesas }
+}
+
+/**
  * Um único movimento (para o recibo). Devolve `null` em vez de lançar se
  * não existir ou não pertencer ao condomínio do membro atual — a página do
  * recibo trata isso como "não encontrado", não como erro.
@@ -93,6 +121,7 @@ export async function criarMovimento(formData: FormData) {
   const pago = formData.get('pago') === 'on' || formData.get('pago') === 'true'
   const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
   const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
+  const destino = String(formData.get('destino') || 'geral')
 
   if (!categoria || !descricao || !valor) {
     throw new Error('Preencha todos os campos obrigatórios')
@@ -102,6 +131,9 @@ export async function criarMovimento(formData: FormData) {
   // do condomínio e não precisam de fração.
   if (tipo === 'receita' && !fracaoId) {
     throw new Error('Selecione a fração a que esta quota diz respeito')
+  }
+  if (destino !== 'geral' && destino !== 'reserva') {
+    throw new Error('Destino inválido')
   }
 
   const [novo] = await db
@@ -115,6 +147,7 @@ export async function criarMovimento(formData: FormData) {
       valor,
       pago,
       fracaoId: tipo === 'receita' ? fracaoId : null,
+      destino,
       ...(dataStr ? { data: new Date(dataStr) } : {}),
     })
     .returning({ id: movimento.id })
@@ -124,7 +157,7 @@ export async function criarMovimento(formData: FormData) {
     acao: 'criar',
     entidade: 'movimento',
     entidadeId: novo.id,
-    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)`,
+    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)${destino === 'reserva' ? ' [fundo de reserva]' : ''}`,
   })
 
   revalidatePath('/financas')

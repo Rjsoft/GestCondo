@@ -182,6 +182,12 @@ export const movimento = pgTable(
     }),
     data: timestamp("data").notNull().defaultNow(),
     pago: boolean("pago").notNull().default(true),
+    // "geral" (despesas correntes/quotas normais) ou "reserva" (fundo comum
+    // de reserva, obrigatório por lei — DL 268/94). Um movimento pertence
+    // inteiramente a um dos dois; se uma quota tiver de ser dividida entre
+    // os dois fundos, regista-se como duas linhas separadas (sem cálculo
+    // automático de percentagem — ver FUNCTIONAL_GAPS.md).
+    destino: text("destino").notNull().default("geral"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },
@@ -210,6 +216,31 @@ export const orcamento = pgTable(
     index("orcamento_condominio_idx").on(t.condominioId),
     uniqueIndex("orcamento_condominio_ano_idx").on(t.condominioId, t.ano),
   ],
+)
+
+// Apólices de seguro do condomínio. O seguro contra incêndio/multirriscos
+// do edifício é obrigatório por lei (art. 1429º Código Civil) — antes só
+// podia ser registado como texto livre num "documento"; agora é uma
+// entidade própria com datas de validade, para se poder alertar quando
+// está a expirar.
+export const seguro = pgTable(
+  "seguro",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    seguradora: text("seguradora").notNull(),
+    apolice: text("apolice").notNull(),
+    tipo: text("tipo").notNull().default("multirriscos"), // "multirriscos" | "incendio" | "outro"
+    dataInicio: timestamp("dataInicio").notNull(),
+    dataFim: timestamp("dataFim").notNull(),
+    valorPremio: numeric("valorPremio", { precision: 12, scale: 2 }),
+    notas: text("notas"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("seguro_condominio_idx").on(t.condominioId)],
 )
 
 // Avisos / comunicados

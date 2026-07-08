@@ -6,6 +6,8 @@ import { MovimentoActions } from '@/components/financas/movimento-actions'
 import { ExportarCsvButton } from '@/components/financas/exportar-csv-button'
 import { NovoOrcamentoDialog } from '@/components/financas/novo-orcamento-dialog'
 import { OrcamentoActions } from '@/components/financas/orcamento-actions'
+import { NovoSeguroDialog } from '@/components/financas/novo-seguro-dialog'
+import { SeguroActions } from '@/components/financas/seguro-actions'
 import { TipoMovimentoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +29,7 @@ type Movimento = {
   tipo: string
   pago: boolean
   valor: string
+  destino: string
 }
 
 type SaldoFracao = {
@@ -45,16 +48,35 @@ type Orcamento = {
   notas: string | null
 }
 
+type Seguro = {
+  id: number
+  seguradora: string
+  apolice: string
+  tipo: string
+  dataInicio: Date
+  dataFim: Date
+  valorPremio: string | null
+  notas: string | null
+}
+
+const TIPO_SEGURO_LABEL: Record<string, string> = {
+  multirriscos: 'Multirriscos',
+  incendio: 'Incêndio',
+  outro: 'Outro',
+}
+
 export function FinancasTabs({
   movimentos,
   mapaSaldos,
   orcamentos,
+  seguros,
   fracoes,
   isAdmin,
 }: {
   movimentos: Movimento[]
   mapaSaldos: SaldoFracao[]
   orcamentos: Orcamento[]
+  seguros: Seguro[]
   fracoes: { id: number; identificacao: string }[]
   isAdmin: boolean
 }) {
@@ -64,6 +86,7 @@ export function FinancasTabs({
         <TabsTrigger value="movimentos">Movimentos</TabsTrigger>
         <TabsTrigger value="dividas">Dívidas por fração</TabsTrigger>
         <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
+        <TabsTrigger value="seguro">Seguro</TabsTrigger>
       </TabsList>
 
       <TabsContent value="movimentos" className="mt-4">
@@ -101,7 +124,17 @@ export function FinancasTabs({
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {formatData(m.data)}
                     </TableCell>
-                    <TableCell className="font-medium">{m.categoria}</TableCell>
+                    <TableCell className="font-medium">
+                      {m.categoria}
+                      {m.destino === 'reserva' && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 border-sky-200 bg-sky-100 text-sky-800"
+                        >
+                          Reserva
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="hidden max-w-xs truncate text-muted-foreground sm:table-cell">
                       {m.descricao}
                     </TableCell>
@@ -238,6 +271,91 @@ export function FinancasTabs({
                     )}
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="seguro" className="mt-4">
+        {isAdmin && (
+          <div className="mb-3 flex justify-end">
+            <NovoSeguroDialog />
+          </div>
+        )}
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Seguradora</TableHead>
+                  <TableHead>Apólice</TableHead>
+                  <TableHead className="hidden sm:table-cell">Tipo</TableHead>
+                  <TableHead>Validade</TableHead>
+                  <TableHead className="text-right">Prémio anual</TableHead>
+                  {isAdmin && <TableHead className="w-10" />}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {seguros.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={isAdmin ? 6 : 5}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Ainda não existe nenhum seguro registado. O seguro do
+                      edifício é obrigatório por lei.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {seguros.map((s) => {
+                  const hoje = new Date()
+                  const diasParaExpirar = Math.ceil(
+                    (s.dataFim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24),
+                  )
+                  const expirado = diasParaExpirar < 0
+                  const aExpirar = !expirado && diasParaExpirar <= 30
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">{s.seguradora}</TableCell>
+                      <TableCell className="text-muted-foreground">{s.apolice}</TableCell>
+                      <TableCell className="hidden text-muted-foreground sm:table-cell">
+                        {TIPO_SEGURO_LABEL[s.tipo] ?? s.tipo}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <span className="whitespace-nowrap text-muted-foreground">
+                            {formatData(s.dataInicio)} – {formatData(s.dataFim)}
+                          </span>
+                          {expirado && (
+                            <Badge
+                              variant="outline"
+                              className="w-fit border-red-200 bg-red-100 text-red-800"
+                            >
+                              Expirado
+                            </Badge>
+                          )}
+                          {aExpirar && (
+                            <Badge
+                              variant="outline"
+                              className="w-fit border-amber-200 bg-amber-100 text-amber-800"
+                            >
+                              Expira em breve
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {s.valorPremio ? formatEuro(Number(s.valorPremio)) : '—'}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <SeguroActions id={s.id} />
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </CardContent>

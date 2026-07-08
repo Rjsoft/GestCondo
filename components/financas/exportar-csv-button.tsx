@@ -10,6 +10,7 @@ type MovimentoCsv = {
   descricao: string
   valor: string | number
   pago: boolean
+  destino: string
 }
 
 function escaparCampo(valor: string) {
@@ -23,12 +24,13 @@ function escaparCampo(valor: string) {
 
 export function ExportarCsvButton({ movimentos }: { movimentos: MovimentoCsv[] }) {
   const exportar = () => {
-    const cabecalho = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor (€)', 'Estado']
+    const cabecalho = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor (€)', 'Estado', 'Destino']
     const linhas = movimentos.map((m) => {
       const data = new Date(m.data).toLocaleDateString('pt-PT')
       const tipo = m.tipo === 'receita' ? 'Receita' : 'Despesa'
       const estado = m.tipo === 'receita' ? (m.pago ? 'Pago' : 'Pendente') : ''
-      return [data, tipo, m.categoria, m.descricao, String(m.valor).replace('.', ','), estado]
+      const destino = m.destino === 'reserva' ? 'Fundo de reserva' : 'Conta corrente'
+      return [data, tipo, m.categoria, m.descricao, String(m.valor).replace('.', ','), estado, destino]
         .map((campo) => escaparCampo(campo))
         .join(',')
     })

@@ -43,6 +43,13 @@
       "when": 1783407311081,
       "tag": "0005_membro_fracao_id_drop_old",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783522456168,
+      "tag": "0006_parched_carmella_unuscione",
+      "breakpoints": true
     }
   ]
 }

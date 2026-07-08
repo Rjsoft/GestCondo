@@ -30,10 +30,12 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
   const [open, setOpen] = useState(false)
   const [tipo, setTipo] = useState('despesa')
   const [fracaoId, setFracaoId] = useState('')
+  const [destino, setDestino] = useState('geral')
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
     formData.set('tipo', tipo)
+    formData.set('destino', destino)
     if (tipo === 'receita') formData.set('fracaoId', fracaoId)
     startTransition(async () => {
       try {
@@ -41,6 +43,7 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
         toast.success('Movimento registado')
         setOpen(false)
         setFracaoId('')
+        setDestino('geral')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao registar')
       }
@@ -117,6 +120,26 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
               )}
             </div>
           )}
+
+          <div className="flex flex-col gap-2">
+            <Label>Destino</Label>
+            <Select
+              value={destino}
+              onValueChange={(value) => value && setDestino(value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="geral">Conta corrente do condomínio</SelectItem>
+                <SelectItem value="reserva">Fundo de reserva</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              O fundo de reserva é obrigatório por lei e é seguido à parte
+              das contas correntes.
+            </p>
+          </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria">Categoria</Label>
