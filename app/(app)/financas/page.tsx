@@ -1,6 +1,11 @@
 import { notFound } from 'next/navigation'
 import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
-import { getMapaSaldos, getMovimentos, getSaldoFundoReserva } from '@/app/actions/financas'
+import {
+  getMapaSaldos,
+  getMovimentos,
+  getQuotasEmAtraso,
+  getSaldoFundoReserva,
+} from '@/app/actions/financas'
 import { getOrcamentos } from '@/app/actions/orcamentos'
 import { getSeguros } from '@/app/actions/seguros'
 import { getFracoes } from '@/app/actions/fracoes'
@@ -15,14 +20,16 @@ export default async function FinancasPage() {
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
 
-  const [movimentos, mapaSaldos, orcamentos, seguros, fracoes, fundoReserva] = await Promise.all([
-    getMovimentos(),
-    getMapaSaldos(),
-    getOrcamentos(),
-    getSeguros(),
-    getFracoes(),
-    getSaldoFundoReserva(),
-  ])
+  const [movimentos, mapaSaldos, orcamentos, seguros, fracoes, fundoReserva, quotasEmAtraso] =
+    await Promise.all([
+      getMovimentos(),
+      getMapaSaldos(),
+      getOrcamentos(),
+      getSeguros(),
+      getFracoes(),
+      getSaldoFundoReserva(),
+      getQuotasEmAtraso(),
+    ])
 
   // Conta corrente do condomínio: movimentos com destino "geral", excluindo
   // o fundo de reserva (obrigatório por lei e seguido à parte — ver
@@ -105,6 +112,7 @@ export default async function FinancasPage() {
           permilagem: Number(f.permilagem),
           isentaElevador: f.isentaElevador,
         }))}
+        quotasEmAtraso={quotasEmAtraso}
         isAdmin={isAdmin}
       />
     </div>

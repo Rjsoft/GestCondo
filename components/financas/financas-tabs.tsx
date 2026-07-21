@@ -8,6 +8,7 @@ import { NovoOrcamentoDialog } from '@/components/financas/novo-orcamento-dialog
 import { OrcamentoActions } from '@/components/financas/orcamento-actions'
 import { NovoSeguroDialog } from '@/components/financas/novo-seguro-dialog'
 import { SeguroActions } from '@/components/financas/seguro-actions'
+import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
 import { TipoMovimentoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -73,6 +74,7 @@ export function FinancasTabs({
   orcamentos,
   seguros,
   fracoes,
+  quotasEmAtraso,
   isAdmin,
 }: {
   movimentos: Movimento[]
@@ -85,6 +87,7 @@ export function FinancasTabs({
     permilagem: number
     isentaElevador: boolean
   }[]
+  quotasEmAtraso: { fracaoId: number | null; valor: string; data: Date }[]
   isAdmin: boolean
 }) {
   return (
@@ -191,6 +194,11 @@ export function FinancasTabs({
       </TabsContent>
 
       <TabsContent value="dividas" className="mt-4">
+        {isAdmin && (
+          <div className="mb-3 flex justify-end">
+            <LancarJurosDialog quotasEmAtraso={quotasEmAtraso} fracoes={fracoes} />
+          </div>
+        )}
         <Card>
           <CardContent className="p-0">
             <Table>

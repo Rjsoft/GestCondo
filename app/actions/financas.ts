@@ -3,8 +3,9 @@
 import { db } from '@/lib/db'
 import { fracao, movimento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { calcularJurosMora } from '@/lib/juros'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, asc, desc, eq, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, isNull, lt } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getMovimentos() {
@@ -108,6 +109,100 @@ export async function getMapaSaldos() {
       emDivida: totalLancado - totalPago,
     }
   })
+}
+
+/**
+ * Quotas (receitas ligadas a uma fração) por pagar cuja data já passou —
+ * "em atraso" usa a própria data da quota como data de vencimento, sem
+ * campo de vencimento próprio nem período de tolerância. Base de
+ * app/actions/financas.ts:lancarJurosMora e do diálogo de pré-visualização.
+ */
+export async function getQuotasEmAtraso() {
+  const m = await requireAcessoFinanceiro()
+  return db
+    .select({
+      id: movimento.id,
+      fracaoId: movimento.fracaoId,
+      valor: movimento.valor,
+      data: movimento.data,
+    })
+    .from(movimento)
+    .where(
+      and(
+        eq(movimento.condominioId, m.condominioId),
+        eq(movimento.tipo, 'receita'),
+        eq(movimento.pago, false),
+        isNotNull(movimento.fracaoId),
+        lt(movimento.data, new Date()),
+        isNull(movimento.deletedAt),
+      ),
+    )
+}
+
+/**
+ * Lança juros de mora sobre todas as quotas em atraso, agrupados por
+ * fração (um movimento novo por fração, não um por quota). A taxa é
+ * indicada pelo administrador no momento — a app não a sugere nem a
+ * guarda, por depender do regulamento do condomínio ou da taxa legal em
+ * vigor, que esta ferramenta não assume conhecer com autoridade.
+ */
+export async function lancarJurosMora(taxaAnualPercent: number) {
+  const admin = await requireAdmin()
+
+  if (!Number.isFinite(taxaAnualPercent) || taxaAnualPercent <= 0) {
+    throw new Error('Indique uma taxa de juro anual válida')
+  }
+
+  const quotasEmAtraso = await getQuotasEmAtraso()
+  if (quotasEmAtraso.length === 0) {
+    throw new Error('Não há quotas em atraso')
+  }
+
+  const jurosPorFracao = calcularJurosMora(
+    quotasEmAtraso.map((q) => ({
+      fracaoId: q.fracaoId!,
+      valor: Number(q.valor),
+      data: q.data,
+    })),
+    taxaAnualPercent,
+  )
+
+  const aLancar = jurosPorFracao.filter((f) => f.valorJuros > 0)
+  if (aLancar.length === 0) {
+    throw new Error('Os juros calculados são todos zero — nada a lançar')
+  }
+
+  for (const f of aLancar) {
+    const [novo] = await db
+      .insert(movimento)
+      .values({
+        condominioId: admin.condominioId,
+        userId: admin.userId,
+        tipo: 'receita',
+        categoria: 'Juros de mora',
+        descricao: `Juros de mora — taxa ${taxaAnualPercent}% ao ano, ${f.quotas.length} quota(s) em atraso`,
+        valor: f.valorJuros.toFixed(2),
+        fracaoId: f.fracaoId,
+        pago: false,
+        destino: 'geral',
+      })
+      .returning({ id: movimento.id })
+
+    await registarAuditoria({
+      actor: admin,
+      acao: 'criar',
+      entidade: 'movimento',
+      entidadeId: novo.id,
+      detalhes: `Juros de mora lançados: ${f.valorJuros.toFixed(2)} € (taxa ${taxaAnualPercent}%/ano, ${f.quotas.length} quota(s))`,
+    })
+  }
+
+  revalidatePath('/financas')
+
+  return {
+    quantidade: aLancar.length,
+    total: aLancar.reduce((s, f) => s + f.valorJuros, 0),
+  }
 }
 
 export async function criarMovimento(formData: FormData) {
