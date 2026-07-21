@@ -214,6 +214,37 @@ export const movimento = pgTable(
   ],
 )
 
+// Linha importada de um extrato bancário (CSV), para conciliação com
+// `movimento`. Só cobre a conta corrente (destino "geral") — o fundo de
+// reserva, muitas vezes noutra conta bancária, fica de fora por agora.
+// Não existe um campo "conciliado" em `movimento`: esse estado deriva-se
+// de existir ou não uma linha aqui com `conciliadoMovimentoId` a apontar
+// para ele (mesmo princípio de `movimento.orcamentoId`).
+export const extratoBancario = pgTable(
+  "extratoBancario",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    data: timestamp("data").notNull(),
+    descricao: text("descricao").notNull(),
+    // Assinado: positivo = entrada, negativo = saída.
+    valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
+    conciliadoMovimentoId: integer("conciliadoMovimentoId").references(
+      () => movimento.id,
+      { onDelete: "set null" },
+    ),
+    // Linhas sem correspondência esperada em `movimento` (ex: taxas
+    // bancárias não modeladas) — marcadas para não ficarem para sempre
+    // como "por conciliar".
+    ignorado: boolean("ignorado").notNull().default(false),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("extrato_bancario_condominio_idx").on(t.condominioId)],
+)
+
 // Orçamento anual aprovado do condomínio. Por agora um valor global por
 // ano (sem rubricas discriminadas) — ver FUNCTIONAL_GAPS.md para o que
 // falta (orçamento previsto vs. executado). Gera quotas mensais por fração

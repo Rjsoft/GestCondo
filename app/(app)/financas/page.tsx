@@ -9,6 +9,11 @@ import {
 import { getOrcamentos } from '@/app/actions/orcamentos'
 import { getSeguros } from '@/app/actions/seguros'
 import { getFracoes } from '@/app/actions/fracoes'
+import {
+  getLinhasConciliadas,
+  getLinhasPorConciliar,
+  getMovimentosPorConciliar,
+} from '@/app/actions/extrato'
 import { PageHeader } from '@/components/page-header'
 import { FinancasTabs } from '@/components/financas/financas-tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,16 +25,29 @@ export default async function FinancasPage() {
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
 
-  const [movimentos, mapaSaldos, orcamentos, seguros, fracoes, fundoReserva, quotasEmAtraso] =
-    await Promise.all([
-      getMovimentos(),
-      getMapaSaldos(),
-      getOrcamentos(),
-      getSeguros(),
-      getFracoes(),
-      getSaldoFundoReserva(),
-      getQuotasEmAtraso(),
-    ])
+  const [
+    movimentos,
+    mapaSaldos,
+    orcamentos,
+    seguros,
+    fracoes,
+    fundoReserva,
+    quotasEmAtraso,
+    linhasExtrato,
+    movimentosPorConciliar,
+    linhasConciliadas,
+  ] = await Promise.all([
+    getMovimentos(),
+    getMapaSaldos(),
+    getOrcamentos(),
+    getSeguros(),
+    getFracoes(),
+    getSaldoFundoReserva(),
+    getQuotasEmAtraso(),
+    getLinhasPorConciliar(),
+    getMovimentosPorConciliar(),
+    getLinhasConciliadas(),
+  ])
 
   // Conta corrente do condomínio: movimentos com destino "geral", excluindo
   // o fundo de reserva (obrigatório por lei e seguido à parte — ver
@@ -113,6 +131,9 @@ export default async function FinancasPage() {
           isentaElevador: f.isentaElevador,
         }))}
         quotasEmAtraso={quotasEmAtraso}
+        linhasExtrato={linhasExtrato}
+        movimentosPorConciliar={movimentosPorConciliar}
+        linhasConciliadas={linhasConciliadas}
         isAdmin={isAdmin}
       />
     </div>

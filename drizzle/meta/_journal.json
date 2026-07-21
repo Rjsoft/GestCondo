@@ -85,6 +85,13 @@
       "when": 1784631423012,
       "tag": "0011_nif_fracao",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1784643723781,
+      "tag": "0012_simple_king_bedlam",
+      "breakpoints": true
     }
   ]
 }

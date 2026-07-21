@@ -9,6 +9,7 @@ import { OrcamentoActions } from '@/components/financas/orcamento-actions'
 import { NovoSeguroDialog } from '@/components/financas/novo-seguro-dialog'
 import { SeguroActions } from '@/components/financas/seguro-actions'
 import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
+import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { TipoMovimentoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -68,6 +69,21 @@ const TIPO_SEGURO_LABEL: Record<string, string> = {
   outro: 'Outro',
 }
 
+type LinhaExtrato = { id: number; data: Date; descricao: string; valor: string }
+
+type MovimentoConciliar = {
+  id: number
+  data: Date
+  valor: string
+  tipo: string
+  categoria: string
+  descricao: string
+}
+
+type LinhaConciliada = LinhaExtrato & {
+  movimento: { id: number; categoria: string; descricao: string } | null
+}
+
 export function FinancasTabs({
   movimentos,
   mapaSaldos,
@@ -75,6 +91,9 @@ export function FinancasTabs({
   seguros,
   fracoes,
   quotasEmAtraso,
+  linhasExtrato,
+  movimentosPorConciliar,
+  linhasConciliadas,
   isAdmin,
 }: {
   movimentos: Movimento[]
@@ -88,6 +107,9 @@ export function FinancasTabs({
     isentaElevador: boolean
   }[]
   quotasEmAtraso: { fracaoId: number | null; valor: string; data: Date }[]
+  linhasExtrato: LinhaExtrato[]
+  movimentosPorConciliar: MovimentoConciliar[]
+  linhasConciliadas: LinhaConciliada[]
   isAdmin: boolean
 }) {
   return (
@@ -97,6 +119,7 @@ export function FinancasTabs({
         <TabsTrigger value="dividas">Dívidas por fração</TabsTrigger>
         <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         <TabsTrigger value="seguro">Seguro</TabsTrigger>
+        <TabsTrigger value="conciliacao">Conciliação bancária</TabsTrigger>
       </TabsList>
 
       <TabsContent value="movimentos" className="mt-4">
@@ -383,6 +406,15 @@ export function FinancasTabs({
             </Table>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="conciliacao" className="mt-4">
+        <ConciliacaoTab
+          linhas={linhasExtrato}
+          movimentos={movimentosPorConciliar}
+          conciliadas={linhasConciliadas}
+          isAdmin={isAdmin}
+        />
       </TabsContent>
     </Tabs>
   )
