@@ -13,11 +13,11 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 | CRUD de ocorrências | 🟡 Parcial — falta anexos/fotos, fornecedores, aprovação de despesas |
 | CRUD de frações | 🟡 Parcial — falta multi-condomínio, proprietário relacional, histórico |
 | CRUD de condóminos + aprovação | 🟡 Parcial — falta perfis (proprietário/inquilino/fornecedor/auditor), âmbito por condomínio |
-| Assembleias/atas | ✅ Resolvido 2026-07-09 — convocatória, ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, ata imutável após aprovação. Falta anexos à ata, confirmação de leitura e videoconferência (ver `FUNCTIONAL_GAPS.md`) |
+| Assembleias/atas | ✅ Resolvido 2026-07-09, **verificado em runtime 2026-07-21** — convocatória, ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, ata imutável após aprovação; ciclo completo testado manualmente contra a BD Neon real. Falta anexos à ata, confirmação de leitura e videoconferência (ver `FUNCTIONAL_GAPS.md`) |
 | Multi-condomínio / multi-tenant | 🟡 Schema e isolamento de queries resolvidos 2026-07-06; falta o fluxo de produto (criar/convidar para um 2º condomínio) |
 | RGPD (textos legais, direitos do titular) | ❌ Inexistente (0%) |
 | Auditoria/log de alterações | ✅ Resolvido 2026-07-06 — `audit_log` + página `/auditoria` + soft-delete em `movimento` |
-| Upload de ficheiros | ✅ Resolvido 2026-07-09 — Vercel Blob (`lib/storage.ts`), ligado a documentos, fotos de ocorrências e apólices de seguro |
+| Upload de ficheiros | ✅ Resolvido 2026-07-09, **verificado em runtime 2026-07-21** — Vercel Blob (`lib/storage.ts`), ligado a documentos, fotos de ocorrências e apólices de seguro; testado upload+eliminação real nos três pontos. Requer que o Blob store seja criado com acesso **Public** (um store Private não funciona e não pode ser convertido depois) |
 | Notificações por email | ✅ Resolvido 2026-07-09 — reset de password/verificação, convocatória de assembleia, avisos importantes/urgentes e atualização de estado de ocorrências. Sem notificação push. |
 | Exportação PDF/Excel | ❌ Inexistente (0%) |
 | Testes automatizados | ✅ `vitest` + 38 testes unitários (permissões, formatação) + teste de integração real de isolamento multi-tenant (`pnpm test:db`, contra a BD Neon do utilizador) desde 2026-07-06; faltam testes de autorização e2e via HTTP |
@@ -53,7 +53,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 ## Fase 2 — MVP funcional (utilizável por um condomínio real, um só administrador)
 
 1. 🟡 **Em curso desde 2026-07-07** — Gestão financeira formal: orçamento anual (valor global, sem rubricas), dívida por fração/mapa de saldos ✅, recibo imprimível ✅, exportação CSV ✅ (não `.xlsx`/PDF real). Falta: geração automática de quotas, rateio por permilagem, juros, reconciliação bancária.
-2. ✅ **Feito 2026-07-09** — Upload de ficheiros (documentos, fotos de ocorrências, apólice de seguro) via Vercel Blob.
+2. ✅ **Feito 2026-07-09, verificado em runtime 2026-07-21** — Upload de ficheiros (documentos, fotos de ocorrências, apólice de seguro) via Vercel Blob. Store tem de ser criado com acesso Public.
 3. ✅ **Feito 2026-07-07** — Distinção proprietário/inquilino (`membro.fracaoId`, liga um `membro` condomino ou inquilino à sua fração) e correção da exposição de contactos pessoais (`SECURITY_AUDIT.md` S13).
 4. ✅ **Feito 2026-07-08** — Seguro obrigatório (apólice, seguradora, validade, alerta de expiração) e fundo de reserva (movimentos com `destino: "reserva"`, seguido à parte da conta corrente) como entidades geridas, não texto livre.
 5. ✅ **Feito 2026-07-09** — Notificações por email para avisos importantes/urgentes e para atualização de estado de ocorrências.
@@ -106,9 +106,9 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 7b. ✅ CI mínimo (`.github/workflows/ci.yml`) e cabeçalhos de segurança básicos — feito 2026-07-06.
 7c. ✅ Testes automatizados — `vitest` + 38 testes unitários de permissões, mais o teste de integração de isolamento multi-tenant (item 12) feito 2026-07-06 contra a BD Neon real do utilizador.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
-9. ✅ Implementar upload de ficheiros com controlo de acesso — feito 2026-07-09 (Vercel Blob, documentos/ocorrências/seguro; falta configurar `BLOB_READ_WRITE_TOKEN` real antes de usar em produção).
+9. ✅ Implementar upload de ficheiros com controlo de acesso — feito 2026-07-09 (Vercel Blob, documentos/ocorrências/seguro). **Verificado em runtime 2026-07-21** com um `BLOB_READ_WRITE_TOKEN` real: upload, acesso público ao ficheiro e eliminação em cascata confirmados nos três pontos de uso. Descoberto e corrigido nesse teste: o Blob store tem de ser criado com acesso Public (um store Private falha e não pode ser convertido depois de criado).
 10. 🟡 Construir gestão financeira formal — feito 2026-07-07: orçamento anual (valor global), dívida por fração/mapa de saldos, recibo imprimível, exportação CSV (ver `FUNCTIONAL_GAPS.md` secção 3). Falta: geração automática de quotas a partir do orçamento, rateio por permilagem, juros/penalizações, reconciliação bancária, exportação `.xlsx`/PDF real.
-11. ✅ Construir módulo de Assembleias — feito 2026-07-09: convocatória (com email automático aos condóminos aprovados), ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, deliberações, ata imutável após aprovação. Ver `FUNCTIONAL_GAPS.md` secção 2 para o detalhe e o que ficou fora (anexos à ata, confirmação de leitura, videoconferência).
+11. ✅ Construir módulo de Assembleias — feito 2026-07-09: convocatória (com email automático aos condóminos aprovados), ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, deliberações, ata imutável após aprovação. **Verificado em runtime 2026-07-21**: ciclo completo testado manualmente contra a BD Neon real, incluindo a imutabilidade após aprovação da ata. Ver `FUNCTIONAL_GAPS.md` secção 2 para o detalhe e o que ficou fora (anexos à ata, confirmação de leitura, videoconferência).
 12. ✅ Introduzir testes cobrindo isolamento multi-tenant e permissões — feito 2026-07-06 (`lib/perfis.test.ts` para permissões; `lib/db/tenant-isolation.dbtest.ts` para isolamento entre condomínios, corrido contra uma BD Neon real dentro de uma transação sempre revertida).
 
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.

@@ -8,6 +8,8 @@ O que existe hoje cobre uma fatia pequena e bem construída de **gestão adminis
 
 Módulo inteiro pedido como essencial para o mercado português — **Assembleias** — ganhou o seu núcleo P1 em 2026-07-09 (convocatória, ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, ata imutável) — ver secção 2. **Gestão financeira formal** (orçamentos, dívidas por fração, recibos, exportação, seguro obrigatório, fundo de reserva) ganhou uma primeira versão em 2026-07-07/08 — ver secção 3 — mas ainda falta geração automática de quotas, rateio por permilagem, juros/reconciliação bancária e exportação em formato `.xlsx`/PDF real.
 
+**Verificado em runtime em 2026-07-21**, contra a base de dados Neon real do utilizador (não só revisto em código): migrações `0007_assembleias`/`0008_upload-ficheiros` aplicadas; ciclo completo de uma assembleia (convocar → adicionar ponto → votar → aprovar deliberação → marcar realizada → aprovar ata → confirmar imutabilidade → imprimir ata) testado manualmente no browser; upload real de ficheiro testado nos três pontos que o usam (documento, foto de ocorrência, apólice de seguro), incluindo a eliminação em cascata do ficheiro no Vercel Blob. Nesse teste encontrou-se e corrigiu-se um desfasamento entre o limite de corpo das server actions (10MB) e o limite real de ficheiro documentado (15MB) — `next.config.mjs`, `bodySizeLimit` subido para 16MB.
+
 ---
 
 ## 1. Gestão do condomínio
@@ -27,7 +29,7 @@ Módulo inteiro pedido como essencial para o mercado português — **Assembleia
 | Seguro obrigatório | ✅ Implementado 2026-07-08 | Entidade `seguro` própria (seguradora, apólice, tipo, validade, prémio), gerida em `/financas` (separador "Seguro"), com aviso visual quando a apólice expirou ou expira nos próximos 30 dias. Falta ainda anexar o documento da apólice (depende de upload de ficheiros). | — |
 | Fundo comum de reserva | ✅ Implementado 2026-07-08 | Movimentos podem ser marcados com `destino: "reserva"` em vez de `"geral"` e passam a ser seguidos numa conta própria (`getSaldoFundoReserva()`), visível no dashboard e em `/financas`, excluída do saldo da conta corrente normal. Falta ainda impor por regra a % mínima de quota destinada ao fundo (DL nº 268/94) — hoje a segregação é manual, por lançamento. | P2 (automatizar o cálculo da % mínima) |
 
-## 2. Assembleias — implementado 2026-07-09 (núcleo P1)
+## 2. Assembleias — implementado 2026-07-09 (núcleo P1), verificado em runtime 2026-07-21
 
 | Funcionalidade | Estado | Prioridade |
 |---|---|---|
@@ -97,7 +99,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
-| Upload seguro | ✅ Implementado 2026-07-09 | Vercel Blob (`lib/storage.ts`), com validação de tipo/tamanho por finalidade (PDF/imagem, 8–15MB). `documento.url` continua a aceitar um link colado à mão como alternativa. Fotos de ocorrência e apólice de seguro também ligadas (`ocorrencia.fotoUrl`, `seguro.anexoUrl`). Sem scanning de malware; controlo de acesso é o mesmo já existente por página (`condominioId`/perfil), não uma verificação por ficheiro — ver a linha seguinte. | — |
+| Upload seguro | ✅ Implementado 2026-07-09, verificado em runtime 2026-07-21 | Vercel Blob (`lib/storage.ts`), com validação de tipo/tamanho por finalidade (PDF/imagem, 8–15MB). `documento.url` continua a aceitar um link colado à mão como alternativa. Fotos de ocorrência e apólice de seguro também ligadas (`ocorrencia.fotoUrl`, `seguro.anexoUrl`). Sem scanning de malware; controlo de acesso é o mesmo já existente por página (`condominioId`/perfil), não uma verificação por ficheiro — ver a linha seguinte. **Nota operacional importante:** o Blob store da Vercel tem de ser criado com acesso **Public** — um store criado como **Private** falha todos os uploads (`Cannot use public access on a private store`) e o modo de acesso não pode ser alterado depois de criado, só recriando o store. | — |
 | Classificação por tipo | ✅ Implementado | `ata \| regulamento \| orcamento \| outro`. | — |
 | Controlo de permissões por documento | ❌ Em falta | Hoje é tudo-ou-nada (qualquer aprovado vê tudo). Não há documentos privados/confidenciais (ex. um orçamento de fornecedor em negociação). | P2 |
 | Versionamento | ❌ Em falta | Substituir um documento perde a versão anterior. | P2 |
