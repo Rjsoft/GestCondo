@@ -113,6 +113,10 @@ export function NovaOcorrenciaDialog() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
+            <Label htmlFor="foto">Foto (opcional, até 8MB)</Label>
+            <Input id="foto" name="foto" type="file" accept="image/*" />
+          </div>
+          <div className="flex flex-col gap-2">
             <Label>Prioridade</Label>
             <Select
               value={prioridade}

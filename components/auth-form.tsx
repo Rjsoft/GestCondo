@@ -14,6 +14,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [aceitaTermos, setAceitaTermos] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [registado, setRegistado] = useState(false)
@@ -23,6 +24,12 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (isSignUp && !aceitaTermos) {
+      setError('Tem de aceitar a Política de Privacidade e os Termos de Utilização')
+      return
+    }
+
     setLoading(true)
 
     const { error } = isSignUp
@@ -147,13 +154,39 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
               />
             </div>
 
+            {isSignUp && (
+              <div className="flex items-start gap-2">
+                <input
+                  id="aceitaTermos"
+                  type="checkbox"
+                  checked={aceitaTermos}
+                  onChange={(e) => setAceitaTermos(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-input"
+                />
+                <Label htmlFor="aceitaTermos" className="font-normal text-xs text-muted-foreground">
+                  Li e aceito a{' '}
+                  <Link href="/privacidade" target="_blank" className="text-primary underline-offset-4 hover:underline">
+                    Política de Privacidade
+                  </Link>{' '}
+                  e os{' '}
+                  <Link href="/termos" target="_blank" className="text-primary underline-offset-4 hover:underline">
+                    Termos de Utilização
+                  </Link>
+                </Label>
+              </div>
+            )}
+
             {error && (
               <p className="text-sm text-destructive" role="alert">
                 {error}
               </p>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button
+              type="submit"
+              disabled={loading || (isSignUp && !aceitaTermos)}
+              className="w-full"
+            >
               {loading
                 ? 'Aguarde...'
                 : isSignUp
@@ -170,6 +203,15 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             className="text-primary font-medium underline-offset-4 hover:underline"
           >
             {isSignUp ? 'Entrar' : 'Registar'}
+          </Link>
+        </p>
+
+        <p className="mt-3 flex justify-center gap-3 text-xs text-muted-foreground">
+          <Link href="/privacidade" className="underline-offset-4 hover:underline">
+            Privacidade
+          </Link>
+          <Link href="/termos" className="underline-offset-4 hover:underline">
+            Termos
           </Link>
         </p>
       </div>

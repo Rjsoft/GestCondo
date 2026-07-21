@@ -18,6 +18,7 @@ export type EntidadeAuditoria =
   | 'ocorrencia'
   | 'orcamento'
   | 'seguro'
+  | 'assembleia'
 
 /**
  * Escreve uma linha no registo de auditoria. Chamar depois de a operação na

@@ -1,8 +1,10 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { ocorrencia } from '@/lib/db/schema'
+import { membro, ocorrencia } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { sendEmail } from '@/lib/email'
+import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import {
   requireAdmin,
   requireMembroComEscrita,
@@ -49,6 +51,15 @@ export async function criarOcorrencia(formData: FormData) {
     throw new Error('Preencha o título e a descrição')
   }
 
+  const foto = formData.get('foto')
+  let fotoUrl: string | null = null
+  let fotoNomeFicheiro: string | null = null
+  if (foto instanceof File && foto.size > 0) {
+    const guardado = await guardarFicheiro(foto, 'ocorrencias')
+    fotoUrl = guardado.url
+    fotoNomeFicheiro = guardado.nomeFicheiro
+  }
+
   const [nova] = await db
     .insert(ocorrencia)
     .values({
@@ -61,6 +72,8 @@ export async function criarOcorrencia(formData: FormData) {
       categoria,
       prioridade,
       estado: 'aberta',
+      fotoUrl,
+      fotoNomeFicheiro,
     })
     .returning({ id: ocorrencia.id })
 
@@ -78,11 +91,17 @@ export async function criarOcorrencia(formData: FormData) {
 
 const ESTADOS = ['aberta', 'em_curso', 'resolvida']
 
+const ESTADO_LABEL: Record<string, string> = {
+  aberta: 'Aberta',
+  em_curso: 'Em curso',
+  resolvida: 'Resolvida',
+}
+
 export async function atualizarEstadoOcorrencia(id: number, estado: string) {
   // Apenas admin/gestor gerem o estado das ocorrências.
   const admin = await requireAdmin()
   if (!ESTADOS.includes(estado)) throw new Error('Estado inválido')
-  await db
+  const [atualizada] = await db
     .update(ocorrencia)
     .set({ estado, updatedAt: new Date() })
     .where(
@@ -91,6 +110,7 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
         eq(ocorrencia.condominioId, admin.condominioId),
       ),
     )
+    .returning({ userId: ocorrencia.userId, titulo: ocorrencia.titulo })
 
   await registarAuditoria({
     actor: admin,
@@ -100,6 +120,24 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
     detalhes: `Estado alterado para "${estado}"`,
   })
 
+  // Notifica quem reportou a ocorrência — não o próprio admin que a
+  // atualizou, que já sabe.
+  if (atualizada && atualizada.userId !== admin.userId) {
+    const [reporter] = await db
+      .select({ email: membro.email })
+      .from(membro)
+      .where(and(eq(membro.userId, atualizada.userId), eq(membro.condominioId, admin.condominioId)))
+      .limit(1)
+
+    if (reporter) {
+      await sendEmail({
+        to: reporter.email,
+        subject: `Ocorrência atualizada: ${atualizada.titulo}`,
+        html: `<p>A sua ocorrência "${atualizada.titulo}" passou para o estado <strong>${ESTADO_LABEL[estado] ?? estado}</strong>.</p><p>Consulte os detalhes na aplicação GestCondo.</p>`,
+      })
+    }
+  }
+
   revalidatePath('/ocorrencias')
   revalidatePath('/')
 }
@@ -108,23 +146,21 @@ export async function eliminarOcorrencia(id: number) {
   const m = await requireMembroComEscrita()
   // Admin/gestor podem eliminar qualquer uma do seu condomínio; os
   // restantes só as suas.
-  if (temPermissaoGestao(m)) {
-    await db
-      .delete(ocorrencia)
-      .where(
-        and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, m.condominioId)),
+  const condicao = temPermissaoGestao(m)
+    ? and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, m.condominioId))
+    : and(
+        eq(ocorrencia.id, id),
+        eq(ocorrencia.condominioId, m.condominioId),
+        eq(ocorrencia.userId, m.userId),
       )
-  } else {
-    await db
-      .delete(ocorrencia)
-      .where(
-        and(
-          eq(ocorrencia.id, id),
-          eq(ocorrencia.condominioId, m.condominioId),
-          eq(ocorrencia.userId, m.userId),
-        ),
-      )
-  }
+
+  const [existente] = await db
+    .select({ fotoUrl: ocorrencia.fotoUrl })
+    .from(ocorrencia)
+    .where(condicao)
+    .limit(1)
+
+  await db.delete(ocorrencia).where(condicao)
 
   await registarAuditoria({
     actor: m,
@@ -132,6 +168,8 @@ export async function eliminarOcorrencia(id: number) {
     entidade: 'ocorrencia',
     entidadeId: id,
   })
+
+  await apagarFicheiro(existente?.fotoUrl)
 
   revalidatePath('/ocorrencias')
 }

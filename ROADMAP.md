@@ -13,12 +13,12 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 | CRUD de ocorrências | 🟡 Parcial — falta anexos/fotos, fornecedores, aprovação de despesas |
 | CRUD de frações | 🟡 Parcial — falta multi-condomínio, proprietário relacional, histórico |
 | CRUD de condóminos + aprovação | 🟡 Parcial — falta perfis (proprietário/inquilino/fornecedor/auditor), âmbito por condomínio |
-| Assembleias/atas | ❌ Inexistente (0%) |
+| Assembleias/atas | ✅ Resolvido 2026-07-09 — convocatória, ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, ata imutável após aprovação. Falta anexos à ata, confirmação de leitura e videoconferência (ver `FUNCTIONAL_GAPS.md`) |
 | Multi-condomínio / multi-tenant | 🟡 Schema e isolamento de queries resolvidos 2026-07-06; falta o fluxo de produto (criar/convidar para um 2º condomínio) |
 | RGPD (textos legais, direitos do titular) | ❌ Inexistente (0%) |
 | Auditoria/log de alterações | ✅ Resolvido 2026-07-06 — `audit_log` + página `/auditoria` + soft-delete em `movimento` |
-| Upload de ficheiros | ❌ Inexistente (0%) |
-| Notificações por email | ❌ Inexistente (0%) — inclui recuperação de password |
+| Upload de ficheiros | ✅ Resolvido 2026-07-09 — Vercel Blob (`lib/storage.ts`), ligado a documentos, fotos de ocorrências e apólices de seguro |
+| Notificações por email | ✅ Resolvido 2026-07-09 — reset de password/verificação, convocatória de assembleia, avisos importantes/urgentes e atualização de estado de ocorrências. Sem notificação push. |
 | Exportação PDF/Excel | ❌ Inexistente (0%) |
 | Testes automatizados | ✅ `vitest` + 38 testes unitários (permissões, formatação) + teste de integração real de isolamento multi-tenant (`pnpm test:db`, contra a BD Neon do utilizador) desde 2026-07-06; faltam testes de autorização e2e via HTTP |
 | Controlo de versões / CI | ✅ Git desde 2026-07-06; `.github/workflows/ci.yml` criado 2026-07-06 (só corre quando/se for enviado para o GitHub) |
@@ -53,24 +53,24 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 ## Fase 2 — MVP funcional (utilizável por um condomínio real, um só administrador)
 
 1. 🟡 **Em curso desde 2026-07-07** — Gestão financeira formal: orçamento anual (valor global, sem rubricas), dívida por fração/mapa de saldos ✅, recibo imprimível ✅, exportação CSV ✅ (não `.xlsx`/PDF real). Falta: geração automática de quotas, rateio por permilagem, juros, reconciliação bancária.
-2. Upload de ficheiros com controlo de acesso (documentos, faturas, fotos de ocorrências).
+2. ✅ **Feito 2026-07-09** — Upload de ficheiros (documentos, fotos de ocorrências, apólice de seguro) via Vercel Blob.
 3. ✅ **Feito 2026-07-07** — Distinção proprietário/inquilino (`membro.fracaoId`, liga um `membro` condomino ou inquilino à sua fração) e correção da exposição de contactos pessoais (`SECURITY_AUDIT.md` S13).
 4. ✅ **Feito 2026-07-08** — Seguro obrigatório (apólice, seguradora, validade, alerta de expiração) e fundo de reserva (movimentos com `destino: "reserva"`, seguido à parte da conta corrente) como entidades geridas, não texto livre.
-5. Notificações por email para avisos importantes e novas ocorrências.
-6. Autogestão de dados pessoais pelo condómino (ver os seus dados, corrigir contacto).
+5. ✅ **Feito 2026-07-09** — Notificações por email para avisos importantes/urgentes e para atualização de estado de ocorrências.
+6. ✅ **Feito 2026-07-09** — Autogestão de dados pessoais pelo condómino (`/os-meus-dados`: ver os seus dados, corrigir contacto), construído como parte da Fase 3 (RGPD).
 7. Confirmação antes de ações destrutivas na UI; paginação/pesquisa nas listagens.
 
 Ver `MVP_PLAN.md` para o detalhe desta fase.
 
 ## Fase 3 — RGPD, segurança e auditoria (pode correr em paralelo com a Fase 2, mas tem de fechar antes do primeiro cliente real)
 
-1. Política de Privacidade, Termos de Utilização, aviso de finalidade no registo.
-2. Registo de Atividades de Tratamento (documento interno).
-3. Direitos do titular: exportação, eliminação de conta, retificação self-service.
-4. Política de retenção por tipo de dado.
-5. MFA para administradores, rate limiting explícito, política de password no servidor.
-6. Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes.
-7. Auditoria de segurança externa (pentest ligeiro) antes do primeiro cliente pagante.
+1. ✅ **Feito 2026-07-09** — Política de Privacidade (`/privacidade`), Termos de Utilização (`/termos`), aviso de finalidade no registo (checkbox em `components/auth-form.tsx`). Textos marcados como rascunho técnico — precisam de revisão jurídica antes de utilizadores reais.
+2. ✅ **Feito 2026-07-09** — Registo de Atividades de Tratamento (`RAT.md`, documento interno).
+3. ✅ **Feito 2026-07-09** — Direitos do titular: `/os-meus-dados` (ver, corrigir nome/telefone, exportar em JSON, eliminar conta com confirmação por email via `user.deleteUser` do better-auth).
+4. ✅ **Feito 2026-07-09** — Prazos de retenção propostos por tipo de dado (`GDPR_CHECKLIST.md` secção 5) — ainda não validados por jurista/contabilista nem automatizados (sem expurgo automático).
+5. 🟡 **Parcial 2026-07-09** — Rate limiting explícito no better-auth feito (`lib/auth.ts`, storage em memória — não partilhado entre instâncias); MFA para administradores e política de password reforçada (verificação de password comprometida) continuam por fazer, ficam para uma sessão dedicada.
+6. Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — adiado até existir o fluxo de onboarding multi-condomínio.
+7. Auditoria de segurança externa (pentest ligeiro) antes do primeiro cliente pagante — decisão/ação do utilizador, fora do que pode ser feito nesta ferramenta.
 
 Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 
@@ -106,9 +106,9 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 7b. ✅ CI mínimo (`.github/workflows/ci.yml`) e cabeçalhos de segurança básicos — feito 2026-07-06.
 7c. ✅ Testes automatizados — `vitest` + 38 testes unitários de permissões, mais o teste de integração de isolamento multi-tenant (item 12) feito 2026-07-06 contra a BD Neon real do utilizador.
 8. Escrever Política de Privacidade/Termos e mostrar aviso de finalidade no registo.
-9. Implementar upload de ficheiros com controlo de acesso.
+9. ✅ Implementar upload de ficheiros com controlo de acesso — feito 2026-07-09 (Vercel Blob, documentos/ocorrências/seguro; falta configurar `BLOB_READ_WRITE_TOKEN` real antes de usar em produção).
 10. 🟡 Construir gestão financeira formal — feito 2026-07-07: orçamento anual (valor global), dívida por fração/mapa de saldos, recibo imprimível, exportação CSV (ver `FUNCTIONAL_GAPS.md` secção 3). Falta: geração automática de quotas a partir do orçamento, rateio por permilagem, juros/penalizações, reconciliação bancária, exportação `.xlsx`/PDF real.
-11. Construir módulo de Assembleias (o maior módulo em falta, tratar como projeto próprio dentro do roadmap).
+11. ✅ Construir módulo de Assembleias — feito 2026-07-09: convocatória (com email automático aos condóminos aprovados), ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, deliberações, ata imutável após aprovação. Ver `FUNCTIONAL_GAPS.md` secção 2 para o detalhe e o que ficou fora (anexos à ata, confirmação de leitura, videoconferência).
 12. ✅ Introduzir testes cobrindo isolamento multi-tenant e permissões — feito 2026-07-06 (`lib/perfis.test.ts` para permissões; `lib/db/tenant-isolation.dbtest.ts` para isolamento entre condomínios, corrido contra uma BD Neon real dentro de uma transação sempre revertida).
 
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.

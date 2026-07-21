@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { seguro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -43,6 +44,15 @@ export async function criarSeguro(formData: FormData) {
     throw new Error('A data de fim tem de ser posterior à data de início')
   }
 
+  let anexoUrl: string | null = null
+  let anexoNomeFicheiro: string | null = null
+  const anexo = formData.get('anexo')
+  if (anexo instanceof File && anexo.size > 0) {
+    const guardado = await guardarFicheiro(anexo, 'seguros')
+    anexoUrl = guardado.url
+    anexoNomeFicheiro = guardado.nomeFicheiro
+  }
+
   const [novo] = await db
     .insert(seguro)
     .values({
@@ -55,6 +65,8 @@ export async function criarSeguro(formData: FormData) {
       dataFim,
       valorPremio: valorPremioStr || null,
       notas: notas || null,
+      anexoUrl,
+      anexoNomeFicheiro,
     })
     .returning({ id: seguro.id })
 
@@ -71,9 +83,11 @@ export async function criarSeguro(formData: FormData) {
 
 export async function eliminarSeguro(id: number) {
   const admin = await requireAdmin()
-  await db
-    .delete(seguro)
-    .where(and(eq(seguro.id, id), eq(seguro.condominioId, admin.condominioId)))
+  const condicao = and(eq(seguro.id, id), eq(seguro.condominioId, admin.condominioId))
+
+  const [existente] = await db.select({ anexoUrl: seguro.anexoUrl }).from(seguro).where(condicao).limit(1)
+
+  await db.delete(seguro).where(condicao)
 
   await registarAuditoria({
     actor: admin,
@@ -81,6 +95,8 @@ export async function eliminarSeguro(id: number) {
     entidade: 'seguro',
     entidadeId: id,
   })
+
+  await apagarFicheiro(existente?.anexoUrl)
 
   revalidatePath('/financas')
 }

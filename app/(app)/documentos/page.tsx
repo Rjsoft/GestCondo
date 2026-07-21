@@ -62,7 +62,8 @@ export default async function DocumentosPage() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-primary hover:underline"
                       >
-                        Abrir documento <ExternalLink className="h-3 w-3" />
+                        {d.nomeFicheiro || 'Abrir documento'}{' '}
+                        <ExternalLink className="h-3 w-3" />
                       </a>
                     )}
                   </div>

@@ -27,11 +27,11 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 | Direito (RGPD) | Implementado? | Nota |
 |---|---|---|
-| Acesso (art. 15º) | ❌ Não | Um condómino não tem nenhum ecrã "os meus dados"; só o admin edita dados de terceiros via `atualizarMembro`. O próprio titular não consegue sequer consultar o que está guardado sobre si além do que vê nas páginas normais da app. |
-| Retificação (art. 16º) | ⚠️ Parcial, só via admin | `atualizarMembro` só é chamável por admin (`requireAdmin()` em `app/actions/fracoes.ts`). O condómino não pode corrigir o seu próprio nome/telefone/fração sem pedir ao admin. |
-| Apagamento (art. 17º) | ❌ Não | Não existe nenhuma função "eliminar a minha conta". `rejeitarMembro` remove a linha `membro`, mas não remove `user`/`account`/`session` no better-auth — os dados de login continuam a existir indefinidamente. |
-| Oposição/limitação (arts. 18º/21º) | ❌ Não | Sem mecanismo. |
-| Portabilidade (art. 20º) | ❌ Não | Sem exportação de dados em formato estruturado (JSON/CSV) para o próprio titular. |
+| Acesso (art. 15º) | ✅ Implementado 2026-07-09 | Ecrã `/os-meus-dados` (`app/actions/perfil.ts:getMeuPerfil`) — qualquer membro aprovado vê os seus próprios dados. |
+| Retificação (art. 16º) | ✅ Implementado 2026-07-09 | `atualizarMeuPerfil` (`app/actions/perfil.ts`) permite ao próprio corrigir nome/telefone, sem passar pelo admin — nunca aceita um `id` do cliente, sempre a própria linha do chamador. Perfil/fração continuam só editáveis por admin (decisão deliberada). |
+| Apagamento (art. 17º) | ✅ Implementado 2026-07-09 | `user.deleteUser` do better-auth (`lib/auth.ts`), com confirmação por email antes de eliminar. `afterDelete` remove a linha `membro` associada (mesmo padrão de `rejeitarMembro`); `user`/`account`/`session` são removidos pelo próprio better-auth (FK `onDelete: cascade`). |
+| Oposição/limitação (arts. 18º/21º) | ❌ Não | Sem mecanismo automático — processado manualmente pelo admin do condomínio por agora. |
+| Portabilidade (art. 20º) | ✅ Implementado 2026-07-09 | Botão "Exportar os meus dados" em `/os-meus-dados` (`exportarMeusDados`) gera um ficheiro JSON para download. |
 | Registo de consentimentos | ❌ N/A por agora | Como a base legal principal não deve ser consentimento (ver secção 2), isto é secundário — mas se no futuro existir qualquer tratamento por consentimento (ex. newsletter, marketing, partilha com terceiros), tem de existir registo de quando/como foi dado e permitir revogação. |
 
 ## 4. Privacy by design / by default
@@ -44,6 +44,11 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 - **Atualizado 2026-07-06:** registos financeiros (`movimento`) deixaram de poder ser apagados fisicamente — `eliminarMovimento` faz agora soft-delete (`deletedAt`), preservando o registo para efeitos de retenção contabilística/fiscal enquanto deixa de aparecer na UI. **Ainda não existe** uma política de retenção formal (prazos configuráveis, expurgo automático ao fim do prazo legal) nem soft-delete nas restantes tabelas (`fracao`, `aviso`, `documento`, `ocorrencia`, `membro`), que continuam a usar `DELETE` físico.
 - **Sessões do better-auth** (`session` table) não têm política de limpeza automática configurada além do `expiresIn`/`updateAge` (7 dias / 1 dia) — registos expirados não são necessariamente apagados da BD (depende de rotina de limpeza do better-auth, a confirmar).
+- **Prazos concretos propostos (2026-07-09, ainda não automatizados — a validar com um jurista/contabilista antes de aplicar como política final):**
+  - Dados financeiros (`movimento`, `orcamento`, `seguro`): prazo legal de retenção contabilística/fiscal em Portugal (habitualmente 10 anos, a confirmar caso a caso) — soft-delete já garante que não se perde antes disso.
+  - Atas de assembleia (`assembleia`, uma vez aprovada): sem prazo de eliminação — registo legal permanente da vida do condomínio.
+  - Candidaturas de `membro` rejeitadas (`rejeitarMembro`): já eliminadas de imediato hoje (não há retenção alguma) — considerar se algum prazo curto de retenção é preferível para efeitos de prova, sem urgência identificada.
+  - Conta de utilizador eliminada pelo próprio (`user.deleteUser`, `lib/auth.ts`): a linha `membro` é removida de imediato após confirmação por email; `user`/`account`/`session` são removidos pelo better-auth. Dados financeiros históricos já lançados mantêm-se (ver ponto acima), sem ligação visível a uma conta ativa.
 
 ## 6. Logs de auditoria
 
@@ -55,32 +60,30 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 ## 8. Textos legais em falta
 
-Não existe nenhum destes ecrãs/documentos na aplicação:
-
-- [ ] Política de Privacidade
-- [ ] Termos de Utilização
-- [ ] Informação sobre Tratamento de Dados (aviso no momento do registo, art. 13º RGPD)
-- [ ] Registo de Atividades de Tratamento (art. 30º RGPD) — documento interno, não necessariamente uma página na app
-- [ ] Modelo de Acordo de Subcontratação (DPA) — **necessário assim que uma empresa de administração de condomínios (terceira entidade responsável por vários condomínios de clientes diferentes) usar a plataforma**, porque nesse cenário a empresa de administração é responsável pelo tratamento e o operador da plataforma (quem gere o SaaS) é subcontratado.
+- [x] Política de Privacidade — `/privacidade`, implementado 2026-07-09 (rascunho técnico, marcado como tal na própria página — **precisa de revisão jurídica antes de utilizadores reais**)
+- [x] Termos de Utilização — `/termos`, implementado 2026-07-09 (mesma nota de rascunho)
+- [x] Informação sobre Tratamento de Dados (aviso no momento do registo, art. 13º RGPD) — checkbox obrigatório em `components/auth-form.tsx` com link para ambos os textos, implementado 2026-07-09
+- [x] Registo de Atividades de Tratamento (art. 30º RGPD) — `RAT.md`, implementado 2026-07-09
+- [ ] Modelo de Acordo de Subcontratação (DPA) — **necessário assim que uma empresa de administração de condomínios (terceira entidade responsável por vários condomínios de clientes diferentes) usar a plataforma**, porque nesse cenário a empresa de administração é responsável pelo tratamento e o operador da plataforma (quem gere o SaaS) é subcontratado. Adiado até o fluxo de onboarding multi-condomínio existir (ver `FUNCTIONAL_GAPS.md`).
 
 ## 9. Checklist de conformidade RGPD (para acompanhar progresso)
 
 ### Base e governação
-- [ ] Registo de Atividades de Tratamento (art. 30º) elaborado
-- [ ] Base legal documentada por tipo de dado/finalidade
+- [x] Registo de Atividades de Tratamento (art. 30º) elaborado — `RAT.md`, 2026-07-09
+- [x] Base legal documentada por tipo de dado/finalidade — `RAT.md`, 2026-07-09
 - [ ] Avaliação de Impacto sobre a Proteção de Dados (DPIA) se o volume/sensibilidade justificar (dados financeiros de muitos titulares + potencial dados sensíveis em ocorrências)
 - [ ] Nomeação de responsável de proteção de dados ou ponto de contacto, se aplicável face ao volume
 
 ### Transparência
-- [ ] Política de Privacidade publicada e acessível antes do registo
-- [ ] Termos de Utilização publicados
-- [ ] Aviso de finalidade no momento da recolha de cada dado (formulários)
-- [ ] Distinção clara entre campos obrigatórios e opcionais
+- [x] Política de Privacidade publicada e acessível antes do registo — `/privacidade`, 2026-07-09 (rascunho técnico, requer revisão jurídica)
+- [x] Termos de Utilização publicados — `/termos`, 2026-07-09 (idem)
+- [x] Aviso de finalidade no momento do registo — checkbox obrigatório em `components/auth-form.tsx`, 2026-07-09
+- [ ] Distinção clara entre campos obrigatórios e opcionais em todos os formulários (fora de âmbito desta sessão)
 
 ### Direitos dos titulares
-- [ ] Ecrã de autogestão "Os meus dados" (ver, corrigir)
-- [ ] Função de exportação de dados pessoais (portabilidade)
-- [ ] Função de eliminação de conta (com efeitos claros sobre dados que têm de ser retidos por obrigação legal, ex. registos financeiros)
+- [x] Ecrã de autogestão "Os meus dados" (ver, corrigir) — `/os-meus-dados`, 2026-07-09
+- [x] Função de exportação de dados pessoais (portabilidade) — `/os-meus-dados`, 2026-07-09
+- [x] Função de eliminação de conta (com efeitos claros sobre dados que têm de ser retidos por obrigação legal, ex. registos financeiros) — `user.deleteUser` (`lib/auth.ts`), 2026-07-09, com confirmação por email
 - [ ] Mecanismo de pedido de oposição/limitação, mesmo que processado manualmente numa fase inicial
 
 ### Segurança e minimização (cruzar com `SECURITY_AUDIT.md`)
@@ -88,20 +91,21 @@ Não existe nenhum destes ecrãs/documentos na aplicação:
 - [x] Isolamento multi-condomínio implementado — 2026-07-06 (schema + todas as queries; falta o fluxo de onboarding para um 2º condomínio, ver `FUNCTIONAL_GAPS.md`)
 - [ ] Cifra em trânsito (HTTPS obrigatório em produção) e em repouso (a confirmar com o provedor de BD)
 - [x] Log de auditoria de acessos/alterações a dados pessoais e financeiros — 2026-07-06 (`audit_log`, página `/auditoria`)
+- [x] Rate limiting explícito no better-auth — 2026-07-09 (`lib/auth.ts`, `storage: 'memory'` — não sobrevive a múltiplas instâncias serverless, ver `SECURITY_AUDIT.md` S5)
 
 ### Retenção e ciclo de vida
-- [ ] Política de retenção definida por tipo de dado (ex. registos financeiros: prazo legal; candidaturas rejeitadas de condóminos: prazo curto)
-- [x] Soft-delete + expurgo programado em vez de `DELETE` imediato — 2026-07-06, mas só para `movimento` (o caso legalmente mais crítico); `fracao`/`aviso`/`documento`/`ocorrencia`/`membro` continuam com `DELETE` físico
+- [x] Política de retenção definida por tipo de dado — proposta em secção 5 (2026-07-09), ainda não validada por jurista/contabilista nem automatizada (expurgo automático continua por fazer)
+- [x] Soft-delete + expurgo programado em vez de `DELETE` imediato — 2026-07-06, mas só para `movimento` (o caso legalmente mais crítico); `fracao`/`aviso`/`documento`/`ocorrencia` continuam com `DELETE` físico; `membro` também, exceto no caso da autoeliminação de conta (2026-07-09), que já regista auditoria antes de remover
 - [ ] Rotina de limpeza de sessões expiradas confirmada
 
 ### Terceiros
-- [ ] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes
-- [ ] Lista de subprocessadores (hosting, BD, email transacional) documentada e comunicada
+- [ ] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — adiado até existir o fluxo de onboarding multi-condomínio
+- [x] Lista de subprocessadores documentada — `RAT.md` e `/privacidade`, 2026-07-09 (Neon/PostgreSQL, Resend, Vercel Blob); comunicação formal aos utilizadores ainda por fazer além da própria política de privacidade
 
 ## 10. Prioridade
 
-As três ações RGPD com maior relação impacto/esforço para já:
+**Atualizado 2026-07-09:** as três ações de maior relação impacto/esforço identificadas em 2026-07-06 estão feitas. Prioridades seguintes: MFA para administradores (`SECURITY_AUDIT.md` S3), DPA (quando o onboarding multi-condomínio existir), e auditoria de segurança externa antes do primeiro cliente pagante.
 
-1. Redigir e publicar Política de Privacidade + Termos, e mostrar o aviso de finalidade no registo (baixo esforço técnico, obrigatório desde o primeiro utilizador real).
+1. ✅ Redigir e publicar Política de Privacidade + Termos, e mostrar o aviso de finalidade no registo — **feito 2026-07-09**.
 2. ✅ Substituir `DELETE` físico por soft-delete em `movimento` — feito 2026-07-06. Falta ainda para (no futuro) atas/deliberações, quando esse módulo existir.
-3. Ecrã de autogestão de dados pessoais para o condómino (ver os seus próprios dados, pedir correção) — hoje o poder está 100% concentrado no admin, o que também não é desejável do ponto de vista de exatidão dos dados.
+3. ✅ Ecrã de autogestão de dados pessoais para o condómino (ver os seus próprios dados, pedir correção) — **feito 2026-07-09** (`/os-meus-dados`), com exportação e eliminação de conta incluídas.

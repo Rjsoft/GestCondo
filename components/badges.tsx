@@ -63,6 +63,33 @@ export function EstadoMembroBadge({ estado }: { estado: string }) {
   )
 }
 
+export function AssembleiaStatusBadge({ estado }: { estado: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    convocada: {
+      label: 'Convocada',
+      className: 'bg-blue-100 text-blue-800 border-blue-200',
+    },
+    realizada: {
+      label: 'Realizada',
+      className: 'bg-amber-100 text-amber-800 border-amber-200',
+    },
+    aprovada: {
+      label: 'Aprovada',
+      className: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    },
+    cancelada: {
+      label: 'Cancelada',
+      className: 'bg-red-100 text-red-800 border-red-200',
+    },
+  }
+  const cfg = map[estado] ?? map.convocada
+  return (
+    <Badge variant="outline" className={cn('border', cfg.className)}>
+      {cfg.label}
+    </Badge>
+  )
+}
+
 export function TipoMovimentoBadge({ tipo }: { tipo: string }) {
   const isReceita = tipo === 'receita'
   return (

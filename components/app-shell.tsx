@@ -16,6 +16,8 @@ import {
   Wrench,
   FileText,
   ShieldCheck,
+  Gavel,
+  UserCog,
   LogOut,
   Menu,
   X,
@@ -44,6 +46,7 @@ const NAV: NavItem[] = [
       isSuperAdmin || PERFIS_ACESSO_FINANCEIRO.includes(perfil),
   },
   { href: '/avisos', label: 'Avisos', icon: Megaphone },
+  { href: '/assembleias', label: 'Assembleias', icon: Gavel },
   { href: '/ocorrencias', label: 'Ocorrências', icon: Wrench },
   { href: '/documentos', label: 'Documentos', icon: FileText },
   {
@@ -67,6 +70,7 @@ const NAV: NavItem[] = [
     visivel: (perfil, isSuperAdmin) =>
       isSuperAdmin || PERFIS_CONSULTA_GESTAO.includes(perfil),
   },
+  { href: '/os-meus-dados', label: 'Os meus dados', icon: UserCog },
 ]
 
 export function AppShell({

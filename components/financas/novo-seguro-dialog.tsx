@@ -108,6 +108,11 @@ export function NovoSeguroDialog() {
           </div>
 
           <div className="flex flex-col gap-2">
+            <Label htmlFor="anexo">Apólice em PDF (opcional, até 15MB)</Label>
+            <Input id="anexo" name="anexo" type="file" accept="application/pdf" />
+          </div>
+
+          <div className="flex flex-col gap-2">
             <Label htmlFor="notas">Notas</Label>
             <Textarea id="notas" name="notas" rows={2} placeholder="Opcional" />
           </div>

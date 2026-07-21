@@ -3,6 +3,16 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Upload de ficheiros (documentos, fotos de ocorrências, apólices) passa
+  // pela própria server action, como qualquer outro campo de formulário —
+  // por isso o corpo do pedido precisa de mais do que o limite por omissão
+  // de 1MB. Tem de ser maior que o maior limite em lib/storage.ts (15MB,
+  // documentos/seguros), com margem para o overhead do multipart.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '16mb',
+    },
+  },
   async headers() {
     const isDev = process.env.NODE_ENV === 'development'
 
@@ -19,7 +29,7 @@ const nextConfig = {
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ''}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
       "font-src 'self' data:",
       "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
       "object-src 'none'",

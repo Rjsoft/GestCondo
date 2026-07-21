@@ -1,6 +1,10 @@
 import { betterAuth } from 'better-auth'
-import { pool } from '@/lib/db'
+import { pool, db } from '@/lib/db'
+import { membro } from '@/lib/db/schema'
+import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
+import type { MembroSessao } from '@/lib/perfis'
+import { eq } from 'drizzle-orm'
 
 export const auth = betterAuth({
   database: pool,
@@ -34,6 +38,60 @@ export const auth = betterAuth({
         subject: 'Confirme o seu email — GestCondo',
         html: `<p>Bem-vindo(a) ao GestCondo.</p><p><a href="${url}">Clique aqui para confirmar o seu email</a></p>`,
       })
+    },
+  },
+  // Rate limiting explícito (SECURITY_AUDIT.md S5) — antes só corria com
+  // os valores por omissão do better-auth (ativo só em produção, 10s/100
+  // pedidos). `storage` fica no default ("memory"): não sobrevive a
+  // reinício nem é partilhado entre instâncias serverless — corrigir só
+  // quando houver Redis/Upstash disponível.
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 20,
+    customRules: {
+      '/sign-in/email': { window: 60, max: 5 },
+      '/sign-up/email': { window: 60, max: 5 },
+      '/forget-password': { window: 60, max: 5 },
+    },
+  },
+  user: {
+    deleteUser: {
+      enabled: true,
+      sendDeleteAccountVerification: async ({ user, url }) => {
+        await sendEmail({
+          to: user.email,
+          subject: 'Confirme a eliminação da sua conta — GestCondo',
+          html: `<p>Pediu para eliminar a sua conta GestCondo. Esta ação não pode ser desfeita.</p><p><a href="${url}">Clique aqui para confirmar a eliminação</a></p><p>Se não foi você a pedir, ignore este email — a sua conta não será eliminada.</p>`,
+        })
+      },
+      // Remove a(s) linha(s) membro deste utilizador — mesmo padrão de
+      // rejeitarMembro (app/actions/fracoes.ts): nunca toca em
+      // movimento/ocorrencia históricos, que mantêm o userId como
+      // referência solta, sem FK, por obrigação de retenção legal.
+      afterDelete: async (user) => {
+        const linhas = await db.select().from(membro).where(eq(membro.userId, user.id))
+        for (const m of linhas) {
+          await registarAuditoria({
+            actor: {
+              id: m.id,
+              condominioId: m.condominioId,
+              userId: m.userId,
+              nome: m.nome,
+              email: m.email,
+              perfil: (m.perfil as MembroSessao['perfil']) ?? 'condomino',
+              estado: (m.estado as MembroSessao['estado']) ?? 'aprovado',
+              fracaoId: m.fracaoId,
+              isSuperAdmin: false,
+            },
+            acao: 'eliminar',
+            entidade: 'membro',
+            entidadeId: m.id,
+            detalhes: 'Conta eliminada pelo próprio titular (RGPD)',
+          })
+          await db.delete(membro).where(eq(membro.id, m.id))
+        }
+      },
     },
   },
   trustedOrigins: [

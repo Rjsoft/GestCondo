@@ -6,7 +6,7 @@ Data: 2026-07-06. Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em fa
 
 O que existe hoje cobre uma fatia pequena e bem construída de **gestão administrativa básica de um único condomínio**: finanças simples, avisos, ocorrências, frações, condóminos com fluxo de aprovação. **Não existe nenhuma noção de "condomínio" como entidade** (ver `SECURITY_AUDIT.md` S9) — logo tudo abaixo assume, implicitamente, que isto teria de ser reconstruído sobre uma base multi-tenant antes de ser vendável a mais do que um condomínio.
 
-Módulo inteiro pedido como essencial para o mercado português — **Assembleias** — está **completamente ausente** (0%). **Gestão financeira formal** (orçamentos, dívidas por fração, recibos, exportação, seguro obrigatório, fundo de reserva) ganhou uma primeira versão em 2026-07-07/08 — ver secção 3 — mas ainda falta geração automática de quotas, rateio por permilagem, juros/reconciliação bancária e exportação em formato `.xlsx`/PDF real.
+Módulo inteiro pedido como essencial para o mercado português — **Assembleias** — ganhou o seu núcleo P1 em 2026-07-09 (convocatória, ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, ata imutável) — ver secção 2. **Gestão financeira formal** (orçamentos, dívidas por fração, recibos, exportação, seguro obrigatório, fundo de reserva) ganhou uma primeira versão em 2026-07-07/08 — ver secção 3 — mas ainda falta geração automática de quotas, rateio por permilagem, juros/reconciliação bancária e exportação em formato `.xlsx`/PDF real.
 
 ---
 
@@ -27,24 +27,22 @@ Módulo inteiro pedido como essencial para o mercado português — **Assembleia
 | Seguro obrigatório | ✅ Implementado 2026-07-08 | Entidade `seguro` própria (seguradora, apólice, tipo, validade, prémio), gerida em `/financas` (separador "Seguro"), com aviso visual quando a apólice expirou ou expira nos próximos 30 dias. Falta ainda anexar o documento da apólice (depende de upload de ficheiros). | — |
 | Fundo comum de reserva | ✅ Implementado 2026-07-08 | Movimentos podem ser marcados com `destino: "reserva"` em vez de `"geral"` e passam a ser seguidos numa conta própria (`getSaldoFundoReserva()`), visível no dashboard e em `/financas`, excluída do saldo da conta corrente normal. Falta ainda impor por regra a % mínima de quota destinada ao fundo (DL nº 268/94) — hoje a segregação é manual, por lançamento. | P2 (automatizar o cálculo da % mínima) |
 
-## 2. Assembleias — 0% implementado
-
-Nenhum dos seguintes itens existe, em nenhuma forma, no código atual:
+## 2. Assembleias — implementado 2026-07-09 (núcleo P1)
 
 | Funcionalidade | Estado | Prioridade |
 |---|---|---|
-| Convocatórias | ❌ | P1 |
-| Ordem de trabalhos | ❌ | P1 |
-| Registo de presenças | ❌ | P1 |
-| Representações/procurações | ❌ | P1 |
-| Cálculo de quórum (por permilagem, 1ª/2ª convocatória) | ❌ | P1 |
-| Votação por permilagem | ❌ | P1 |
-| Deliberações | ❌ | P1 |
-| Atas | ❌ | **P1** |
-| Anexos à ata | ❌ | P2 |
-| Histórico de assembleias | ❌ | P1 |
+| Convocatórias | ✅ Tipo (ordinária/extraordinária), local, 1ª e 2ª convocatória (`app/actions/assembleias.ts:criarAssembleia`) | P1 |
+| Ordem de trabalhos | ✅ Pontos numerados sequencialmente, adicionáveis enquanto a assembleia não está encerrada | P1 |
+| Registo de presenças | ✅ Por fração, com nome do representante | P1 |
+| Representações/procurações | ✅ Campo `tipo` (`presencial`/`procuracao`) na presença | P1 |
+| Cálculo de quórum (por permilagem) | ✅ Permilagem presente / permilagem total do condomínio, mostrado na página de detalhe e na ata. Sem distinção automática de limiar 1ª vs. 2ª convocatória — a app mostra o número, quem qualifica se o quórum exigido foi atingido é o administrador | P1 |
+| Votação por permilagem | ✅ Voto por fração (`favor`/`contra`/`abstencao`) por ponto, com soma de permilagem por opção | P1 |
+| Deliberações | ✅ Resultado (`aprovado`/`reprovado`/`adiado`) definido manualmente pelo administrador por ponto, com base nos números mostrados | P1 |
+| Atas | ✅ **P1** — texto livre + ata gerada automaticamente (presenças, votação, deliberações) em `/assembleias/ata/[id]`, imprimível. Torna-se imutável assim que aprovada (`estado: 'aprovada'` bloqueia qualquer escrita nas tabelas associadas) | — |
+| Anexos à ata | ❌ | P2 — depende de upload de ficheiros (ver secção 6) |
+| Histórico de assembleias | ✅ Lista em `/assembleias`, ordenada por data | P1 |
 | Videoconferência (quando legalmente admissível) | ❌ | P3 |
-| Notificação por email de convocatórias | ❌ (não há envio de email na aplicação) | **P1** |
+| Notificação por email de convocatórias | ✅ Envio automático a todos os membros aprovados do condomínio ao convocar (`lib/email.ts`) | — |
 | Registo de receção/leitura/confirmação de convocatória | ❌ | P2 — juridicamente relevante para provar convocação regular |
 
 Este é o módulo funcionalmente mais crítico para o mercado português (as assembleias e as suas atas são o instrumento legal central da vida do condomínio, Código Civil arts. 1430º–1438º-A) e o que está mais distante de existir. Não há atalhos aqui: é um módulo novo de raiz, com implicações de integridade de dados fortes (uma ata aprovada não pode ser silenciosamente editável — ver auditoria abaixo).
@@ -89,7 +87,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
 | Avisos aos condóminos | ✅ Implementado | `app/(app)/avisos/page.tsx`, com prioridade. | — |
-| Notificações (push/email) | 🟡 Parcial — infraestrutura de email pronta desde 2026-07-06 (`lib/email.ts`, ver `SECURITY_AUDIT.md` S1/S2), usada hoje só para verificação de conta e reset de password. Ainda não envia email quando um aviso importante é publicado ou uma ocorrência é atualizada. | P1 |
+| Notificações (push/email) | ✅ Implementado 2026-07-09 — email enviado quando um aviso `importante`/`urgente` é publicado (a todos os membros aprovados) e quando o estado de uma ocorrência é atualizado (a quem a reportou). Avisos `normal` não geram email, para não sobrecarregar a caixa de entrada. Sem notificação push (só email). | — |
 | Mensagens internas (condómino ↔ admin) | ❌ Em falta | Sem qualquer canal de mensagem direta/privada. | P2 |
 | Histórico de comunicações | 🟡 Parcial | Avisos ficam listados indefinidamente, mas não há registo de "quem viu o quê". | P2 |
 | Confirmação de leitura | ❌ Em falta | Nem em avisos nem (mais crítico) em convocatórias de assembleia. | P1/P2 conforme uso |
@@ -99,7 +97,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 | Funcionalidade | Estado | Nota | Prioridade |
 |---|---|---|---|
-| Upload seguro | ❌ Em falta | `documento.url` é só um link externo de texto; não há armazenamento próprio, nem validação de tipo/tamanho de ficheiro, nem scanning. | **P1** |
+| Upload seguro | ✅ Implementado 2026-07-09 | Vercel Blob (`lib/storage.ts`), com validação de tipo/tamanho por finalidade (PDF/imagem, 8–15MB). `documento.url` continua a aceitar um link colado à mão como alternativa. Fotos de ocorrência e apólice de seguro também ligadas (`ocorrencia.fotoUrl`, `seguro.anexoUrl`). Sem scanning de malware; controlo de acesso é o mesmo já existente por página (`condominioId`/perfil), não uma verificação por ficheiro — ver a linha seguinte. | — |
 | Classificação por tipo | ✅ Implementado | `ata \| regulamento \| orcamento \| outro`. | — |
 | Controlo de permissões por documento | ❌ Em falta | Hoje é tudo-ou-nada (qualquer aprovado vê tudo). Não há documentos privados/confidenciais (ex. um orçamento de fornecedor em negociação). | P2 |
 | Versionamento | ❌ Em falta | Substituir um documento perde a versão anterior. | P2 |
@@ -134,10 +132,10 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 
 1. ~~**P0** — Entidade `condominio` + isolamento multi-tenant~~ **Resolvido 2026-07-06** (schema e queries); falta o fluxo de onboarding/convite para um segundo condomínio.
 2. ~~**P0/P1** — Log de auditoria mínimo + soft-delete em dados financeiros~~ **Resolvido 2026-07-06.**
-3. **P1** — Módulo de Assembleias (convocatória → ordem de trabalhos → presenças/procurações → quórum → votação → ata).
+3. ~~**P1** — Módulo de Assembleias (convocatória → ordem de trabalhos → presenças/procurações → quórum → votação → ata).~~ **Resolvido 2026-07-09** (núcleo P1); faltam anexos à ata e confirmação de leitura (P2).
 4. **P1** — Gestão financeira formal: orçamento, dívida por fração, recibos, exportação PDF/Excel.
-5. **P1** — Upload de ficheiros (documentos, faturas, fotos de ocorrências) com controlo de acesso.
-6. **P1** — Envio de email (mínimo: reset de password, convocatórias, avisos importantes).
+5. ~~**P1** — Upload de ficheiros (documentos, faturas, fotos de ocorrências) com controlo de acesso.~~ **Resolvido 2026-07-09** via Vercel Blob (`lib/storage.ts`); controlo de acesso ao nível da página, não por ficheiro (ver secção 6).
+6. ~~**P1** — Envio de email: reset de password/verificação, convocatórias, avisos importantes, atualização de ocorrências.~~ **Resolvido 2026-07-09.**
 7. **P1** — Distinção proprietário/inquilino e correção da exposição de contactos.
 8. ~~**P1** — Seguro obrigatório e fundo de reserva como entidades próprias, não texto livre/implícito.~~ **Resolvido 2026-07-08.**
 

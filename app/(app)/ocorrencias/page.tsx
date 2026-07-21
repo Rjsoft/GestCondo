@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { requireMembroPagina, podeEscrever, temPermissaoGestao } from '@/lib/session'
 import { getOcorrencias } from '@/app/actions/ocorrencias'
 import { PageHeader } from '@/components/page-header'
@@ -43,6 +44,17 @@ export default async function OcorrenciasPage() {
                   <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
                     {o.descricao}
                   </p>
+                  {o.fotoUrl && (
+                    <a href={o.fotoUrl} target="_blank" rel="noopener noreferrer" className="mt-2 block w-fit">
+                      <Image
+                        src={o.fotoUrl}
+                        alt="Foto da ocorrência"
+                        width={96}
+                        height={96}
+                        className="h-24 w-24 rounded-md border border-border object-cover"
+                      />
+                    </a>
+                  )}
                   <p className="mt-3 text-xs text-muted-foreground">
                     {o.reporterNome}
                     {o.local ? ` · ${o.local}` : ''} · {formatData(o.createdAt)}

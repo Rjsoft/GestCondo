@@ -11,7 +11,7 @@
 import { and, eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from './index'
-import { aviso, condominio, movimento } from './schema'
+import { assembleia, aviso, condominio, movimento } from './schema'
 
 class RollbackDeTeste extends Error {}
 
@@ -121,6 +121,51 @@ describe('isolamento multi-tenant (condominioId)', () => {
         // -- o UPDATE do atacante não deve ter afetado nenhuma linha,
         // porque o condominioId não bate certo.
         expect(aindaExiste.deletedAt).toBeNull()
+
+        throw new RollbackDeTeste('reverter fixture de teste, nunca persistir')
+      }),
+    ).rejects.toThrow(RollbackDeTeste)
+  })
+
+  it('assembleias de um condomínio nunca aparecem numa leitura filtrada de outro', async () => {
+    await expect(
+      db.transaction(async (tx) => {
+        const [condoA] = await tx
+          .insert(condominio)
+          .values({ nome: '[teste isolamento] Condomínio A (assembleias)' })
+          .returning({ id: condominio.id })
+        const [condoB] = await tx
+          .insert(condominio)
+          .values({ nome: '[teste isolamento] Condomínio B (assembleias)' })
+          .returning({ id: condominio.id })
+
+        await tx.insert(assembleia).values({
+          condominioId: condoA.id,
+          userId: 'user-a',
+          tipo: 'ordinaria',
+          local: 'Hall do condomínio A',
+          dataPrimeiraConvocatoria: new Date(),
+        })
+        await tx.insert(assembleia).values({
+          condominioId: condoB.id,
+          userId: 'user-b',
+          tipo: 'ordinaria',
+          local: 'Hall do condomínio B',
+          dataPrimeiraConvocatoria: new Date(),
+        })
+
+        // Reproduz exatamente o filtro de app/actions/assembleias.ts:getAssembleias.
+        const assembleiasDoA = await tx
+          .select()
+          .from(assembleia)
+          .where(eq(assembleia.condominioId, condoA.id))
+        const assembleiasDoB = await tx
+          .select()
+          .from(assembleia)
+          .where(eq(assembleia.condominioId, condoB.id))
+
+        expect(assembleiasDoA.map((a) => a.local)).toEqual(['Hall do condomínio A'])
+        expect(assembleiasDoB.map((a) => a.local)).toEqual(['Hall do condomínio B'])
 
         throw new RollbackDeTeste('reverter fixture de teste, nunca persistir')
       }),

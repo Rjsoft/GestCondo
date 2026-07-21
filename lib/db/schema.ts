@@ -238,6 +238,10 @@ export const seguro = pgTable(
     dataFim: timestamp("dataFim").notNull(),
     valorPremio: numeric("valorPremio", { precision: 12, scale: 2 }),
     notas: text("notas"),
+    // Anexo da apólice em PDF (Vercel Blob, ver lib/storage.ts). Nome
+    // distinto de `apolice`, que é o número da apólice, não o ficheiro.
+    anexoUrl: text("anexoUrl"),
+    anexoNomeFicheiro: text("anexoNomeFicheiro"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (t) => [index("seguro_condominio_idx").on(t.condominioId)],
@@ -277,6 +281,11 @@ export const ocorrencia = pgTable(
     categoria: text("categoria").notNull().default("manutencao"),
     estado: text("estado").notNull().default("aberta"), // "aberta" | "em_curso" | "resolvida"
     prioridade: text("prioridade").notNull().default("normal"),
+    // Foto da avaria (Vercel Blob, ver lib/storage.ts). Uma só por
+    // ocorrência — várias fotos ficaria para uma tabela própria, não feito
+    // nesta fase (ver FUNCTIONAL_GAPS.md).
+    fotoUrl: text("fotoUrl"),
+    fotoNomeFicheiro: text("fotoNomeFicheiro"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     updatedAt: timestamp("updatedAt").notNull().defaultNow(),
   },
@@ -295,10 +304,102 @@ export const documento = pgTable(
     titulo: text("titulo").notNull(),
     categoria: text("categoria").notNull().default("ata"), // "ata" | "regulamento" | "orcamento" | "outro"
     descricao: text("descricao"),
+    // Aceita tanto um link externo colado à mão como o URL de um ficheiro
+    // carregado para o Vercel Blob (ver lib/storage.ts) — `nomeFicheiro`
+    // guarda o nome original só no segundo caso, para não mostrar ao
+    // utilizador um nome aleatório gerado pelo armazenamento.
     url: text("url"), // link para o ficheiro
+    nomeFicheiro: text("nomeFicheiro"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (t) => [index("documento_condominio_idx").on(t.condominioId)],
+)
+
+// Assembleias: convocatória, ordem de trabalhos, presenças/procurações e
+// votação por permilagem. `estado` governa o ciclo de vida: "convocada"
+// (agendada) → "realizada" (aconteceu, ata em rascunho, ainda editável) →
+// "aprovada" (ata fechada — todas as tabelas abaixo tornam-se imutáveis,
+// ver app/actions/assembleias.ts) ou "cancelada" (só a partir de
+// "convocada"). Sem motor de regras legais de maioria: a app calcula e
+// mostra o quórum/votação por permilagem, mas quem qualifica se uma
+// deliberação foi aprovada nos termos do Código Civil é o administrador.
+export const assembleia = pgTable(
+  "assembleia",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    tipo: text("tipo").notNull().default("ordinaria"), // "ordinaria" | "extraordinaria"
+    local: text("local").notNull(),
+    dataPrimeiraConvocatoria: timestamp("dataPrimeiraConvocatoria").notNull(),
+    dataSegundaConvocatoria: timestamp("dataSegundaConvocatoria"),
+    estado: text("estado").notNull().default("convocada"), // "convocada" | "realizada" | "aprovada" | "cancelada"
+    textoAta: text("textoAta"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("assembleia_condominio_idx").on(t.condominioId)],
+)
+
+// Ordem de trabalhos de uma assembleia — cada ponto é também onde fica
+// registada a deliberação (resultado) depois de discutido/votado.
+export const assembleiaPonto = pgTable(
+  "assembleia_ponto",
+  {
+    id: serial("id").primaryKey(),
+    assembleiaId: integer("assembleiaId")
+      .notNull()
+      .references(() => assembleia.id, { onDelete: "cascade" }),
+    ordem: integer("ordem").notNull(),
+    titulo: text("titulo").notNull(),
+    descricao: text("descricao"),
+    resultado: text("resultado"), // "aprovado" | "reprovado" | "adiado", null até decidido
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("assembleia_ponto_assembleia_idx").on(t.assembleiaId)],
+)
+
+// Presença/representação por fração numa assembleia — a unidade de
+// quórum/voto é a fração (via a sua permilagem), não a pessoa.
+export const assembleiaPresenca = pgTable(
+  "assembleia_presenca",
+  {
+    id: serial("id").primaryKey(),
+    assembleiaId: integer("assembleiaId")
+      .notNull()
+      .references(() => assembleia.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    tipo: text("tipo").notNull().default("presencial"), // "presencial" | "procuracao"
+    representante: text("representante"), // nome de quem está fisicamente presente
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("assembleia_presenca_assembleia_idx").on(t.assembleiaId),
+    uniqueIndex("assembleia_presenca_fracao_idx").on(t.assembleiaId, t.fracaoId),
+  ],
+)
+
+// Voto de uma fração num ponto da ordem de trabalhos.
+export const assembleiaVoto = pgTable(
+  "assembleia_voto",
+  {
+    id: serial("id").primaryKey(),
+    pontoId: integer("pontoId")
+      .notNull()
+      .references(() => assembleiaPonto.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    voto: text("voto").notNull(), // "favor" | "contra" | "abstencao"
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("assembleia_voto_ponto_idx").on(t.pontoId),
+    uniqueIndex("assembleia_voto_ponto_fracao_idx").on(t.pontoId, t.fracaoId),
+  ],
 )
 
 // Registo de auditoria: quem fez o quê, quando, a que entidade. Escrito

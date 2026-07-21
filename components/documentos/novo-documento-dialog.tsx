@@ -103,7 +103,11 @@ export function NovoDocumentoDialog() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="url">Link do documento</Label>
+            <Label htmlFor="ficheiro">Ficheiro (PDF ou imagem, até 15MB)</Label>
+            <Input id="ficheiro" name="ficheiro" type="file" accept="application/pdf,image/*" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="url">Ou cole um link</Label>
             <Input id="url" name="url" type="url" placeholder="https://..." />
           </div>
           <DialogFooter>

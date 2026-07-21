@@ -57,6 +57,7 @@ type Seguro = {
   dataFim: Date
   valorPremio: string | null
   notas: string | null
+  anexoUrl: string | null
 }
 
 const TIPO_SEGURO_LABEL: Record<string, string> = {
@@ -350,7 +351,7 @@ export function FinancasTabs({
                       </TableCell>
                       {isAdmin && (
                         <TableCell>
-                          <SeguroActions id={s.id} />
+                          <SeguroActions id={s.id} anexoUrl={s.anexoUrl} />
                         </TableCell>
                       )}
                     </TableRow>

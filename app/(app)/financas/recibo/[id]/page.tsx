@@ -3,7 +3,7 @@ import { getMovimentoPorId } from '@/app/actions/financas'
 import { getFracaoPorId } from '@/app/actions/fracoes'
 import { getCondominioAtual, requireMembroPagina } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
-import { ImprimirButton } from '@/components/financas/imprimir-button'
+import { ImprimirButton } from '@/components/imprimir-button'
 import { formatEuro, formatData } from '@/lib/format'
 import { Building2 } from 'lucide-react'
 

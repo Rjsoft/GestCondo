@@ -1,8 +1,9 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { aviso } from '@/lib/db/schema'
+import { aviso, membro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { sendEmail } from '@/lib/email'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
 import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -46,6 +47,26 @@ export async function criarAviso(formData: FormData) {
     entidadeId: novo.id,
     detalhes: titulo,
   })
+
+  // Avisos "importante"/"urgente" são notificados por email — os
+  // "normal" ficam só na listagem, para não sobrecarregar a caixa de
+  // entrada dos condóminos com comunicações rotineiras.
+  if (prioridade === 'importante' || prioridade === 'urgente') {
+    const membrosAprovados = await db
+      .select({ email: membro.email })
+      .from(membro)
+      .where(and(eq(membro.condominioId, admin.condominioId), eq(membro.estado, 'aprovado')))
+
+    await Promise.all(
+      membrosAprovados.map((mb) =>
+        sendEmail({
+          to: mb.email,
+          subject: `[${prioridade === 'urgente' ? 'Urgente' : 'Importante'}] ${titulo}`,
+          html: `<p>${conteudo.replace(/\n/g, '<br>')}</p><p>— ${admin.nome}, GestCondo</p>`,
+        }),
+      ),
+    )
+  }
 
   revalidatePath('/avisos')
   revalidatePath('/')
