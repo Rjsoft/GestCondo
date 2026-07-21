@@ -5,16 +5,32 @@ import { aviso, membro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
-export async function getAvisos() {
+const PAGE_SIZE = 20
+
+export async function getAvisos({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
   const m = await requireMembroAprovado()
-  return db
-    .select()
-    .from(aviso)
-    .where(eq(aviso.condominioId, m.condominioId))
-    .orderBy(desc(aviso.createdAt))
+  const condicao = search
+    ? and(
+        eq(aviso.condominioId, m.condominioId),
+        or(ilike(aviso.titulo, `%${search}%`), ilike(aviso.conteudo, `%${search}%`)),
+      )
+    : eq(aviso.condominioId, m.condominioId)
+
+  const [avisos, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(aviso)
+      .where(condicao)
+      .orderBy(desc(aviso.createdAt))
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE),
+    db.select({ total: count() }).from(aviso).where(condicao),
+  ])
+
+  return { avisos, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
 }
 
 export async function criarAviso(formData: FormData) {

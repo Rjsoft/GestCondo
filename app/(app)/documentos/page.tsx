@@ -5,6 +5,8 @@ import { NovoDocumentoDialog } from '@/components/documentos/novo-documento-dial
 import { DocumentoActions } from '@/components/documentos/documento-actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { SearchInput } from '@/components/ui/search-input'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { formatData } from '@/lib/format'
 import { FileText, ExternalLink } from 'lucide-react'
 
@@ -15,10 +17,17 @@ const CATEGORIA_LABEL: Record<string, string> = {
   outro: 'Outro',
 }
 
-export default async function DocumentosPage() {
+export default async function DocumentosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>
+}) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
-  const documentos = await getDocumentos()
+  const params = await searchParams
+  const search = params.q ?? ''
+  const page = Math.max(1, Number(params.page) || 1)
+  const { documentos, totalPages } = await getDocumentos({ page, search })
 
   return (
     <div>
@@ -29,14 +38,19 @@ export default async function DocumentosPage() {
         {isAdmin && <NovoDocumentoDialog />}
       </PageHeader>
 
+      <div className="mb-4">
+        <SearchInput placeholder="Pesquisar documentos..." />
+      </div>
+
       {documentos.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
             <FileText className="h-8 w-8" />
-            <p>Ainda não existem documentos.</p>
+            <p>{search ? 'Nenhum documento encontrado.' : 'Ainda não existem documentos.'}</p>
           </CardContent>
         </Card>
       ) : (
+        <>
         <div className="flex flex-col gap-3">
           {documentos.map((d) => (
             <Card key={d.id}>
@@ -73,6 +87,12 @@ export default async function DocumentosPage() {
             </Card>
           ))}
         </div>
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          buildHref={(p) => `/documentos?${new URLSearchParams({ ...(search ? { q: search } : {}), page: String(p) }).toString()}`}
+        />
+        </>
       )}
     </div>
   )

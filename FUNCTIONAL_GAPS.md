@@ -74,7 +74,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 |---|---|---|---|
 | Comunicação de avarias | ✅ Implementado | `app/(app)/ocorrencias/page.tsx` + `app/actions/ocorrencias.ts`. | — |
 | Pedidos de intervenção | ✅ Implementado | Mesma funcionalidade acima cobre este caso de uso. | — |
-| Fotos/anexos | ❌ Em falta | Sem upload de ficheiros em lado nenhum da aplicação. | **P1** |
+| Fotos/anexos | ✅ Implementado 2026-07-09 | `ocorrencia.fotoUrl` via Vercel Blob (`app/actions/ocorrencias.ts`), incluindo eliminação em cascata do ficheiro. | — |
 | Estado da ocorrência | ✅ Implementado | `aberta \| em_curso \| resolvida`, com validação de enum. | — |
 | Prioridade | ✅ Implementado | `normal \| importante \| urgente`. | — |
 | Fornecedores | ❌ Em falta | Sem entidade "fornecedor" nem associação a uma ocorrência. | P2 |
@@ -93,7 +93,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Mensagens internas (condómino ↔ admin) | ❌ Em falta | Sem qualquer canal de mensagem direta/privada. | P2 |
 | Histórico de comunicações | 🟡 Parcial | Avisos ficam listados indefinidamente, mas não há registo de "quem viu o quê". | P2 |
 | Confirmação de leitura | ❌ Em falta | Nem em avisos nem (mais crítico) em convocatórias de assembleia. | P1/P2 conforme uso |
-| Regras contra exposição de emails entre condóminos | ❌ Em falta | Ver `SECURITY_AUDIT.md` S13 — hoje é o oposto: os contactos são visíveis a todos. | **P1** |
+| Regras contra exposição de emails entre condóminos | ✅ Resolvido 2026-07-07 | Ver `SECURITY_AUDIT.md` S13. | — |
 
 ## 6. Documentos
 

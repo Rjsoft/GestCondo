@@ -18,3 +18,5 @@ node_modules
 
 # Local tool/editor config
 .claude/settings.local.json
+.vercel
+.env*

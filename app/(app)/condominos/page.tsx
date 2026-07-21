@@ -10,6 +10,7 @@ import { PerfilSelect } from '@/components/condominos/perfil-select'
 import { EditarMembroDialog } from '@/components/condominos/editar-membro-dialog'
 import { MembroStatusActions } from '@/components/condominos/membro-status-actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SearchInput } from '@/components/ui/search-input'
 import {
   Table,
   TableBody,
@@ -22,14 +23,27 @@ import { formatData } from '@/lib/format'
 import { PERFIL_LABEL, type Perfil } from '@/lib/session'
 import { UserCheck } from 'lucide-react'
 
-export default async function CondominosPage() {
+export default async function CondominosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
   const membro = await requireMembroPagina()
   if (!temConsultaGestao(membro)) notFound()
   const podeGerir = temPermissaoGestao(membro)
+  const search = ((await searchParams).q ?? '').trim().toLowerCase()
 
   const [todos, fracoes] = await Promise.all([getMembros(), getFracoes()])
   const pendentes = todos.filter((m) => m.estado === 'pendente')
-  const membros = todos.filter((m) => m.estado === 'aprovado')
+  const aprovados = todos.filter((m) => m.estado === 'aprovado')
+  // Pesquisa em memória: número de condóminos por condomínio é tipicamente
+  // pequeno (dezenas), não justifica paginação no servidor. Não filtra os
+  // pedidos pendentes, para não esconder acidentalmente uma aprovação por fazer.
+  const membros = search
+    ? aprovados.filter(
+        (m) => m.nome.toLowerCase().includes(search) || m.email.toLowerCase().includes(search),
+      )
+    : aprovados
   const fracaoPorId = new Map(fracoes.map((f) => [f.id, f.identificacao]))
 
   return (
@@ -38,6 +52,10 @@ export default async function CondominosPage() {
         title="Condóminos"
         description="Membros do condomínio e respetivos perfis de acesso."
       />
+
+      <div className="mb-4">
+        <SearchInput placeholder="Pesquisar por nome ou email..." />
+      </div>
 
       {pendentes.length > 0 && (
         <Card className="mb-4">
@@ -88,7 +106,7 @@ export default async function CondominosPage() {
                     colSpan={6}
                     className="py-10 text-center text-muted-foreground"
                   >
-                    Ainda não existem condóminos aprovados.
+                    {search ? 'Nenhum condómino encontrado.' : 'Ainda não existem condóminos aprovados.'}
                   </TableCell>
                 </TableRow>
               )}

@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/page-header'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
 import { FracaoActions } from '@/components/fracoes/fracao-actions'
 import { Card, CardContent } from '@/components/ui/card'
+import { SearchInput } from '@/components/ui/search-input'
 import {
   Table,
   TableBody,
@@ -19,16 +20,21 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-export default async function FracoesPage() {
+export default async function FracoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
   const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
+  const search = ((await searchParams).q ?? '').trim().toLowerCase()
   // Contactos pessoais (email/telefone) só são mostrados a quem gere o
   // condomínio ou audita — ver a mesma decisão em getFracoes()
   // (SECURITY_AUDIT.md S13). Para os restantes, getFracoes() já devolve
   // esses campos como null; aqui só se decide esconder a própria coluna.
   const veContactos = temConsultaGestao(membro)
-  const [fracoes, membros] = await Promise.all([
+  const [todasFracoes, membros] = await Promise.all([
     getFracoes(),
     // Só para quem gere/audita — usado para mostrar quais contas de
     // condómino estão ligadas a cada fração (visibilidade de
@@ -36,6 +42,15 @@ export default async function FracoesPage() {
     // tecnicamente permitido, mas não tinha nenhuma UI que o mostrasse).
     veContactos ? getMembros() : Promise.resolve([]),
   ])
+  // Pesquisa em memória: o número de frações por condomínio é
+  // tipicamente pequeno (dezenas), não justifica paginação no servidor.
+  const fracoes = search
+    ? todasFracoes.filter(
+        (f) =>
+          f.identificacao.toLowerCase().includes(search) ||
+          f.proprietario.toLowerCase().includes(search),
+      )
+    : todasFracoes
   const condominosPorFracao = new Map<number, string[]>()
   for (const m of membros) {
     if (m.perfil !== 'condomino' || !m.fracaoId) continue
@@ -52,6 +67,10 @@ export default async function FracoesPage() {
       >
         {isAdmin && <NovaFracaoDialog />}
       </PageHeader>
+
+      <div className="mb-4">
+        <SearchInput placeholder="Pesquisar por identificação ou proprietário..." />
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -78,7 +97,7 @@ export default async function FracoesPage() {
                     colSpan={3 + (veContactos ? 2 : 0) + (isAdmin ? 1 : 0)}
                     className="py-10 text-center text-muted-foreground"
                   >
-                    Ainda não existem frações registadas.
+                    {search ? 'Nenhuma fração encontrada.' : 'Ainda não existem frações registadas.'}
                   </TableCell>
                 </TableRow>
               )}

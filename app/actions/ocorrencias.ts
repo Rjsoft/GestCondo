@@ -11,30 +11,35 @@ import {
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
-export async function getOcorrencias() {
+const PAGE_SIZE = 20
+
+export async function getOcorrencias({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
   const m = await requireMembroComEscrita()
   // Admin/gestor/auditor veem todas as do seu condomínio; os restantes
   // (condómino, inquilino, fornecedor) veem só as suas.
-  if (temConsultaGestao(m)) {
-    return db
+  const escopo = temConsultaGestao(m)
+    ? eq(ocorrencia.condominioId, m.condominioId)
+    : and(eq(ocorrencia.condominioId, m.condominioId), eq(ocorrencia.userId, m.userId))
+
+  const condicao = search
+    ? and(escopo, or(ilike(ocorrencia.titulo, `%${search}%`), ilike(ocorrencia.descricao, `%${search}%`)))
+    : escopo
+
+  const [ocorrencias, [{ total }]] = await Promise.all([
+    db
       .select()
       .from(ocorrencia)
-      .where(eq(ocorrencia.condominioId, m.condominioId))
+      .where(condicao)
       .orderBy(desc(ocorrencia.createdAt))
-  }
-  return db
-    .select()
-    .from(ocorrencia)
-    .where(
-      and(
-        eq(ocorrencia.condominioId, m.condominioId),
-        eq(ocorrencia.userId, m.userId),
-      ),
-    )
-    .orderBy(desc(ocorrencia.createdAt))
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE),
+    db.select({ total: count() }).from(ocorrencia).where(condicao),
+  ])
+
+  return { ocorrencias, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
 }
 
 export async function criarOcorrencia(formData: FormData) {

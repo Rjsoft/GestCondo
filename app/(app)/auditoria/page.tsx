@@ -4,6 +4,8 @@ import { getAuditLog } from '@/app/actions/auditoria'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { SearchInput } from '@/components/ui/search-input'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import {
   Table,
   TableBody,
@@ -33,18 +35,29 @@ const ENTIDADE_LABEL: Record<string, string> = {
   seguro: 'Seguro',
 }
 
-export default async function AuditoriaPage() {
+export default async function AuditoriaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>
+}) {
   const membro = await requireMembroPagina()
   if (!temConsultaGestao(membro)) notFound()
 
-  const registos = await getAuditLog()
+  const params = await searchParams
+  const search = params.q ?? ''
+  const page = Math.max(1, Number(params.page) || 1)
+  const { registos, totalPages } = await getAuditLog({ page, search })
 
   return (
     <div>
       <PageHeader
         title="Auditoria"
-        description="Registo de ações sensíveis realizadas no condomínio (últimos 200 registos)."
+        description="Registo de ações sensíveis realizadas no condomínio."
       />
+
+      <div className="mb-4">
+        <SearchInput placeholder="Pesquisar por autor ou detalhes..." />
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -65,7 +78,7 @@ export default async function AuditoriaPage() {
                     colSpan={5}
                     className="py-10 text-center text-muted-foreground"
                   >
-                    Ainda não existem registos de auditoria.
+                    {search ? 'Nenhum registo encontrado.' : 'Ainda não existem registos de auditoria.'}
                   </TableCell>
                 </TableRow>
               )}
@@ -92,6 +105,11 @@ export default async function AuditoriaPage() {
           </Table>
         </CardContent>
       </Card>
+      <PaginationControls
+        page={page}
+        totalPages={totalPages}
+        buildHref={(p) => `/auditoria?${new URLSearchParams({ ...(search ? { q: search } : {}), page: String(p) }).toString()}`}
+      />
     </div>
   )
 }

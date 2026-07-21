@@ -6,13 +6,22 @@ import { NovaOcorrenciaDialog } from '@/components/ocorrencias/nova-ocorrencia-d
 import { OcorrenciaActions } from '@/components/ocorrencias/ocorrencia-actions'
 import { PrioridadeBadge, EstadoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
+import { SearchInput } from '@/components/ui/search-input'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { formatData } from '@/lib/format'
 import { Wrench } from 'lucide-react'
 
-export default async function OcorrenciasPage() {
+export default async function OcorrenciasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>
+}) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
-  const ocorrencias = await getOcorrencias()
+  const params = await searchParams
+  const search = params.q ?? ''
+  const page = Math.max(1, Number(params.page) || 1)
+  const { ocorrencias, totalPages } = await getOcorrencias({ page, search })
 
   return (
     <div>
@@ -23,14 +32,19 @@ export default async function OcorrenciasPage() {
         {podeEscrever(membro) && <NovaOcorrenciaDialog />}
       </PageHeader>
 
+      <div className="mb-4">
+        <SearchInput placeholder="Pesquisar ocorrências..." />
+      </div>
+
       {ocorrencias.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
             <Wrench className="h-8 w-8" />
-            <p>Sem ocorrências registadas.</p>
+            <p>{search ? 'Nenhuma ocorrência encontrada.' : 'Sem ocorrências registadas.'}</p>
           </CardContent>
         </Card>
       ) : (
+        <>
         <div className="flex flex-col gap-3">
           {ocorrencias.map((o) => (
             <Card key={o.id}>
@@ -70,6 +84,12 @@ export default async function OcorrenciasPage() {
             </Card>
           ))}
         </div>
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          buildHref={(p) => `/ocorrencias?${new URLSearchParams({ ...(search ? { q: search } : {}), page: String(p) }).toString()}`}
+        />
+        </>
       )}
     </div>
   )
