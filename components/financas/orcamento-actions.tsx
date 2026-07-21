@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { GerarQuotasDialog } from '@/components/financas/gerar-quotas-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { MoreHorizontal, Trash2, Calculator } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -33,12 +34,14 @@ export function OrcamentoActions({
 }) {
   const [pending, startTransition] = useTransition()
   const [gerarAberto, setGerarAberto] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const remover = () => {
     startTransition(async () => {
       try {
         await eliminarOrcamento(id)
         toast.success('Orçamento eliminado')
+        setConfirmOpen(false)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro')
       }
@@ -58,7 +61,7 @@ export function OrcamentoActions({
             Gerar quotas mensais
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={remover}
+            onClick={() => setConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
@@ -74,6 +77,14 @@ export function OrcamentoActions({
         valorAnual={valorAnual}
         valorAnualElevador={valorAnualElevador}
         fracoes={fracoes}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Eliminar orçamento"
+        description="Esta ação não pode ser desfeita. As quotas já geradas a partir deste orçamento não são apagadas, mas deixam de estar ligadas a ele."
+        onConfirm={remover}
+        pending={pending}
       />
     </>
   )

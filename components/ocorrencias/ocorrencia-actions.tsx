@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import {
   atualizarEstadoOcorrencia,
   eliminarOcorrencia,
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -34,6 +35,7 @@ export function OcorrenciaActions({
   isOwner: boolean
 }) {
   const [pending, startTransition] = useTransition()
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const mudarEstado = (novoEstado: string) => {
     startTransition(async () => {
@@ -51,6 +53,7 @@ export function OcorrenciaActions({
       try {
         await eliminarOcorrencia(id)
         toast.success('Ocorrência eliminada')
+        setConfirmOpen(false)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro')
       }
@@ -83,12 +86,20 @@ export function OcorrenciaActions({
         variant="ghost"
         size="icon"
         disabled={pending}
-        onClick={remover}
+        onClick={() => setConfirmOpen(true)}
         className="text-muted-foreground hover:text-destructive"
         aria-label="Eliminar ocorrência"
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Eliminar ocorrência"
+        description="Esta ação não pode ser desfeita. O registo da ocorrência e o seu histórico são removidos."
+        onConfirm={remover}
+        pending={pending}
+      />
     </div>
   )
 }
