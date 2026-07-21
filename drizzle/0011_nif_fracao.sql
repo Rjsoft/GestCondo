@@ -1,0 +1,1 @@
+ALTER TABLE "fracao" ADD COLUMN "nif" text;

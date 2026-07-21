@@ -78,6 +78,13 @@
       "when": 1784630271965,
       "tag": "0010_isencao_elevador",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784631423012,
+      "tag": "0011_nif_fracao",
+      "breakpoints": true
     }
   ]
 }

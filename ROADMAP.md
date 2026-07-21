@@ -54,7 +54,7 @@ Não há funcionalidades "mockadas" ou simuladas no sentido de existir uma facha
 
 1. 🟡 **Em curso desde 2026-07-07** — Gestão financeira formal: orçamento anual (valor global, sem rubricas), dívida por fração/mapa de saldos ✅, recibo imprimível ✅, exportação CSV ✅ (não `.xlsx`/PDF real), rateio automático de quotas por permilagem com isenção de elevador ✅ **(2026-07-21)**. Falta: juros, reconciliação bancária, exportação `.xlsx`/PDF real.
 2. ✅ **Feito 2026-07-09, verificado em runtime 2026-07-21** — Upload de ficheiros (documentos, fotos de ocorrências, apólice de seguro) via Vercel Blob. Store tem de ser criado com acesso Public.
-3. ✅ **Feito 2026-07-07** — Distinção proprietário/inquilino (`membro.fracaoId`, liga um `membro` condomino ou inquilino à sua fração) e correção da exposição de contactos pessoais (`SECURITY_AUDIT.md` S13).
+3. ✅ **Feito 2026-07-07** — Distinção proprietário/inquilino (`membro.fracaoId`, liga um `membro` condomino ou inquilino à sua fração) e correção da exposição de contactos pessoais (`SECURITY_AUDIT.md` S13). **Feito 2026-07-21** — NIF do proprietário (`fracao.nif`) e visibilidade de compropriedade (`/fracoes` mostra todos os condóminos com conta ligados à mesma fração).
 4. ✅ **Feito 2026-07-08** — Seguro obrigatório (apólice, seguradora, validade, alerta de expiração) e fundo de reserva (movimentos com `destino: "reserva"`, seguido à parte da conta corrente) como entidades geridas, não texto livre.
 5. ✅ **Feito 2026-07-09** — Notificações por email para avisos importantes/urgentes e para atualização de estado de ocorrências.
 6. ✅ **Feito 2026-07-09** — Autogestão de dados pessoais pelo condómino (`/os-meus-dados`: ver os seus dados, corrigir contacto), construído como parte da Fase 3 (RGPD).

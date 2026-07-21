@@ -49,6 +49,7 @@ export async function criarFracao(formData: FormData) {
 
   const identificacao = String(formData.get('identificacao') || '').trim()
   const proprietario = String(formData.get('proprietario') || '').trim()
+  const nif = String(formData.get('nif') || '').trim()
   const permilagem = String(formData.get('permilagem') || '0')
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
   const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
@@ -66,6 +67,7 @@ export async function criarFracao(formData: FormData) {
       userId: admin.userId,
       identificacao,
       proprietario,
+      nif: nif || null,
       permilagem,
       contactoEmail: contactoEmail || null,
       contactoTelefone: contactoTelefone || null,

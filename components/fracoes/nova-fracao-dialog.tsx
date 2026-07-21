@@ -70,14 +70,20 @@ export function NovaFracaoDialog() {
               />
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="proprietario">Proprietário</Label>
-            <Input
-              id="proprietario"
-              name="proprietario"
-              required
-              placeholder="Nome do proprietário"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="proprietario">Proprietário</Label>
+              <Input
+                id="proprietario"
+                name="proprietario"
+                required
+                placeholder="Nome do proprietário"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="nif">NIF (opcional)</Label>
+              <Input id="nif" name="nif" placeholder="Ex: 123456789" />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">

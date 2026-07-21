@@ -148,6 +148,10 @@ export const fracao = pgTable(
     userId: text("userId").notNull(), // criador (admin)
     identificacao: text("identificacao").notNull(), // ex: "R/C Dto", "2ºEsq"
     proprietario: text("proprietario").notNull(),
+    // NIF do proprietário registado (fracao.proprietario) — útil para
+    // recibos/declarações fiscais. Texto livre, sem validação de checksum,
+    // pelo mesmo padrão já usado em condominio.nif.
+    nif: text("nif"),
     permilagem: numeric("permilagem", { precision: 8, scale: 2 })
       .notNull()
       .default("0"),
