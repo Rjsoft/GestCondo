@@ -102,6 +102,17 @@ export function NovaFracaoDialog() {
             <Label htmlFor="notas">Notas</Label>
             <Textarea id="notas" name="notas" rows={3} placeholder="Opcional" />
           </div>
+          <div className="flex items-start gap-2">
+            <input
+              id="isentaElevador"
+              name="isentaElevador"
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="isentaElevador" className="font-normal text-xs text-muted-foreground">
+              Isenta da parcela do elevador (ex: rés-do-chão sem acesso ao elevador)
+            </Label>
+          </div>
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? 'A guardar...' : 'Guardar fração'}

@@ -154,6 +154,11 @@ export const fracao = pgTable(
     contactoEmail: text("contactoEmail"),
     contactoTelefone: text("contactoTelefone"),
     notas: text("notas"),
+    // Frações sem uso do elevador (tipicamente o rés-do-chão) podem ser
+    // isentas dessa parcela do orçamento — art. 1424º CC permite repartição
+    // diferente da permilagem para despesas sem utilidade para certas
+    // frações. Ver orcamento.valorAnualElevador e lib/rateio.ts.
+    isentaElevador: boolean("isentaElevador").notNull().default(false),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (t) => [index("fracao_condominio_idx").on(t.condominioId)],
@@ -188,17 +193,27 @@ export const movimento = pgTable(
     // os dois fundos, regista-se como duas linhas separadas (sem cálculo
     // automático de percentagem — ver FUNCTIONAL_GAPS.md).
     destino: text("destino").notNull().default("geral"),
+    // Preenchido só nas quotas criadas por gerarQuotasOrcamento (lib/rateio.ts
+    // + app/actions/orcamentos.ts) — permite verificar se um orçamento já
+    // gerou quotas (bloqueia gerar em duplicado) sem inferir por texto de
+    // categoria/data. `set null` em vez de cascade: eliminar o orçamento
+    // nunca pode apagar um movimento financeiro (obrigação de retenção).
+    orcamentoId: integer("orcamentoId").references(() => orcamento.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },
-  (t) => [index("movimento_condominio_idx").on(t.condominioId)],
+  (t) => [
+    index("movimento_condominio_idx").on(t.condominioId),
+    index("movimento_orcamento_idx").on(t.orcamentoId),
+  ],
 )
 
 // Orçamento anual aprovado do condomínio. Por agora um valor global por
-// ano (sem rubricas discriminadas nem geração automática de quotas a
-// partir dele) — ver FUNCTIONAL_GAPS.md para o que falta (rubricas,
-// orçamento previsto vs. executado, geração automática de quotas mensais
-// por fração a partir da permilagem).
+// ano (sem rubricas discriminadas) — ver FUNCTIONAL_GAPS.md para o que
+// falta (orçamento previsto vs. executado). Gera quotas mensais por fração
+// via app/actions/orcamentos.ts:gerarQuotasOrcamento + lib/rateio.ts.
 export const orcamento = pgTable(
   "orcamento",
   {
@@ -209,6 +224,11 @@ export const orcamento = pgTable(
     userId: text("userId").notNull(),
     ano: integer("ano").notNull(),
     valorAnual: numeric("valorAnual", { precision: 12, scale: 2 }).notNull(),
+    // Parcela do valorAnual que é custo do elevador — opcional, rateada só
+    // pelas frações não isentas (fracao.isentaElevador), separadamente do
+    // resto (rateado por permilagem entre todas). Null/0 = sem parcela de
+    // elevador distinta; comporta-se como antes desta funcionalidade.
+    valorAnualElevador: numeric("valorAnualElevador", { precision: 12, scale: 2 }),
     notas: text("notas"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },

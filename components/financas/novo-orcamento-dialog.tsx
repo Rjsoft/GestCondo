@@ -76,6 +76,22 @@ export function NovoOrcamentoDialog() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
+            <Label htmlFor="valorAnualElevador">Valor anual do elevador (opcional)</Label>
+            <Input
+              id="valorAnualElevador"
+              name="valorAnualElevador"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0,00"
+            />
+            <p className="text-xs text-muted-foreground">
+              Se preenchido, esta parcela é rateada só pelas frações não isentas de elevador
+              (ver &quot;Frações&quot;) — o resto do orçamento continua a ser rateado por
+              permilagem entre todas.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
             <Label htmlFor="notas">Notas</Label>
             <Textarea
               id="notas"

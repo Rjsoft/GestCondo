@@ -1,12 +1,24 @@
 'use client'
 
 import { useTransition } from 'react'
-import { eliminarFracao } from '@/app/actions/fracoes'
+import { alternarIsencaoElevador, eliminarFracao } from '@/app/actions/fracoes'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Trash2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function FracaoActions({ id }: { id: number }) {
+export function FracaoActions({
+  id,
+  isentaElevador,
+}: {
+  id: number
+  isentaElevador: boolean
+}) {
   const [pending, startTransition] = useTransition()
 
   const remover = () => {
@@ -20,16 +32,49 @@ export function FracaoActions({ id }: { id: number }) {
     })
   }
 
+  const alternarElevador = () => {
+    startTransition(async () => {
+      try {
+        await alternarIsencaoElevador(id, !isentaElevador)
+        toast.success(
+          isentaElevador
+            ? 'Fração deixou de estar isenta de elevador'
+            : 'Fração marcada como isenta de elevador',
+        )
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro')
+      }
+    })
+  }
+
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      disabled={pending}
-      onClick={remover}
-      className="text-muted-foreground hover:text-destructive"
-      aria-label="Eliminar fração"
-    >
-      <Trash2 className="h-4 w-4" />
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" disabled={pending} />}>
+        <MoreHorizontal className="h-4 w-4" />
+        <span className="sr-only">Ações</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={alternarElevador}>
+          {isentaElevador ? (
+            <>
+              <ArrowUpCircle className="h-4 w-4" />
+              Retirar isenção de elevador
+            </>
+          ) : (
+            <>
+              <ArrowDownCircle className="h-4 w-4" />
+              Isentar de elevador
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={remover}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" />
+          Eliminar
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

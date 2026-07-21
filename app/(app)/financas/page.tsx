@@ -99,7 +99,12 @@ export default async function FinancasPage() {
         mapaSaldos={mapaSaldos}
         orcamentos={orcamentos}
         seguros={seguros}
-        fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
+        fracoes={fracoes.map((f) => ({
+          id: f.id,
+          identificacao: f.identificacao,
+          permilagem: Number(f.permilagem),
+          isentaElevador: f.isentaElevador,
+        }))}
         isAdmin={isAdmin}
       />
     </div>

@@ -50,6 +50,7 @@ export default async function FracoesPage() {
                   <TableHead className="hidden sm:table-cell">Contacto</TableHead>
                 )}
                 <TableHead className="text-right">Permilagem</TableHead>
+                <TableHead className="hidden sm:table-cell">Elevador</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
             </TableHeader>
@@ -57,7 +58,7 @@ export default async function FracoesPage() {
               {fracoes.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={2 + (veContactos ? 1 : 0) + 1 + (isAdmin ? 1 : 0)}
+                    colSpan={3 + (veContactos ? 1 : 0) + (isAdmin ? 1 : 0)}
                     className="py-10 text-center text-muted-foreground"
                   >
                     Ainda não existem frações registadas.
@@ -86,9 +87,12 @@ export default async function FracoesPage() {
                   <TableCell className="text-right">
                     {Number(f.permilagem).toFixed(2)} ‰
                   </TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {f.isentaElevador ? 'Isenta' : '—'}
+                  </TableCell>
                   {isAdmin && (
                     <TableCell>
-                      <FracaoActions id={f.id} />
+                      <FracaoActions id={f.id} isentaElevador={f.isentaElevador} />
                     </TableCell>
                   )}
                 </TableRow>

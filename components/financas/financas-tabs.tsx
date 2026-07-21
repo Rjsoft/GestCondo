@@ -45,6 +45,7 @@ type Orcamento = {
   id: number
   ano: number
   valorAnual: string
+  valorAnualElevador: string | null
   notas: string | null
 }
 
@@ -78,7 +79,12 @@ export function FinancasTabs({
   mapaSaldos: SaldoFracao[]
   orcamentos: Orcamento[]
   seguros: Seguro[]
-  fracoes: { id: number; identificacao: string }[]
+  fracoes: {
+    id: number
+    identificacao: string
+    permilagem: number
+    isentaElevador: boolean
+  }[]
   isAdmin: boolean
 }) {
   return (
@@ -267,7 +273,15 @@ export function FinancasTabs({
                     </TableCell>
                     {isAdmin && (
                       <TableCell>
-                        <OrcamentoActions id={o.id} />
+                        <OrcamentoActions
+                          id={o.id}
+                          ano={o.ano}
+                          valorAnual={Number(o.valorAnual)}
+                          valorAnualElevador={
+                            o.valorAnualElevador ? Number(o.valorAnualElevador) : 0
+                          }
+                          fracoes={fracoes}
+                        />
                       </TableCell>
                     )}
                   </TableRow>

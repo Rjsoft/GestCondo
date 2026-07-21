@@ -1,13 +1,38 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { eliminarOrcamento } from '@/app/actions/orcamentos'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { GerarQuotasDialog } from '@/components/financas/gerar-quotas-dialog'
+import { MoreHorizontal, Trash2, Calculator } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function OrcamentoActions({ id }: { id: number }) {
+export function OrcamentoActions({
+  id,
+  ano,
+  valorAnual,
+  valorAnualElevador,
+  fracoes,
+}: {
+  id: number
+  ano: number
+  valorAnual: number
+  valorAnualElevador: number
+  fracoes: {
+    id: number
+    identificacao: string
+    permilagem: number
+    isentaElevador: boolean
+  }[]
+}) {
   const [pending, startTransition] = useTransition()
+  const [gerarAberto, setGerarAberto] = useState(false)
 
   const remover = () => {
     startTransition(async () => {
@@ -21,15 +46,35 @@ export function OrcamentoActions({ id }: { id: number }) {
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      disabled={pending}
-      onClick={remover}
-      className="text-muted-foreground hover:text-destructive"
-      aria-label="Eliminar orçamento"
-    >
-      <Trash2 className="h-4 w-4" />
-    </Button>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" disabled={pending} />}>
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Ações</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setGerarAberto(true)}>
+            <Calculator className="h-4 w-4" />
+            Gerar quotas mensais
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={remover}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Eliminar
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <GerarQuotasDialog
+        open={gerarAberto}
+        onOpenChange={setGerarAberto}
+        orcamentoId={id}
+        ano={ano}
+        valorAnual={valorAnual}
+        valorAnualElevador={valorAnualElevador}
+        fracoes={fracoes}
+      />
+    </>
   )
 }

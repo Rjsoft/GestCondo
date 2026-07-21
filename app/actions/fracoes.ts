@@ -53,6 +53,7 @@ export async function criarFracao(formData: FormData) {
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
   const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
   const notas = String(formData.get('notas') || '').trim()
+  const isentaElevador = formData.get('isentaElevador') === 'on'
 
   if (!identificacao || !proprietario) {
     throw new Error('Preencha a identificação e o proprietário')
@@ -69,6 +70,7 @@ export async function criarFracao(formData: FormData) {
       contactoEmail: contactoEmail || null,
       contactoTelefone: contactoTelefone || null,
       notas: notas || null,
+      isentaElevador,
     })
     .returning({ id: fracao.id })
 
@@ -82,6 +84,25 @@ export async function criarFracao(formData: FormData) {
 
   revalidatePath('/fracoes')
   revalidatePath('/')
+}
+
+export async function alternarIsencaoElevador(id: number, isento: boolean) {
+  const admin = await requireAdmin()
+  await db
+    .update(fracao)
+    .set({ isentaElevador: isento })
+    .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'fracao',
+    entidadeId: id,
+    detalhes: isento ? 'Marcada como isenta de elevador' : 'Deixou de estar isenta de elevador',
+  })
+
+  revalidatePath('/fracoes')
+  revalidatePath('/financas')
 }
 
 export async function eliminarFracao(id: number) {

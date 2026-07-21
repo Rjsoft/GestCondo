@@ -64,6 +64,20 @@
       "when": 1783581832935,
       "tag": "0008_upload-ficheiros",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784629176571,
+      "tag": "0009_quotas_orcamento",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784630271965,
+      "tag": "0010_isencao_elevador",
+      "breakpoints": true
     }
   ]
 }
