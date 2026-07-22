@@ -66,7 +66,7 @@ Confirmado nesta fase: obrigatório por lei (DL 268/94 art. 4º), mínimo **10% 
 
 Ver `docs/legal/MEETINGS_AND_VOTING_MATRIX.md`. Núcleo P1 já implementado (2026-07-09) está correto na sua decisão de não codificar uma regra universal de maioria — a app mostra os números, o administrador qualifica a decisão à luz da matéria.
 
-**LEGAL-03**: `assembleia.dataPrimeiraConvocatoria`/`dataSegundaConvocatoria` não valida que sejam dias distintos (art. 1432º/6-7 exige isto explicitamente) — hoje é possível, tecnicamente, marcar a 2ª convocatória para o mesmo dia da 1ª, o que seria juridicamente inválido. Severidade Baixa, prioridade P3 (validação de formulário, não uma falha estrutural).
+**LEGAL-03 — Resolvido 2026-07-22**: `criarAssembleia` (`app/actions/assembleias.ts`) agora rejeita a criação se a 2ª convocatória cair no mesmo dia da 1ª, citando o art. 1432º do Código Civil. Testado em runtime (mesmo dia → erro; dias distintos → sucesso).
 
 ## 7.6 Administrador
 
@@ -82,7 +82,7 @@ Já coberto em detalhe por `FUNCTIONAL_GAPS.md` secção 4 (fornecedores, orçam
 |---|---|---|---|---|
 | LEGAL-01 | ~~Declaração de encargos/dívida (art. 1424º-A) em falta~~ **Resolvido 2026-07-22** | Alta | — | `app/actions/financas.ts`, `app/(app)/financas/declaracao-divida/[fracaoId]/page.tsx` |
 | LEGAL-02 | Orçamento sem ligação obrigatória a uma deliberação de assembleia | Média | P2 | `app/actions/orcamentos.ts` |
-| LEGAL-03 | Datas de 1ª/2ª convocatória sem validação de dia distinto | Baixa | P3 | `app/actions/assembleias.ts` |
+| LEGAL-03 | ~~Datas de 1ª/2ª convocatória sem validação de dia distinto~~ **Resolvido 2026-07-22** | Baixa | — | `app/actions/assembleias.ts` |
 | LEGAL-04 | Execução de deliberações sem campo de prazo (15 dias úteis) nem alerta | Média | P2 | `lib/db/schema.ts` (`assembleia_ponto`) |
 | LEGAL-05 | Sem suporte a três orçamentos de fornecedor para obras extraordinárias/inovação | Média | P2 | Depende do módulo de fornecedores (`FUNCTIONAL_GAPS.md` secção 4) |
 | LEGAL-06 | Sem dever de informação semestral sobre processos judiciais em curso | Baixa | P2 (só relevante se houver processo) | Funcionalidade nova |

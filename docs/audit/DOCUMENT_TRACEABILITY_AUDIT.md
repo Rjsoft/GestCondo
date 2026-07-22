@@ -22,13 +22,13 @@ Data: 2026-07-22. Consolida as secções 8 (Documentos e Prova) e 9 (Auditoria e
 
 ### 8.2 Regra "não apagar documentos financeiros/jurídicos" — verificação
 
-A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jurídicos emitidos; deve usar anulação/substituição/nova versão/estorno/aditamento/retificação") está **corretamente aplicada a `movimento`** (soft-delete, nunca `DELETE` físico — confirmado no schema e em `eliminarMovimento`). **Não está aplicada a**: `seguro` (documento com valor probatório de cumprimento de obrigação legal — seguro obrigatório do edifício), `aviso`, `documento`, `ocorrencia` — todos continuam com `DELETE` físico. Já identificado em `GDPR_CHECKLIST.md` secção 5 e reconfirmado nesta fase como **DOC-01**.
+A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jurídicos emitidos; deve usar anulação/substituição/nova versão/estorno/aditamento/retificação") está **corretamente aplicada a `movimento`** (soft-delete, nunca `DELETE` físico — confirmado no schema e em `eliminarMovimento`) e, **desde 2026-07-22, também a `seguro`** (`eliminarSeguro` passou a soft-delete, `deletedAt`, testado em runtime — o registo mantém-se na BD mesmo depois de "eliminado" na UI). **Ainda não está aplicada a**: `aviso`, `documento`, `ocorrencia` — continuam com `DELETE` físico.
 
 ### 8.3 Achados novos desta fase (secção 8)
 
 | ID | Título | Severidade | Prioridade |
 |---|---|---|---|
-| DOC-01 | `seguro`/`aviso`/`documento`/`ocorrencia` usam `DELETE` físico, não soft-delete | Média | P2 (P1 para `seguro` especificamente, por ser prova de cumprimento de obrigação legal) |
+| DOC-01 | `aviso`/`documento`/`ocorrencia` usam `DELETE` físico, não soft-delete (`seguro` **resolvido 2026-07-22**) | Média | P2 |
 | DOC-02 | Sem número sequencial próprio para assembleias/atas (ex. "Ata n.º 3/2026") — só existe o `id` interno | Baixa | P3 |
 | DOC-03 | Sem histórico de alterações ao valor de um orçamento (`onConflictDoUpdate` sobrescreve) | Média | P2 |
 | DOC-04 | Recibo usa `movimento.id` como número — sequencial mas partilhado com despesas, não uma numeração exclusiva de recibos | Baixa | P3 (aceitável para condomínios sem IVA, conforme já analisado em `FUNCTIONAL_GAPS.md`/memória de sessão sobre validade fiscal de recibos) |
@@ -44,7 +44,7 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 | Recuperação de conta (reset de password) | ❌ Não |
 | Alteração de permissões (perfil) | ✅ `atualizarPerfilMembro` |
 | Criação de utilizadores | ✅ (aprovação/rejeição de `membro`) |
-| Exportação | ❌ **Não** — nem `exportarMeusDados()` (portabilidade RGPD) nem a exportação CSV de movimentos (que é só client-side, sem round-trip ao servidor) ficam registadas |
+| Exportação | 🟡 `exportarMeusDados()` (portabilidade RGPD) **passou a ser auditada 2026-07-22** (`registarAuditoria`, confirmado em runtime via `/auditoria`); a exportação CSV de movimentos continua sem registo, por ser só client-side, sem round-trip ao servidor |
 | Consulta de dados sensíveis | ❌ Não (decisão deliberada — só escritas são auditadas, não leituras; ver nota abaixo) |
 | Criação e alteração de titulares (frações/condóminos) | ✅ |
 | Mudança de proprietário | ✅ (é uma alteração de `fracao`) |
@@ -85,7 +85,7 @@ A decisão de **não auditar leituras**, só escritas, é uma decisão de desenh
 | ID | Título | Severidade | Prioridade |
 |---|---|---|---|
 | AUDIT-01 | Login, falhas de login e recuperação de conta não ficam no `audit_log` — só nos logs efémeros da plataforma | Média | P2 |
-| AUDIT-02 | Exportação de dados (portabilidade RGPD, CSV de movimentos) não é auditada | Média | P2 (liga-se a RGPD-02, Fase B) |
+| AUDIT-02 | ~~Exportação de dados (portabilidade RGPD) não é auditada~~ **Resolvido 2026-07-22** para `exportarMeusDados`; CSV de movimentos continua por auditar (exigiria converter para server action) | Média | P3 (restante) |
 | AUDIT-03 | Download de documentos não é auditado | Baixa | P3 |
 
 ## Próxima fase

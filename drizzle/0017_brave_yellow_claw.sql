@@ -1,0 +1,1 @@
+ALTER TABLE "seguro" ADD COLUMN "deletedAt" timestamp;

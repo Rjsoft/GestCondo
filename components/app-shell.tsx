@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   Settings,
+  Truck,
 } from 'lucide-react'
 import {
   PERFIL_LABEL,
@@ -51,6 +52,7 @@ const NAV: NavItem[] = [
   { href: '/assembleias', label: 'Assembleias', icon: Gavel },
   { href: '/ocorrencias', label: 'Ocorrências', icon: Wrench },
   { href: '/documentos', label: 'Documentos', icon: FileText },
+  { href: '/fornecedores', label: 'Fornecedores', icon: Truck },
   {
     href: '/fracoes',
     label: 'Frações',

@@ -5,7 +5,7 @@ import { seguro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const TIPOS = ['multirriscos', 'incendio', 'outro']
@@ -15,7 +15,7 @@ export async function getSeguros() {
   return db
     .select()
     .from(seguro)
-    .where(eq(seguro.condominioId, m.condominioId))
+    .where(and(eq(seguro.condominioId, m.condominioId), isNull(seguro.deletedAt)))
     .orderBy(desc(seguro.dataFim))
 }
 
@@ -87,9 +87,13 @@ export async function eliminarSeguro(id: number) {
   const admin = await requireAdmin()
   const condicao = and(eq(seguro.id, id), eq(seguro.condominioId, admin.condominioId))
 
+  // Soft-delete (achado DOC-01 da auditoria jurídica 2026-07-22): o seguro
+  // é prova de cumprimento de obrigação legal, nunca DELETE físico — mesmo
+  // padrão de movimento.deletedAt. O anexo em Vercel Blob continua a ser
+  // apagado (não tem valor probatório manter o ficheiro em si).
   const [existente] = await db.select({ anexoUrl: seguro.anexoUrl }).from(seguro).where(condicao).limit(1)
 
-  await db.delete(seguro).where(condicao)
+  await db.update(seguro).set({ deletedAt: new Date() }).where(condicao)
 
   await registarAuditoria({
     actor: admin,

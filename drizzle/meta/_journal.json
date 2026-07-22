@@ -120,6 +120,20 @@
       "when": 1784713470161,
       "tag": "0016_thin_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1784721203865,
+      "tag": "0017_brave_yellow_claw",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1784723350641,
+      "tag": "0018_busy_blade",
+      "breakpoints": true
     }
   ]
 }

@@ -160,6 +160,28 @@ export const membro = pgTable(
   ],
 )
 
+// Fornecedores do condomínio (ex: elevadores, limpeza, seguros) — registo
+// simples de contacto/categoria, sem ligação ainda a ocorrências, obras ou
+// despesas (ver FUNCTIONAL_GAPS.md, gap "Fornecedores" P2 — versão mínima).
+export const fornecedor = pgTable(
+  "fornecedor",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    nome: text("nome").notNull(),
+    nif: text("nif"),
+    categoria: text("categoria"), // ex: "Elevadores", "Limpeza", "Seguros" — texto livre
+    contactoEmail: text("contactoEmail"),
+    contactoTelefone: text("contactoTelefone"),
+    notas: text("notas"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("fornecedor_condominio_idx").on(t.condominioId)],
+)
+
 // Frações do condomínio
 export const fracao = pgTable(
   "fracao",
@@ -331,6 +353,11 @@ export const seguro = pgTable(
     anexoUrl: text("anexoUrl"),
     anexoNomeFicheiro: text("anexoNomeFicheiro"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01): o seguro
+    // é prova de cumprimento da obrigação legal de seguro do edifício
+    // (DL nº 268/94) — nunca deve desaparecer sem rasto, mesmo passado o
+    // prazo de validade. Mesmo padrão de `movimento.deletedAt`.
+    deletedAt: timestamp("deletedAt"),
   },
   (t) => [index("seguro_condominio_idx").on(t.condominioId)],
 )

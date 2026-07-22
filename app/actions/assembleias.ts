@@ -145,6 +145,19 @@ export async function criarAssembleia(formData: FormData) {
   if (!primeiraStr) throw new Error('Indique a data/hora da primeira convocatória')
   if (tipo !== 'ordinaria' && tipo !== 'extraordinaria') throw new Error('Tipo inválido')
 
+  const dataPrimeira = new Date(primeiraStr)
+  const dataSegunda = segundaStr ? new Date(segundaStr) : null
+
+  // A 2ª convocatória tem de ser marcada para um dia distinto da 1ª (Código
+  // Civil art. 1432º/6-7) — não basta "meia hora depois" no mesmo dia, por
+  // mais que os condóminos presentes concordem (achado LEGAL-03 da
+  // auditoria jurídica 2026-07-22, ver docs/legal/MEETINGS_AND_VOTING_MATRIX.md).
+  if (dataSegunda && dataPrimeira.toDateString() === dataSegunda.toDateString()) {
+    throw new Error(
+      'A 2ª convocatória tem de ser marcada para um dia diferente da 1ª (art. 1432º do Código Civil)',
+    )
+  }
+
   const [nova] = await db
     .insert(assembleia)
     .values({
@@ -152,8 +165,8 @@ export async function criarAssembleia(formData: FormData) {
       userId: admin.userId,
       tipo,
       local,
-      dataPrimeiraConvocatoria: new Date(primeiraStr),
-      dataSegundaConvocatoria: segundaStr ? new Date(segundaStr) : null,
+      dataPrimeiraConvocatoria: dataPrimeira,
+      dataSegundaConvocatoria: dataSegunda,
     })
     .returning({ id: assembleia.id })
 
