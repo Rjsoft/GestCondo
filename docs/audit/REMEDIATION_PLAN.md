@@ -21,8 +21,8 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 
 | Item | Achado(s) | Ação |
 |---|---|---|
-| Política de Privacidade | PP-1 a PP-10 | Fechar os 10 gaps (identidade/contacto do responsável, reclamação à CNPD, Vercel Analytics, segurança, cookies, transferências, decisões automatizadas) |
-| Termos de Utilização | TU-1 a TU-12 | Fechar os 12 gaps (identidade, propriedade intelectual, documentos carregados, pagamentos, lei aplicável/foro, RAL/ODR, legitimidade de representação ao criar condomínio) |
+| Política de Privacidade | PP-1 a PP-10 | ✅ **9/10 resolvidos 2026-07-22** (reclamação à CNPD, Vercel Analytics, segurança, cookies, transferências, decisões automatizadas, distinção de cenários, data). Falta só PP-1 (identidade/contacto do responsável), placeholder `[A preencher]` deixado no texto — decisão do utilizador, ainda pendente |
+| Termos de Utilização | TU-1 a TU-12 | ✅ **9/12 resolvidos 2026-07-22** (propriedade intelectual, documentos carregados, pagamentos — estado atual declarado, RAL/ODR, utilização proibida, legitimidade de representação, exportação/eliminação, força maior, data). Faltam TU-1/TU-5 (identidade/foro, decisão do utilizador) e TU-7 (classificação B2B/B2C, precisa de confirmação jurídica) |
 | Acordo de Tratamento de Dados (DPA) | RGPD-03, `LEGAL_DOCUMENTS_REGISTER.md` | ~~Redigir~~ **Modelo pronto** (`DPA_TEMPLATE.md`, 2026-07-22) — falta preencher e celebrar quando surgir o primeiro cliente administradora real (hoje não há nenhum) |
 | Contrato SaaS | `LEGAL_DOCUMENTS_REGISTER.md` | Redigir documento comercial formal |
 | Retenção | RGPD-04 (fechado), RGPD-05 | Expurgo automático de sessões/logs — soft-delete já cobre todas as tabelas relevantes |
@@ -66,7 +66,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 
 1. ~~**Declaração de encargos/dívida** (LEGAL-01)~~ — **Resolvido 2026-07-22.**
 2. ~~**DPA**~~ — **Modelo pronto 2026-07-22** (`DPA_TEMPLATE.md`); sem cliente real ainda, deixa de ser urgente até haver um.
-3. **Fechar gaps de Privacidade/Termos** (22 no total) — a maioria são adições de texto, não código. Próximo passo mais importante em aberto.
+3. ~~**Fechar gaps de Privacidade/Termos**~~ — **18/22 resolvidos 2026-07-22.** Restam 4, todos bloqueados em decisões que só o utilizador pode tomar: identidade legal do operador + contacto de privacidade (PP-1/TU-1), foro competente (TU-5) e classificação B2B/B2C (TU-7, precisa também de confirmação jurídica). Assinalados com `[A preencher]` diretamente nas páginas publicadas.
 4. ~~**Soft-delete em `seguro`**~~ — **feito 2026-07-22**, e estendido também a `aviso`/`documento`/`ocorrencia` (DOC-01 fechado).
 5. **Bucket de ficheiros deixar de ser público** — depende de recriar o Blob store (ver nota operacional em `FUNCTIONAL_GAPS.md`), mais disruptivo.
 6. Resto da Fase 2/3, depois Fase 4 por oportunidade.
