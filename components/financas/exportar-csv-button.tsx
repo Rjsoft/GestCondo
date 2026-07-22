@@ -3,6 +3,14 @@
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 
+const MEIO_PAGAMENTO_LABEL: Record<string, string> = {
+  transferencia: 'Transferência',
+  multibanco: 'Multibanco',
+  numerario: 'Numerário',
+  cheque: 'Cheque',
+  outro: 'Outro',
+}
+
 type MovimentoCsv = {
   data: string | Date
   tipo: string
@@ -11,6 +19,8 @@ type MovimentoCsv = {
   valor: string | number
   pago: boolean
   destino: string
+  meioPagamento: string | null
+  dataLiquidacao: string | Date | null
 }
 
 function escaparCampo(valor: string) {
@@ -24,13 +34,35 @@ function escaparCampo(valor: string) {
 
 export function ExportarCsvButton({ movimentos }: { movimentos: MovimentoCsv[] }) {
   const exportar = () => {
-    const cabecalho = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor (€)', 'Estado', 'Destino']
+    const cabecalho = [
+      'Data',
+      'Tipo',
+      'Categoria',
+      'Descrição',
+      'Valor (€)',
+      'Estado',
+      'Destino',
+      'Meio de pagamento',
+      'Data de liquidação',
+    ]
     const linhas = movimentos.map((m) => {
       const data = new Date(m.data).toLocaleDateString('pt-PT')
       const tipo = m.tipo === 'receita' ? 'Receita' : 'Despesa'
       const estado = m.tipo === 'receita' ? (m.pago ? 'Pago' : 'Pendente') : ''
       const destino = m.destino === 'reserva' ? 'Fundo de reserva' : 'Conta corrente'
-      return [data, tipo, m.categoria, m.descricao, String(m.valor).replace('.', ','), estado, destino]
+      const meioPagamento = m.meioPagamento ? (MEIO_PAGAMENTO_LABEL[m.meioPagamento] ?? m.meioPagamento) : ''
+      const dataLiquidacao = m.dataLiquidacao ? new Date(m.dataLiquidacao).toLocaleDateString('pt-PT') : ''
+      return [
+        data,
+        tipo,
+        m.categoria,
+        m.descricao,
+        String(m.valor).replace('.', ','),
+        estado,
+        destino,
+        meioPagamento,
+        dataLiquidacao,
+      ]
         .map((campo) => escaparCampo(campo))
         .join(',')
     })

@@ -209,6 +209,12 @@ export const movimento = pgTable(
     }),
     data: timestamp("data").notNull().defaultNow(),
     pago: boolean("pago").notNull().default(true),
+    // Detalhe do pagamento — todos opcionais, preenchidos quando o movimento
+    // é marcado como pago. "data" acima é a data do lançamento/vencimento;
+    // dataLiquidacao é quando o pagamento efetivamente ocorreu.
+    meioPagamento: text("meioPagamento"), // "transferencia" | "multibanco" | "numerario" | "cheque" | "outro"
+    referenciaMb: text("referenciaMb"),
+    dataLiquidacao: timestamp("dataLiquidacao"),
     // "geral" (despesas correntes/quotas normais) ou "reserva" (fundo comum
     // de reserva, obrigatório por lei — DL 268/94). Um movimento pertence
     // inteiramente a um dos dois; se uma quota tiver de ser dividida entre

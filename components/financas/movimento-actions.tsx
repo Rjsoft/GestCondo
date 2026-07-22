@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { MarcarPagoDialog } from '@/components/financas/marcar-pago-dialog'
 import { MoreHorizontal, Trash2, CheckCircle2, Circle, Receipt } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -25,6 +26,7 @@ export function MovimentoActions({
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [marcarPagoOpen, setMarcarPagoOpen] = useState(false)
 
   const remover = () => {
     startTransition(async () => {
@@ -38,11 +40,11 @@ export function MovimentoActions({
     })
   }
 
-  const marcar = () => {
+  const marcarPendente = () => {
     startTransition(async () => {
       try {
-        await alternarPago(id, !pago)
-        toast.success(pago ? 'Marcado como pendente' : 'Marcado como pago')
+        await alternarPago(id, false)
+        toast.success('Marcado como pendente')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro')
       }
@@ -66,7 +68,7 @@ export function MovimentoActions({
             </DropdownMenuItem>
           )}
           {tipo === 'receita' && (
-            <DropdownMenuItem onClick={marcar}>
+            <DropdownMenuItem onClick={pago ? marcarPendente : () => setMarcarPagoOpen(true)}>
               {pago ? (
                 <>
                   <Circle className="h-4 w-4" />
@@ -97,6 +99,7 @@ export function MovimentoActions({
         onConfirm={remover}
         pending={pending}
       />
+      <MarcarPagoDialog id={id} open={marcarPagoOpen} onOpenChange={setMarcarPagoOpen} />
     </>
   )
 }

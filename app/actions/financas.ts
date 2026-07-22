@@ -246,6 +246,9 @@ export async function criarMovimento(formData: FormData) {
   const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
   const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
   const destino = String(formData.get('destino') || 'geral')
+  const meioPagamentoRaw = String(formData.get('meioPagamento') || '').trim()
+  const referenciaMbRaw = String(formData.get('referenciaMb') || '').trim()
+  const dataLiquidacaoRaw = String(formData.get('dataLiquidacao') || '').trim()
 
   if (!categoria || !descricao || !valor) {
     throw new Error('Preencha todos os campos obrigatórios')
@@ -272,6 +275,10 @@ export async function criarMovimento(formData: FormData) {
       pago,
       fracaoId: tipo === 'receita' ? fracaoId : null,
       destino,
+      // Detalhe do pagamento só faz sentido quando o movimento já nasce pago.
+      meioPagamento: pago && meioPagamentoRaw ? meioPagamentoRaw : null,
+      referenciaMb: pago && referenciaMbRaw ? referenciaMbRaw : null,
+      dataLiquidacao: pago && dataLiquidacaoRaw ? new Date(dataLiquidacaoRaw) : null,
       ...(dataStr ? { data: new Date(dataStr) } : {}),
     })
     .returning({ id: movimento.id })
@@ -308,11 +315,19 @@ export async function eliminarMovimento(id: number) {
   revalidatePath('/')
 }
 
+/**
+ * Marca um movimento como pendente novamente — limpa o detalhe do
+ * pagamento (meio, referência, data de liquidação), que deixa de fazer
+ * sentido enquanto o movimento não voltar a ser pago.
+ */
 export async function alternarPago(id: number, pago: boolean) {
   const admin = await requireAdmin()
   await db
     .update(movimento)
-    .set({ pago })
+    .set({
+      pago,
+      ...(pago ? {} : { meioPagamento: null, referenciaMb: null, dataLiquidacao: null }),
+    })
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 
   await registarAuditoria({
@@ -321,6 +336,37 @@ export async function alternarPago(id: number, pago: boolean) {
     entidade: 'movimento',
     entidadeId: id,
     detalhes: pago ? 'Marcado como pago' : 'Marcado como pendente',
+  })
+
+  revalidatePath('/financas')
+}
+
+/**
+ * Marca um movimento como pago já com o detalhe do pagamento (meio,
+ * referência multibanco, data de liquidação) — usado no diálogo de
+ * "Marcar como pago" em vez do toggle simples de `alternarPago`.
+ */
+export async function marcarComoPago(
+  id: number,
+  detalhe: { meioPagamento?: string; referenciaMb?: string; dataLiquidacao?: string },
+) {
+  const admin = await requireAdmin()
+  await db
+    .update(movimento)
+    .set({
+      pago: true,
+      meioPagamento: detalhe.meioPagamento || null,
+      referenciaMb: detalhe.referenciaMb || null,
+      dataLiquidacao: detalhe.dataLiquidacao ? new Date(detalhe.dataLiquidacao) : null,
+    })
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'movimento',
+    entidadeId: id,
+    detalhes: `Marcado como pago${detalhe.meioPagamento ? ` (${detalhe.meioPagamento})` : ''}`,
   })
 
   revalidatePath('/financas')

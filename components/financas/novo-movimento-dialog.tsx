@@ -31,12 +31,15 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
   const [tipo, setTipo] = useState('despesa')
   const [fracaoId, setFracaoId] = useState('')
   const [destino, setDestino] = useState('geral')
+  const [pago, setPago] = useState(true)
+  const [meioPagamento, setMeioPagamento] = useState('')
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
     formData.set('tipo', tipo)
     formData.set('destino', destino)
     if (tipo === 'receita') formData.set('fracaoId', fracaoId)
+    if (pago) formData.set('meioPagamento', meioPagamento)
     startTransition(async () => {
       try {
         await criarMovimento(formData)
@@ -44,6 +47,8 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
         setOpen(false)
         setFracaoId('')
         setDestino('geral')
+        setPago(true)
+        setMeioPagamento('')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao registar')
       }
@@ -171,7 +176,8 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
                 id="pago"
                 name="pago"
                 type="checkbox"
-                defaultChecked
+                checked={pago}
+                onChange={(e) => setPago(e.target.checked)}
                 className="h-4 w-4 rounded border-input"
               />
               <Label htmlFor="pago" className="font-normal">
@@ -179,6 +185,45 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
               </Label>
             </div>
           </div>
+
+          {pago && (
+            <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label>Meio de pagamento</Label>
+                  <Select
+                    value={meioPagamento}
+                    onValueChange={(value) => setMeioPagamento(value ?? '')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Não especificado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="transferencia">Transferência</SelectItem>
+                      <SelectItem value="multibanco">Multibanco</SelectItem>
+                      <SelectItem value="numerario">Numerário</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="dataLiquidacao">Data de liquidação</Label>
+                  <Input id="dataLiquidacao" name="dataLiquidacao" type="date" />
+                </div>
+              </div>
+              {meioPagamento === 'multibanco' && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="referenciaMb">Referência multibanco</Label>
+                  <Input
+                    id="referenciaMb"
+                    name="referenciaMb"
+                    placeholder="Ex: Entidade 12345 Referência 123 456 789"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           <DialogFooter>
             <Button

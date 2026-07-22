@@ -37,6 +37,8 @@ type Movimento = {
   pago: boolean
   valor: string
   destino: string
+  meioPagamento: string | null
+  dataLiquidacao: Date | null
 }
 
 type SaldoFracao = {

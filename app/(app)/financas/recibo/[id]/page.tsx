@@ -7,6 +7,14 @@ import { ImprimirButton } from '@/components/imprimir-button'
 import { formatEuro, formatData } from '@/lib/format'
 import { Building2 } from 'lucide-react'
 
+const MEIO_PAGAMENTO_LABEL: Record<string, string> = {
+  transferencia: 'Transferência',
+  multibanco: 'Multibanco',
+  numerario: 'Numerário',
+  cheque: 'Cheque',
+  outro: 'Outro',
+}
+
 export default async function ReciboPage({
   params,
 }: {
@@ -81,6 +89,28 @@ export default async function ReciboPage({
               <dt className="text-muted-foreground">Data</dt>
               <dd className="font-medium text-foreground">{formatData(movimento.data)}</dd>
             </div>
+            {movimento.dataLiquidacao && (
+              <div className="flex justify-between border-b border-border pb-2">
+                <dt className="text-muted-foreground">Data de liquidação</dt>
+                <dd className="font-medium text-foreground">
+                  {formatData(movimento.dataLiquidacao)}
+                </dd>
+              </div>
+            )}
+            {movimento.meioPagamento && (
+              <div className="flex justify-between border-b border-border pb-2">
+                <dt className="text-muted-foreground">Meio de pagamento</dt>
+                <dd className="font-medium text-foreground">
+                  {MEIO_PAGAMENTO_LABEL[movimento.meioPagamento] ?? movimento.meioPagamento}
+                </dd>
+              </div>
+            )}
+            {movimento.referenciaMb && (
+              <div className="flex justify-between border-b border-border pb-2">
+                <dt className="text-muted-foreground">Referência multibanco</dt>
+                <dd className="font-medium text-foreground">{movimento.referenciaMb}</dd>
+              </div>
+            )}
             <div className="flex justify-between pt-2 text-base">
               <dt className="font-semibold text-foreground">Valor</dt>
               <dd className="font-serif font-bold text-emerald-600">
