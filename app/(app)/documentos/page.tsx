@@ -71,7 +71,7 @@ export default async function DocumentosPage({
                     <span>{formatData(d.createdAt)}</span>
                     {d.url && (
                       <a
-                        href={d.url}
+                        href={`/api/ficheiros?url=${encodeURIComponent(d.url)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-primary hover:underline"

@@ -10,7 +10,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 |---|---|---|
 | Fuga de dados entre condomínios | ✅ Resolvido e verificado (teste de integração real, `SECURITY_AUDIT.md` S9) | Nenhuma |
 | Permissões incorretas | ✅ Resolvido (7 perfis, `SECURITY_AUDIT.md` S8) | Nenhuma |
-| Documentos publicamente acessíveis | ❌ **Bucket Vercel Blob é público** | Corrigir antes de qualquer documento com dados pessoais sensíveis ser carregado em maior volume |
+| Documentos publicamente acessíveis | ✅ **Resolvido 2026-07-22** para novos uploads — store privado dedicado (`gestcondo-ficheiros-privado`) + rota autenticada (`app/api/ficheiros/route.ts`). Ficheiros anteriores a esta data continuam no store público antigo, não migrados (risco residual baixo e aceite) | Migrar ficheiros antigos, se algum dia justificar o esforço |
 | Passwords/segredos expostos | ✅ Nenhum encontrado | Nenhuma |
 | Ausência de auditoria financeira | ✅ Resolvido (`audit_log`) | Nenhuma |
 | Eliminações irreversíveis sem rasto | ✅ Resolvido — soft-delete em `movimento`, `seguro`, `aviso`, `documento`, `ocorrencia` (DOC-01 fechado 2026-07-22) | Nenhuma |
@@ -68,5 +68,5 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 2. ~~**DPA**~~ — **Modelo pronto 2026-07-22** (`DPA_TEMPLATE.md`); sem cliente real ainda, deixa de ser urgente até haver um.
 3. ~~**Fechar gaps de Privacidade/Termos**~~ — **18/22 resolvidos 2026-07-22.** Restam 4, todos bloqueados em decisões que só o utilizador pode tomar: identidade legal do operador + contacto de privacidade (PP-1/TU-1), foro competente (TU-5) e classificação B2B/B2C (TU-7, precisa também de confirmação jurídica). Assinalados com `[A preencher]` diretamente nas páginas publicadas.
 4. ~~**Soft-delete em `seguro`**~~ — **feito 2026-07-22**, e estendido também a `aviso`/`documento`/`ocorrencia` (DOC-01 fechado).
-5. **Bucket de ficheiros deixar de ser público** — depende de recriar o Blob store (ver nota operacional em `FUNCTIONAL_GAPS.md`), mais disruptivo.
+5. ~~**Bucket de ficheiros deixar de ser público**~~ — **feito 2026-07-22**, via novo store privado (ver `FUNCTIONAL_GAPS.md`).
 6. Resto da Fase 2/3, depois Fase 4 por oportunidade.

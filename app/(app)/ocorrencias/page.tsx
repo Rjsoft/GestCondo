@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { requireMembroPagina, podeEscrever, temPermissaoGestao } from '@/lib/session'
 import { getOcorrencias } from '@/app/actions/ocorrencias'
 import { PageHeader } from '@/components/page-header'
@@ -59,9 +58,15 @@ export default async function OcorrenciasPage({
                     {o.descricao}
                   </p>
                   {o.fotoUrl && (
-                    <a href={o.fotoUrl} target="_blank" rel="noopener noreferrer" className="mt-2 block w-fit">
-                      <Image
-                        src={o.fotoUrl}
+                    <a
+                      href={`/api/ficheiros?url=${encodeURIComponent(o.fotoUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 block w-fit"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- URL privado do Blob, não pode passar pelo otimizador de imagens do Next (perderia o cookie de sessão) */}
+                      <img
+                        src={`/api/ficheiros?url=${encodeURIComponent(o.fotoUrl)}`}
                         alt="Foto da ocorrência"
                         width={96}
                         height={96}

@@ -38,7 +38,15 @@ export function SeguroActions({ id, anexoUrl }: { id: number; anexoUrl?: string 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {anexoUrl && (
-            <DropdownMenuItem render={<a href={anexoUrl} target="_blank" rel="noopener noreferrer" />}>
+            <DropdownMenuItem
+              render={
+                <a
+                  href={`/api/ficheiros?url=${encodeURIComponent(anexoUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+            >
               <FileText className="h-4 w-4" />
               Ver apólice
             </DropdownMenuItem>

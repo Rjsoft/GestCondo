@@ -38,17 +38,21 @@ export function validarFicheiro(
 }
 
 /**
- * Guarda um ficheiro no Vercel Blob (bucket público — ver a nota sobre
- * controlo de acesso em FUNCTIONAL_GAPS.md secção 6: a proteção é a mesma
- * que já existia para `documento.url`, o link só é mostrado dentro de
- * páginas já protegidas por condominioId/perfil, não uma verificação por
- * pedido ao nível do armazenamento).
+ * Guarda um ficheiro no Vercel Blob com acesso privado (store dedicado
+ * `gestcondo-ficheiros-privado`, criado 2026-07-22 — o store original,
+ * `gestcondo-ficheiros-publico`, não suporta acesso privado por objeto,
+ * só permite tudo público, e não pode ser convertido depois de criado).
+ * Só é servido através de `app/api/ficheiros/route.ts`, que verifica
+ * sessão e `condominioId` antes de o devolver (ver FUNCTIONAL_GAPS.md
+ * secção 6). Ficheiros carregados antes desta mudança continuam no store
+ * público antigo, sem alteração retroativa (decisão deliberada).
  */
 export async function guardarFicheiro(file: File, pasta: PastaFicheiro) {
   validarFicheiro(file, REGRAS[pasta])
   const blob = await put(`${pasta}/${file.name}`, file, {
-    access: 'public',
+    access: 'private',
     addRandomSuffix: true,
+    token: process.env.BLOB_PRIVADO_READ_WRITE_TOKEN,
   })
   return { url: blob.url, nomeFicheiro: file.name }
 }
