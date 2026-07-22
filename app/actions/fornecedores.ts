@@ -53,6 +53,42 @@ export async function criarFornecedor(formData: FormData) {
   revalidatePath('/fornecedores')
 }
 
+export async function atualizarFornecedor(formData: FormData) {
+  const admin = await requireAdmin()
+
+  const id = Number(formData.get('id'))
+  const nome = String(formData.get('nome') || '').trim()
+  const nif = String(formData.get('nif') || '').trim()
+  const categoria = String(formData.get('categoria') || '').trim()
+  const contactoEmail = String(formData.get('contactoEmail') || '').trim()
+  const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
+  const notas = String(formData.get('notas') || '').trim()
+
+  if (!nome) throw new Error('Indique o nome do fornecedor')
+
+  await db
+    .update(fornecedor)
+    .set({
+      nome,
+      nif: nif || null,
+      categoria: categoria || null,
+      contactoEmail: contactoEmail || null,
+      contactoTelefone: contactoTelefone || null,
+      notas: notas || null,
+    })
+    .where(and(eq(fornecedor.id, id), eq(fornecedor.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'fornecedor',
+    entidadeId: id,
+    detalhes: nome,
+  })
+
+  revalidatePath('/fornecedores')
+}
+
 export async function eliminarFornecedor(id: number) {
   const admin = await requireAdmin()
   await db

@@ -2,6 +2,7 @@ import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
 import { getFornecedores } from '@/app/actions/fornecedores'
 import { PageHeader } from '@/components/page-header'
 import { NovoFornecedorDialog } from '@/components/fornecedores/novo-fornecedor-dialog'
+import { EditarFornecedorDialog } from '@/components/fornecedores/editar-fornecedor-dialog'
 import { FornecedorActions } from '@/components/fornecedores/fornecedor-actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { SearchInput } from '@/components/ui/search-input'
@@ -99,7 +100,18 @@ export default async function FornecedoresPage({
                   </TableCell>
                   {isAdmin && (
                     <TableCell>
-                      <FornecedorActions id={f.id} />
+                      <div className="flex items-center gap-1">
+                        <EditarFornecedorDialog
+                          id={f.id}
+                          nome={f.nome}
+                          nif={f.nif}
+                          categoria={f.categoria}
+                          contactoEmail={f.contactoEmail}
+                          contactoTelefone={f.contactoTelefone}
+                          notas={f.notas}
+                        />
+                        <FornecedorActions id={f.id} />
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
