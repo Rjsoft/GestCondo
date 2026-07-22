@@ -264,12 +264,13 @@ export function FinancasTabs({
                   <TableHead className="text-right">Quotas lançadas</TableHead>
                   <TableHead className="text-right">Pago</TableHead>
                   <TableHead className="text-right">Em dívida</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {mapaSaldos.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                       Ainda não existem frações registadas.
                     </TableCell>
                   </TableRow>
@@ -288,6 +289,16 @@ export function FinancasTabs({
                       }`}
                     >
                       {formatEuro(s.emDivida)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        render={<Link href={`/financas/declaracao-divida/${s.fracaoId}`} />}
+                      >
+                        <FileText className="h-4 w-4" />
+                        Declaração
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

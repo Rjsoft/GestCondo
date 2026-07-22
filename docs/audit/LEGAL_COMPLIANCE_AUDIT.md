@@ -53,15 +53,14 @@ Confirmado nesta fase: obrigatório por lei (DL 268/94 art. 4º), mínimo **10% 
 | **Certidão/declaração de dívida** (art. 1424º-A CC) | ❌ **Em falta** — ver LEGAL-01 |
 | Título executivo, cobrança judicial, prescrição | N/A — fora do âmbito de uma aplicação de gestão (é matéria de advogado/tribunal), mas a app deve conseguir produzir a prova documental de base (extrato de dívida) |
 
-### LEGAL-01 — Declaração de encargos/dívida em falta (art. 1424º-A CC)
+### LEGAL-01 — Declaração de encargos/dívida (art. 1424º-A CC) — ✅ Resolvido 2026-07-22
 
 **Confirmado nesta auditoria com base legal precisa**: desde a Lei n.º 8/2022, o administrador é obrigado a emitir, a pedido do condómino, uma declaração escrita com o montante de todos os encargos correntes do condomínio (natureza, valores, prazos de pagamento) e quaisquer dívidas existentes (natureza, valores, datas de constituição e vencimento), **no prazo máximo de 10 dias**. Este documento é **instrutório obrigatório** da escritura ou documento particular autenticado de venda da fração. A responsabilidade pelas dívidas existentes determina-se pelo momento em que deveriam ter sido pagas, salvo renúncia expressa do comprador a esta declaração.
 
-O GestCondo já tem os dados subjacentes (`getMapaSaldos()` calcula exatamente "quotas lançadas − quotas pagas" por fração), mas **não existe nenhuma funcionalidade para gerar este documento formal** com o prazo e o conteúdo exigidos por lei.
+**Implementado**: `/financas/declaracao-divida/[fracaoId]` (`app/actions/financas.ts:getDeclaracaoDivida`), acessível via botão "Declaração" no separador "Dívidas por fração" de `/financas`. Mostra o encargo corrente (quota mensal atual, recalculada a partir do orçamento mais recente por `lib/rateio.ts:calcularQuotasMensais`) e a lista de dívidas existentes (categoria/descrição, data de constituição/vencimento, valor), com total. Testado em runtime com conta e condomínio descartáveis.
 
-- **Severidade**: Alta (é uma obrigação legal ativa desde 2022, não uma boa prática).
-- **Prioridade**: **P1** (subida de P2, onde estava em `FUNCTIONAL_GAPS.md`, dado o prazo legal confirmado de 10 dias e o facto de ser documento obrigatório de venda).
-- **Esforço estimado**: Pequeno — os dados já existem em `getMapaSaldos()`; falta uma página imprimível (mesmo padrão de `/financas/recibo/[id]` e `/financas/balanco/[id]`) com o conteúdo exigido pelo art. 1424º-A.
+- **Severidade**: era Alta (obrigação legal ativa desde 2022).
+- **Prioridade**: era P1 — resolvida.
 
 ## 7.5 Assembleias
 
@@ -81,7 +80,7 @@ Já coberto em detalhe por `FUNCTIONAL_GAPS.md` secção 4 (fornecedores, orçam
 
 | ID | Título | Severidade | Prioridade | Ficheiro |
 |---|---|---|---|---|
-| LEGAL-01 | Declaração de encargos/dívida (art. 1424º-A) em falta, com prazo legal de 10 dias confirmado | Alta | **P1** | `app/actions/financas.ts` (dados já existem) |
+| LEGAL-01 | ~~Declaração de encargos/dívida (art. 1424º-A) em falta~~ **Resolvido 2026-07-22** | Alta | — | `app/actions/financas.ts`, `app/(app)/financas/declaracao-divida/[fracaoId]/page.tsx` |
 | LEGAL-02 | Orçamento sem ligação obrigatória a uma deliberação de assembleia | Média | P2 | `app/actions/orcamentos.ts` |
 | LEGAL-03 | Datas de 1ª/2ª convocatória sem validação de dia distinto | Baixa | P3 | `app/actions/assembleias.ts` |
 | LEGAL-04 | Execução de deliberações sem campo de prazo (15 dias úteis) nem alerta | Média | P2 | `lib/db/schema.ts` (`assembleia_ponto`) |

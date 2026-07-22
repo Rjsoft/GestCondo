@@ -1,9 +1,10 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fracao, movimento } from '@/lib/db/schema'
+import { fracao, movimento, orcamento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
+import { calcularQuotasMensais } from '@/lib/rateio'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -138,6 +139,83 @@ export async function getMapaSaldos() {
       emDivida: totalLancado - totalPago,
     }
   })
+}
+
+/**
+ * Declaração de encargos e dívidas de uma fração (Código Civil art. 1424º-A,
+ * aditado pela Lei n.º 8/2022) — documento instrutório obrigatório da venda
+ * de uma fração, a emitir pelo administrador a pedido do condómino no prazo
+ * máximo de 10 dias. Devolve o encargo corrente (quota mensal atual,
+ * calculada a partir do orçamento mais recente) e a lista de dívidas
+ * existentes (natureza, valor, data de constituição/vencimento — usa-se a
+ * própria data do lançamento como vencimento, mesma convenção de
+ * getQuotasEmAtraso/lancarJurosMora).
+ */
+export async function getDeclaracaoDivida(fracaoId: number) {
+  const m = await requireAcessoFinanceiro()
+
+  const [f] = await db
+    .select()
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, m.condominioId)))
+    .limit(1)
+  if (!f) throw new Error('Fração não encontrada')
+
+  const [fracoes, [orcamentoRecente], dividas] = await Promise.all([
+    db
+      .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
+      .from(fracao)
+      .where(eq(fracao.condominioId, m.condominioId)),
+    db
+      .select()
+      .from(orcamento)
+      .where(eq(orcamento.condominioId, m.condominioId))
+      .orderBy(desc(orcamento.ano))
+      .limit(1),
+    db
+      .select({
+        id: movimento.id,
+        categoria: movimento.categoria,
+        descricao: movimento.descricao,
+        valor: movimento.valor,
+        data: movimento.data,
+      })
+      .from(movimento)
+      .where(
+        and(
+          eq(movimento.condominioId, m.condominioId),
+          eq(movimento.fracaoId, fracaoId),
+          eq(movimento.tipo, 'receita'),
+          eq(movimento.pago, false),
+          isNull(movimento.deletedAt),
+        ),
+      )
+      .orderBy(asc(movimento.data)),
+  ])
+
+  let quotaMensalAtual: number | null = null
+  if (orcamentoRecente) {
+    const quotas = calcularQuotasMensais(
+      fracoes.map((fr) => ({
+        id: fr.id,
+        permilagem: Number(fr.permilagem),
+        isentaElevador: fr.isentaElevador,
+      })),
+      Number(orcamentoRecente.valorAnual),
+      orcamentoRecente.valorAnualElevador ? Number(orcamentoRecente.valorAnualElevador) : 0,
+    )
+    quotaMensalAtual = quotas.find((q) => q.fracaoId === fracaoId)?.valorMensal ?? null
+  }
+
+  const totalDivida = dividas.reduce((s, d) => s + Number(d.valor), 0)
+
+  return {
+    fracao: { id: f.id, identificacao: f.identificacao, proprietario: f.proprietario, nif: f.nif },
+    anoOrcamento: orcamentoRecente?.ano ?? null,
+    quotaMensalAtual,
+    dividas,
+    totalDivida,
+  }
 }
 
 /**

@@ -30,7 +30,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 | Incidentes | — | Procedimento já desenhado (`DATA_BREACH_PROCEDURE.md`) — falta designar formalmente um responsável e comunicar aos subcontratantes a obrigação de notificação |
 | Logs | AUDIT-01, AUDIT-02 | Auditar login/falhas de login/recuperação de conta e exportações |
 | Exportação/cancelamento | RGPD-02 | Ver acima |
-| Fluxos jurídicos essenciais | LEGAL-01 | **Declaração de encargos/dívida (art. 1424º-A)** — o item legal mais urgente de toda a auditoria |
+| Fluxos jurídicos essenciais | LEGAL-01 | ~~**Declaração de encargos/dívida (art. 1424º-A)**~~ **Resolvido 2026-07-22** — `/financas/declaracao-divida/[fracaoId]` |
 
 ## Fase 3 — Antes de expandir para mais condomínios/clientes (equivalente a "antes da produção", já ativo mas a reforçar)
 
@@ -64,8 +64,8 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 
 ## Ordem de execução recomendada (visão única, cruzando as 4 fases por impacto real)
 
-1. **Declaração de encargos/dívida** (LEGAL-01) — esforço pequeno, obrigação legal ativa, dados já existem.
-2. **DPA** — bloqueador comercial real, cenário já em produção.
+1. ~~**Declaração de encargos/dívida** (LEGAL-01)~~ — **Resolvido 2026-07-22.**
+2. **DPA** — bloqueador comercial real, cenário já em produção. Próximo passo mais importante em aberto.
 3. **Fechar gaps de Privacidade/Termos** (22 no total) — a maioria são adições de texto, não código.
 4. **Soft-delete em `seguro`** (parte de DOC-01) — esforço pequeno, mesmo padrão já usado em `movimento`.
 5. **Bucket de ficheiros deixar de ser público** — depende de recriar o Blob store (ver nota operacional em `FUNCTIONAL_GAPS.md`), mais disruptivo.

@@ -15,8 +15,8 @@ O GestCondo chega a esta auditoria numa maturidade bem acima do habitual para um
 ## 3. Riscos críticos
 
 1. **(Resolvido durante a auditoria)** Email transacional não estava configurado em produção — verificação de conta, reset de password e convocatórias não chegavam a ninguém. Corrigido e verificado end-to-end.
-2. **DPA em falta** com o cenário de empresa administradora já ativo em produção.
-3. **Declaração de encargos/dívida (art. 1424º-A)** em falta — obrigação legal ativa desde 2022, documento obrigatório para venda de fração.
+2. **DPA em falta** com o cenário de empresa administradora já ativo em produção. **Único item crítico ainda por resolver.**
+3. **(Resolvido durante a auditoria)** Declaração de encargos/dívida (art. 1424º-A) implementada — `/financas/declaracao-divida/[fracaoId]`.
 4. Bucket de ficheiros público (já conhecido, reconfirmado nesta auditoria como relevante também para RGPD, não só segurança).
 
 ## 4. Bloqueadores de produção
@@ -29,7 +29,7 @@ Nenhum bloqueador que impeça o funcionamento técnico. Bloqueadores **comerciai
 
 ## 6. Lacunas jurídicas
 
-6 achados (LEGAL-01 a LEGAL-06, `docs/audit/LEGAL_COMPLIANCE_AUDIT.md`) — destaque: declaração de encargos/dívida em falta (o mais urgente de toda a auditoria), sem ligação formal orçamento↔deliberação, gaps nas obrigações introduzidas pela Lei 8/2022.
+6 achados (LEGAL-01 a LEGAL-06, `docs/audit/LEGAL_COMPLIANCE_AUDIT.md`) — o mais urgente (declaração de encargos/dívida, LEGAL-01) já **resolvido nesta sessão**; restam: sem ligação formal orçamento↔deliberação, gaps nas obrigações introduzidas pela Lei 8/2022 (prazo de execução de deliberações, três orçamentos para obras, informação semestral sobre processos).
 
 ## 7. Lacunas contratuais
 
@@ -45,8 +45,8 @@ Sem vulnerabilidades OWASP clássicas. Gaps conhecidos reconfirmados: bucket de 
 
 ## 10. Correções prioritárias
 
-1. Declaração de encargos/dívida (LEGAL-01).
-2. DPA.
+1. ~~Declaração de encargos/dívida (LEGAL-01)~~ — resolvido nesta sessão.
+2. DPA — próximo item mais importante.
 3. Fechar gaps de Privacidade/Termos.
 4. Soft-delete em `seguro`.
 5. Bucket de ficheiros deixar de ser público.
@@ -80,7 +80,7 @@ Ver `docs/audit/REMEDIATION_PLAN.md` — 4 fases, com nota de que as fases "ante
 - [x] Auditoria das escritas principais
 - [x] Textos legais publicados (rascunho técnico)
 - [x] Email transacional a funcionar (corrigido nesta auditoria)
-- [ ] Declaração de encargos/dívida
+- [x] Declaração de encargos/dívida (corrigido nesta auditoria)
 - [ ] DPA (só relevante se/quando uma administradora externa aderir)
 
 ## 17. Checklist de aprovação para produção (expansão a mais clientes)
