@@ -25,7 +25,7 @@ export function RedefinirPasswordForm() {
 
     if (!token) {
       setError(
-        'Este link já não é válido. Peça um novo link em "Esqueceu-se da password?".',
+        'Este link já não é válido. Peça um novo link em "Esqueceu-se da palavra-passe?".',
       )
       return
     }
@@ -40,7 +40,7 @@ export function RedefinirPasswordForm() {
     if (error) {
       setError(
         error.message?.toLowerCase().includes('token')
-          ? 'Este link já expirou ou já foi usado. Peça um novo link em "Esqueceu-se da password?".'
+          ? 'Este link já expirou ou já foi usado. Peça um novo link em "Esqueceu-se da palavra-passe?".'
           : (error.message ?? 'Ocorreu um erro. Tente novamente.'),
       )
       return
@@ -58,11 +58,11 @@ export function RedefinirPasswordForm() {
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <h1 className="mt-4 font-serif text-xl font-bold text-foreground">
-              Password alterada
+              Palavra-passe alterada
             </h1>
             <p className="mt-2 text-sm text-pretty text-muted-foreground">
-              A sua password foi alterada com sucesso. Já pode entrar com a
-              nova password.
+              A sua palavra-passe foi alterada com sucesso. Já pode entrar com a
+              nova palavra-passe.
             </p>
             <Button className="mt-6 w-full" onClick={() => router.push('/sign-in')}>
               Entrar
@@ -81,10 +81,10 @@ export function RedefinirPasswordForm() {
             <Building2 className="h-6 w-6" />
           </div>
           <h1 className="mt-4 font-serif text-2xl font-bold tracking-tight text-foreground">
-            Criar nova password
+            Criar nova palavra-passe
           </h1>
           <p className="text-sm text-muted-foreground mt-1 text-center text-pretty">
-            Escolha uma nova password para a sua conta.
+            Escolha uma nova palavra-passe para a sua conta.
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export function RedefinirPasswordForm() {
             )}
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Aguarde...' : 'Guardar nova password'}
+              {loading ? 'Aguarde...' : 'Guardar nova palavra-passe'}
             </Button>
           </form>
         </div>

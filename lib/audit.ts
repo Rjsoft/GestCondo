@@ -59,7 +59,7 @@ export async function registarAuditoria(params: {
 const DETALHES_AUTENTICACAO: Record<'login' | 'login_falhado' | 'pedido_reset_password', string> = {
   login: 'Sessão iniciada',
   login_falhado: 'Tentativa de login com credenciais inválidas',
-  pedido_reset_password: 'Pedido de reposição de password',
+  pedido_reset_password: 'Pedido de reposição de palavra-passe',
 }
 
 /**

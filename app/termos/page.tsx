@@ -50,7 +50,7 @@ export default function TermosPage() {
           <section className="flex flex-col gap-2 text-sm text-foreground">
             <h2 className="font-serif text-sm font-bold">2. Contas e acesso</h2>
             <p>
-              Cada conta é pessoal e intransmissível. É responsável por manter a sua password
+              Cada conta é pessoal e intransmissível. É responsável por manter a sua palavra-passe
               confidencial e por toda a atividade realizada através da sua conta. O acesso a dados
               do condomínio depende do perfil atribuído (administrador, gestor, condómino, inquilino,
               fornecedor ou auditor) e da aprovação de um administrador do condomínio. Quem cria um

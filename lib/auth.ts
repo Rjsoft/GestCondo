@@ -25,8 +25,8 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: 'Repor password — GestCondo',
-        html: `<p>Recebemos um pedido para repor a password da sua conta GestCondo.</p><p><a href="${url}">Clique aqui para repor a password</a></p><p>Se não foi você a pedir, ignore este email — a sua password não será alterada.</p>`,
+        subject: 'Repor palavra-passe — GestCondo',
+        html: `<p>Recebemos um pedido para repor a palavra-passe da sua conta GestCondo.</p><p><a href="${url}">Clique aqui para repor a palavra-passe</a></p><p>Se não foi você a pedir, ignore este email — a sua palavra-passe não será alterada.</p>`,
       })
     },
   },

@@ -41,7 +41,7 @@ export function EsqueciPasswordForm() {
             </h1>
             <p className="mt-2 text-sm text-pretty text-muted-foreground">
               Se existir uma conta com o email <strong>{email}</strong>,
-              enviámos um link para repor a password. Abra o email e siga as
+              enviámos um link para repor a palavra-passe. Abra o email e siga as
               instruções.
             </p>
             <p className="mt-3 text-sm text-pretty text-muted-foreground">
@@ -67,11 +67,11 @@ export function EsqueciPasswordForm() {
             <Building2 className="h-6 w-6" />
           </div>
           <h1 className="mt-4 font-serif text-2xl font-bold tracking-tight text-foreground">
-            Repor password
+            Repor palavra-passe
           </h1>
           <p className="text-sm text-muted-foreground mt-1 text-center text-pretty">
             Indique o email da sua conta e enviamos-lhe um link para criar
-            uma nova password.
+            uma nova palavra-passe.
           </p>
         </div>
 

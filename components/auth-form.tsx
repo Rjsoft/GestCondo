@@ -225,7 +225,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
                     href="/esqueci-password"
                     className="text-xs text-primary underline-offset-4 hover:underline"
                   >
-                    Esqueceu-se da password?
+                    Esqueceu-se da palavra-passe?
                   </Link>
                 )}
               </div>

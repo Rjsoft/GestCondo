@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import QRCode from 'qrcode'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
@@ -54,7 +55,7 @@ function AtivarMfaDialog() {
     const { data, error } = await authClient.twoFactor.enable({ password })
     setPending(false)
     if (error) {
-      toast.error(error.message ?? 'Password incorreta')
+      toast.error(error.message ?? 'Palavra-passe incorreta')
       return
     }
     setTotpURI(data.totpURI)
@@ -98,7 +99,7 @@ function AtivarMfaDialog() {
             <DialogHeader>
               <DialogTitle>Ativar verificação em duas etapas</DialogTitle>
               <DialogDescription>
-                Confirme a sua password para gerar uma chave de configuração para a sua aplicação de
+                Confirme a sua palavra-passe para gerar uma chave de configuração para a sua aplicação de
                 autenticação (Google Authenticator, Authy, ou semelhante).
               </DialogDescription>
             </DialogHeader>
@@ -130,11 +131,12 @@ function AtivarMfaDialog() {
 
             <div className="flex flex-col gap-3">
               {qrCodeUrl && (
-                <img
+                <Image
                   src={qrCodeUrl}
                   alt="Código QR para configurar a aplicação de autenticação"
                   width={200}
                   height={200}
+                  unoptimized
                   className="mx-auto rounded-md border border-border"
                 />
               )}
@@ -195,7 +197,7 @@ function DesativarMfaDialog() {
     const { error } = await authClient.twoFactor.disable({ password })
     setPending(false)
     if (error) {
-      toast.error(error.message ?? 'Password incorreta')
+      toast.error(error.message ?? 'Palavra-passe incorreta')
       return
     }
     toast.success('Verificação em duas etapas desativada')
@@ -213,7 +215,7 @@ function DesativarMfaDialog() {
         <DialogHeader>
           <DialogTitle>Desativar verificação em duas etapas</DialogTitle>
           <DialogDescription>
-            Confirme a sua password. A partir daí, voltará a entrar só com email e password.
+            Confirme a sua palavra-passe. A partir daí, voltará a entrar só com email e palavra-passe.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">

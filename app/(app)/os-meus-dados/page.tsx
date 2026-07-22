@@ -71,7 +71,7 @@ export default async function OsMeusDadosPage() {
         <CardContent className="flex flex-col items-start gap-3 p-5">
           <h2 className="font-serif text-sm font-bold text-foreground">Segurança</h2>
           <p className="text-sm text-muted-foreground">
-            Adicione uma verificação extra ao entrar na sua conta, além da password, usando uma
+            Adicione uma verificação extra ao entrar na sua conta, além da palavra-passe, usando uma
             aplicação de autenticação no seu telemóvel.
           </p>
           <MfaSection />

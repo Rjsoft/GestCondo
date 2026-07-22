@@ -99,7 +99,7 @@ export default function PrivacidadePage() {
             <h2 className="font-serif text-sm font-bold">6. Segurança</h2>
             <p>
               Aplicamos medidas técnicas e organizativas proporcionais ao risco: isolamento dos dados
-              entre condomínios, autenticação com password e verificação de email, cifra em trânsito
+              entre condomínios, autenticação com palavra-passe e verificação de email, cifra em trânsito
               (TLS/HTTPS) entre a aplicação e a base de dados, e registo de auditoria de todas as
               alterações relevantes. Nenhum sistema é absolutamente seguro — não prometemos segurança
               absoluta, mas mantemos estas medidas em revisão.

@@ -24,7 +24,7 @@ const ACAO_LABEL: Record<string, string> = {
   rejeitar: 'Rejeitou',
   login: 'Iniciou sessão',
   login_falhado: 'Falha de login',
-  pedido_reset_password: 'Pediu reposição de password',
+  pedido_reset_password: 'Pediu reposição de palavra-passe',
 }
 
 const ENTIDADE_LABEL: Record<string, string> = {
