@@ -69,7 +69,7 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 - [x] Termos de Utilização — `/termos`, implementado 2026-07-09 (mesma nota de rascunho). Revisão detalhada com 12 gaps encontrados em `docs/legal/TERMS_OF_USE_REVIEW.md` (2026-07-22), incluindo um achado técnico novo (`criarCondominio` sem verificação de legitimidade de representação) — texto ainda não alterado, aguarda decisão.
 - [x] Informação sobre Tratamento de Dados (aviso no momento do registo, art. 13º RGPD) — checkbox obrigatório em `components/auth-form.tsx` com link para ambos os textos, implementado 2026-07-09
 - [x] Registo de Atividades de Tratamento (art. 30º RGPD) — `RAT.md`, implementado 2026-07-09
-- [ ] Modelo de Acordo de Subcontratação (DPA) — **atualizado 2026-07-22: já não pode ficar adiado.** O onboarding multi-condomínio (que este documento apontava como condição para isto ser necessário) já existe em produção desde 2026-07-22 — uma empresa administradora já pode gerir vários condomínios na mesma conta. Ver análise completa por cenário em `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md` e o registo de documentos necessários em `docs/legal/LEGAL_DOCUMENTS_REGISTER.md`.
+- [x] Modelo de Acordo de Subcontratação (DPA) — **modelo criado 2026-07-22**, `docs/legal/DPA_TEMPLATE.md`. O onboarding multi-condomínio já existe, mas **confirmado que ainda não há nenhuma empresa administradora real** a usar a plataforma (o utilizador é o único com conta) — por isso o modelo fica pronto a preencher/assinar assim que surgir o primeiro cliente, mas não é ainda um bloqueador ativo.
 - [ ] Divulgação do Vercel Analytics como subprocessador — **novo, identificado 2026-07-22.** Integração ativa em produção (`app/layout.tsx`), ausente da Política de Privacidade e deste registo até agora. Ver `docs/legal/DATA_SUBPROCESSORS_REGISTER.md`.
 
 ## 9. Checklist de conformidade RGPD (para acompanhar progresso)
@@ -105,7 +105,7 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 - [ ] Rotina de limpeza de sessões expiradas confirmada
 
 ### Terceiros
-- [ ] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — **atualizado 2026-07-22: o onboarding multi-condomínio já existe, isto já não pode ficar adiado.** Ver `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`.
+- [x] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — **modelo pronto 2026-07-22** (`docs/legal/DPA_TEMPLATE.md`); falta preencher/assinar quando houver um cliente real. Ver `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`.
 - [x] Lista de subprocessadores documentada — `RAT.md` e `/privacidade`, 2026-07-09; **atualizada 2026-07-22** com o Vercel Analytics (`docs/legal/DATA_SUBPROCESSORS_REGISTER.md`) — a Política de Privacidade em `/privacidade` ainda não foi atualizada com esta adição (ver Fase C da auditoria).
 
 ### Novo desde 2026-07-22 (Fase B da auditoria — ver `docs/audit/RGPD_AUDIT.md`)

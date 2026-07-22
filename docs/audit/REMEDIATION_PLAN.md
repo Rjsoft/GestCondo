@@ -23,7 +23,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 |---|---|---|
 | Política de Privacidade | PP-1 a PP-10 | Fechar os 10 gaps (identidade/contacto do responsável, reclamação à CNPD, Vercel Analytics, segurança, cookies, transferências, decisões automatizadas) |
 | Termos de Utilização | TU-1 a TU-12 | Fechar os 12 gaps (identidade, propriedade intelectual, documentos carregados, pagamentos, lei aplicável/foro, RAL/ODR, legitimidade de representação ao criar condomínio) |
-| Acordo de Tratamento de Dados (DPA) | RGPD-03, `LEGAL_DOCUMENTS_REGISTER.md` | Redigir e celebrar com qualquer empresa administradora cliente — **cenário já ativo em produção** |
+| Acordo de Tratamento de Dados (DPA) | RGPD-03, `LEGAL_DOCUMENTS_REGISTER.md` | ~~Redigir~~ **Modelo pronto** (`DPA_TEMPLATE.md`, 2026-07-22) — falta preencher e celebrar quando surgir o primeiro cliente administradora real (hoje não há nenhum) |
 | Contrato SaaS | `LEGAL_DOCUMENTS_REGISTER.md` | Redigir documento comercial formal |
 | Retenção | RGPD-04, RGPD-05, DOC-01 | Soft-delete adicional, expurgo automático de sessões/logs |
 | Direitos | RGPD-02, RGPD-06 | Completar exportação de dados pessoais; registo formal de pedidos de oposição/limitação |
@@ -65,8 +65,8 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 ## Ordem de execução recomendada (visão única, cruzando as 4 fases por impacto real)
 
 1. ~~**Declaração de encargos/dívida** (LEGAL-01)~~ — **Resolvido 2026-07-22.**
-2. **DPA** — bloqueador comercial real, cenário já em produção. Próximo passo mais importante em aberto.
-3. **Fechar gaps de Privacidade/Termos** (22 no total) — a maioria são adições de texto, não código.
+2. ~~**DPA**~~ — **Modelo pronto 2026-07-22** (`DPA_TEMPLATE.md`); sem cliente real ainda, deixa de ser urgente até haver um.
+3. **Fechar gaps de Privacidade/Termos** (22 no total) — a maioria são adições de texto, não código. Próximo passo mais importante em aberto.
 4. **Soft-delete em `seguro`** (parte de DOC-01) — esforço pequeno, mesmo padrão já usado em `movimento`.
 5. **Bucket de ficheiros deixar de ser público** — depende de recriar o Blob store (ver nota operacional em `FUNCTIONAL_GAPS.md`), mais disruptivo.
 6. Resto da Fase 2/3, depois Fase 4 por oportunidade.

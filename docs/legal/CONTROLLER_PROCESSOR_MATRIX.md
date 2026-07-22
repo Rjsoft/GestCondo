@@ -12,7 +12,7 @@ Uma empresa de administração de condomínios (perfil `gestor`) contrata o Gest
 | Subcontratante | O operador da instância GestCondo. |
 | Corresponsabilidade | Não, desde que o operador só trate dados conforme instruções documentadas da administradora. |
 | Subcontratantes posteriores | Neon, Resend, Vercel Blob, Vercel Analytics (ver `DATA_SUBPROCESSORS_REGISTER.md`) — precisam de autorização geral ou específica da administradora (art. 28º/2). |
-| Contratos necessários | Acordo de Tratamento de Dados (DPA) entre operador e administradora — **em falta, ver `LEGAL_DOCUMENTS_REGISTER.md`**. |
+| Contratos necessários | Acordo de Tratamento de Dados (DPA) entre operador e administradora — **modelo pronto 2026-07-22, `docs/legal/DPA_TEMPLATE.md`**, falta preencher/assinar quando houver um cliente real. |
 | Instruções documentadas | Ainda não formalizadas — hoje a relação funcional (o que a app faz) substitui instruções escritas explícitas. |
 | Obrigações de cada parte | Administradora: informar os condóminos, responder a pedidos de titulares que exijam decisão de mérito. Operador: segurança técnica, disponibilidade, notificar violações de dados (art. 28º/3/f). |
 
@@ -77,4 +77,4 @@ Ver `DATA_SUBPROCESSORS_REGISTER.md` para o detalhe completo (localização, sal
 
 ## Conclusão
 
-Não se pode assumir uma resposta única "a plataforma é sempre subcontratante" — no Cenário 4 (Vercel Analytics, segurança da plataforma) o operador é responsável autónomo. A prioridade prática imediata é o **DPA para os Cenários 1 e 2** (agora ativos), e a **divulgação do Cenário 4** na Política de Privacidade.
+Não se pode assumir uma resposta única "a plataforma é sempre subcontratante" — no Cenário 4 (Vercel Analytics, segurança da plataforma) o operador é responsável autónomo. O modelo de DPA para os Cenários 1 e 2 já está pronto (`DPA_TEMPLATE.md`); a prioridade prática imediata que resta é a **divulgação do Cenário 4** na Política de Privacidade.

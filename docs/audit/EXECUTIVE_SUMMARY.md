@@ -10,18 +10,18 @@ O GestCondo chega a esta auditoria numa maturidade bem acima do habitual para um
 
 ## 2. Nível geral de maturidade
 
-**Alto para um produto pré-comercial, insuficiente para vender a uma segunda empresa administradora hoje** — falta o DPA, que é uma peça contratual obrigatória assim que essa relação existir, e o cenário já está tecnicamente ativo (onboarding multi-condomínio).
+**Alto para um produto pré-comercial.** Já tem modelo de DPA pronto (`DPA_TEMPLATE.md`) para quando surgir a primeira empresa administradora cliente — falta preencher os dados reais das partes e obter revisão jurídica antes de assinar, não é mais um documento em falta.
 
 ## 3. Riscos críticos
 
 1. **(Resolvido durante a auditoria)** Email transacional não estava configurado em produção — verificação de conta, reset de password e convocatórias não chegavam a ninguém. Corrigido e verificado end-to-end.
-2. **DPA em falta** com o cenário de empresa administradora já ativo em produção. **Único item crítico ainda por resolver.**
+2. **(Resolvido durante a auditoria, como modelo)** DPA — `docs/legal/DPA_TEMPLATE.md` criado; sem cliente administradora real ainda, por isso passa a P2 (reavaliar para P0 com o primeiro cliente).
 3. **(Resolvido durante a auditoria)** Declaração de encargos/dívida (art. 1424º-A) implementada — `/financas/declaracao-divida/[fracaoId]`.
 4. Bucket de ficheiros público (já conhecido, reconfirmado nesta auditoria como relevante também para RGPD, não só segurança).
 
 ## 4. Bloqueadores de produção
 
-Nenhum bloqueador que impeça o funcionamento técnico. Bloqueadores **comerciais/legais**: DPA e Contrato SaaS em falta para expandir a clientes além do piloto atual.
+Nenhum bloqueador que impeça o funcionamento técnico. Bloqueador **comercial/legal** remanescente: Contrato SaaS em falta para expandir a clientes além do piloto atual (o DPA já tem modelo pronto, só falta um cliente real para o preencher).
 
 ## 5. Lacunas RGPD
 
@@ -33,7 +33,7 @@ Nenhum bloqueador que impeça o funcionamento técnico. Bloqueadores **comerciai
 
 ## 7. Lacunas contratuais
 
-17 documentos em falta de 24 considerados (`docs/legal/LEGAL_DOCUMENTS_REGISTER.md`) — os dois urgentes são o DPA e o Contrato SaaS; o resto é P2/P3.
+16 documentos em falta de 24 considerados (`docs/legal/LEGAL_DOCUMENTS_REGISTER.md`) — o DPA já tem modelo (`DPA_TEMPLATE.md`); o mais urgente que resta é o Contrato SaaS; o resto é P2/P3.
 
 ## 8. Lacunas de segurança
 
@@ -46,7 +46,7 @@ Sem vulnerabilidades OWASP clássicas. Gaps conhecidos reconfirmados: bucket de 
 ## 10. Correções prioritárias
 
 1. ~~Declaração de encargos/dívida (LEGAL-01)~~ — resolvido nesta sessão.
-2. DPA — próximo item mais importante.
+2. ~~DPA~~ — modelo pronto nesta sessão (`DPA_TEMPLATE.md`); falta só um cliente real para preencher e assinar.
 3. Fechar gaps de Privacidade/Termos.
 4. Soft-delete em `seguro`.
 5. Bucket de ficheiros deixar de ser público.
@@ -59,7 +59,7 @@ Nenhuma — não foi encontrada nenhuma funcionalidade que devesse ser desativad
 
 ## 12. Funcionalidades que exigem configuração jurídica antes de expandir
 
-Onboarding multi-condomínio (exige DPA antes de uma segunda empresa administradora real o usar); geração de recibos (validade fiscal já analisada em sessão anterior, condomínios sem IVA estão isentos de faturação certificada).
+Onboarding multi-condomínio (exige preencher e assinar o `DPA_TEMPLATE.md` antes de uma segunda empresa administradora real o usar); geração de recibos (validade fiscal já analisada em sessão anterior, condomínios sem IVA estão isentos de faturação certificada).
 
 ## 13. Matérias que exigem parecer de advogado
 
@@ -81,11 +81,11 @@ Ver `docs/audit/REMEDIATION_PLAN.md` — 4 fases, com nota de que as fases "ante
 - [x] Textos legais publicados (rascunho técnico)
 - [x] Email transacional a funcionar (corrigido nesta auditoria)
 - [x] Declaração de encargos/dívida (corrigido nesta auditoria)
-- [ ] DPA (só relevante se/quando uma administradora externa aderir)
+- [x] Modelo de DPA pronto (só relevante assinar se/quando uma administradora externa aderir)
 
 ## 17. Checklist de aprovação para produção (expansão a mais clientes)
 
-- [ ] DPA celebrado com empresas administradoras clientes
+- [ ] DPA preenchido e celebrado com a empresa administradora cliente (modelo já pronto, `DPA_TEMPLATE.md`)
 - [ ] Contrato SaaS formal
 - [ ] Gaps de Privacidade/Termos fechados (22 itens)
 - [ ] Bucket de ficheiros privado
@@ -95,4 +95,4 @@ Ver `docs/audit/REMEDIATION_PLAN.md` — 4 fases, com nota de que as fases "ante
 
 ## Documentos produzidos por esta auditoria
 
-`docs/audit/SYSTEM_DATA_MAP.md`, `RGPD_AUDIT.md`, `LEGAL_COMPLIANCE_AUDIT.md`, `DOCUMENT_TRACEABILITY_AUDIT.md`, `REMEDIATION_PLAN.md`, `EXECUTIVE_SUMMARY.md` (este ficheiro); `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`, `DATA_SUBPROCESSORS_REGISTER.md`, `DATA_RETENTION_MATRIX.md`, `DATA_SUBJECT_RIGHTS_PROCEDURE.md`, `DATA_BREACH_PROCEDURE.md`, `DPIA_SCREENING.md`, `PRIVACY_POLICY_REVIEW.md`, `TERMS_OF_USE_REVIEW.md`, `MEETINGS_AND_VOTING_MATRIX.md`, `ADMINISTRATOR_DUTIES_MATRIX.md`, `LEGAL_DOCUMENTS_REGISTER.md`, `LEGAL_RGPD_COMPLIANCE_HANDBOOK.md`. Mais: `RAT.md` e `GDPR_CHECKLIST.md` atualizados no próprio local (decisão tomada no início da auditoria, para não duplicar informação).
+`docs/audit/SYSTEM_DATA_MAP.md`, `RGPD_AUDIT.md`, `LEGAL_COMPLIANCE_AUDIT.md`, `DOCUMENT_TRACEABILITY_AUDIT.md`, `REMEDIATION_PLAN.md`, `EXECUTIVE_SUMMARY.md` (este ficheiro); `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`, `DATA_SUBPROCESSORS_REGISTER.md`, `DATA_RETENTION_MATRIX.md`, `DATA_SUBJECT_RIGHTS_PROCEDURE.md`, `DATA_BREACH_PROCEDURE.md`, `DPIA_SCREENING.md`, `PRIVACY_POLICY_REVIEW.md`, `TERMS_OF_USE_REVIEW.md`, `MEETINGS_AND_VOTING_MATRIX.md`, `ADMINISTRATOR_DUTIES_MATRIX.md`, `LEGAL_DOCUMENTS_REGISTER.md`, `LEGAL_RGPD_COMPLIANCE_HANDBOOK.md`, `DPA_TEMPLATE.md`. Mais: `RAT.md` e `GDPR_CHECKLIST.md` atualizados no próprio local (decisão tomada no início da auditoria, para não duplicar informação).
