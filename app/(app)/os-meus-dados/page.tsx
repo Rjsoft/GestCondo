@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { EditarPerfilForm } from '@/components/perfil/editar-perfil-form'
 import { ExportarDadosButton } from '@/components/perfil/exportar-dados-button'
 import { EliminarContaDialog } from '@/components/perfil/eliminar-conta-dialog'
+import { MfaSection } from '@/components/perfil/mfa-section'
 import Link from 'next/link'
 
 export default async function OsMeusDadosPage() {
@@ -63,6 +64,17 @@ export default async function OsMeusDadosPage() {
           <p className="text-xs text-muted-foreground">
             Para corrigir o perfil, a fração ou o email, contacte o administrador do condomínio.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col items-start gap-3 p-5">
+          <h2 className="font-serif text-sm font-bold text-foreground">Segurança</h2>
+          <p className="text-sm text-muted-foreground">
+            Adicione uma verificação extra ao entrar na sua conta, além da password, usando uma
+            aplicação de autenticação no seu telemóvel.
+          </p>
+          <MfaSection />
         </CardContent>
       </Card>
 

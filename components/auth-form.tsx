@@ -18,21 +18,41 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [registado, setRegistado] = useState(false)
+  const [pedeCodigo2fa, setPedeCodigo2fa] = useState(false)
+  const [usarCodigoRecuperacao, setUsarCodigoRecuperacao] = useState(false)
+  const [codigo2fa, setCodigo2fa] = useState('')
 
   const isSignUp = mode === 'sign-up'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setLoading(true)
+
+    if (pedeCodigo2fa) {
+      const { error } = usarCodigoRecuperacao
+        ? await authClient.twoFactor.verifyBackupCode({ code: codigo2fa })
+        : await authClient.twoFactor.verifyTotp({ code: codigo2fa })
+
+      setLoading(false)
+
+      if (error) {
+        setError(traduzErro(error.message))
+        return
+      }
+
+      router.push('/')
+      router.refresh()
+      return
+    }
 
     if (isSignUp && !aceitaTermos) {
+      setLoading(false)
       setError('Tem de aceitar a Política de Privacidade e os Termos de Utilização')
       return
     }
 
-    setLoading(true)
-
-    const { error } = isSignUp
+    const { data, error } = isSignUp
       ? await authClient.signUp.email({ email, password, name })
       : await authClient.signIn.email({ email, password })
 
@@ -51,8 +71,75 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       return
     }
 
+    if ('twoFactorRedirect' in data && data.twoFactorRedirect) {
+      // Login com password válida, mas a conta tem MFA ativo — pede o
+      // código antes de terminar a sessão (lib/auth.ts: plugin twoFactor).
+      setPedeCodigo2fa(true)
+      return
+    }
+
     router.push('/')
     router.refresh()
+  }
+
+  if (pedeCodigo2fa) {
+    return (
+      <main className="min-h-svh bg-background flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-sm">
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h1 className="font-serif text-xl font-bold text-foreground">
+              Verificação em duas etapas
+            </h1>
+            <p className="mt-2 text-sm text-pretty text-muted-foreground">
+              {usarCodigoRecuperacao
+                ? 'Introduza um dos seus códigos de recuperação.'
+                : 'Introduza o código de 6 dígitos gerado pela sua aplicação de autenticação.'}
+            </p>
+
+            <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="codigo2fa">
+                  {usarCodigoRecuperacao ? 'Código de recuperação' : 'Código de verificação'}
+                </Label>
+                <Input
+                  id="codigo2fa"
+                  value={codigo2fa}
+                  onChange={(e) => setCodigo2fa(e.target.value)}
+                  required
+                  autoFocus
+                  inputMode={usarCodigoRecuperacao ? 'text' : 'numeric'}
+                  placeholder={usarCodigoRecuperacao ? 'xxxxxxxx' : '000000'}
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? 'Aguarde...' : 'Verificar'}
+              </Button>
+            </form>
+
+            <button
+              type="button"
+              onClick={() => {
+                setUsarCodigoRecuperacao(!usarCodigoRecuperacao)
+                setCodigo2fa('')
+                setError(null)
+              }}
+              className="mt-4 text-xs text-primary underline-offset-4 hover:underline"
+            >
+              {usarCodigoRecuperacao
+                ? 'Usar o código da aplicação de autenticação'
+                : 'Usar um código de recuperação'}
+            </button>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   if (registado) {

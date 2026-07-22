@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth'
+import { twoFactor, haveIBeenPwned } from 'better-auth/plugins'
 import { pool, db } from '@/lib/db'
 import { membro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
@@ -105,6 +106,18 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
+  plugins: [
+    // Verificação de password comprometida (Fase 3, item 5) — usa a API
+    // pública do Have I Been Pwned por k-anonimato (só envia um prefixo de
+    // hash SHA-1, nunca a password em claro). Sem dependência nova.
+    haveIBeenPwned(),
+    // MFA/TOTP opcional, disponível a qualquer perfil (Fase 3, item 5) —
+    // ativação é escolha do próprio membro, não é imposta a administradores
+    // nesta primeira versão (evita lockout sem fluxo de recuperação testado).
+    twoFactor({
+      issuer: 'GestCondo',
+    }),
+  ],
   ...(process.env.NODE_ENV === 'development'
     ? {
         advanced: {

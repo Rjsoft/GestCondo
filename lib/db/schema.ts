@@ -27,6 +27,8 @@ export const user = pgTable("user", {
   // ainda nenhuma UI para o ativar — é definido diretamente na base de
   // dados pelo operador da plataforma (ver lib/session.ts).
   superAdmin: boolean("superAdmin").notNull().default(false),
+  // Campo do plugin "two-factor" do better-auth.
+  twoFactorEnabled: boolean("twoFactorEnabled").notNull().default(false),
 })
 
 export const session = pgTable("session", {
@@ -67,6 +69,22 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp("expiresAt").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
+})
+
+// Tabela do plugin "two-factor" do better-auth (MFA/TOTP + códigos de
+// recuperação, ativação opcional pelo próprio membro — ver lib/auth.ts).
+// `verified`/`failedVerificationCount`/`lockedUntil` são geridos pelo
+// próprio plugin para bloqueio temporário após tentativas falhadas.
+export const twoFactor = pgTable("twoFactor", {
+  id: text("id").primaryKey(),
+  secret: text("secret").notNull(),
+  backupCodes: text("backupCodes").notNull(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  verified: boolean("verified").notNull().default(true),
+  failedVerificationCount: integer("failedVerificationCount").notNull().default(0),
+  lockedUntil: timestamp("lockedUntil"),
 })
 
 // --- Multi-tenant root -------------------------------------------------------
