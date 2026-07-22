@@ -2,6 +2,8 @@
 
 Data: 2026-07-22. Produzida na Fase D da auditoria (secção 7.6 do `PROMPT_AUDITORIA_JURIDICA_RGPD.md`). Base: Código Civil art. 1436º, alterado pela Lei n.º 8/2022, de 10 de janeiro; DL n.º 268/94; art. 1424º-A CC (declaração de encargos, introduzido pela Lei 8/2022). Fontes consultadas em 2026-07-22.
 
+**Atualidade verificada 2026-07-22 (sessão seguinte)**: confirmado que a Lei n.º 8/2022 continua a ser a reforma portuguesa mais recente aplicável a esta matriz — ver nota de verificação em `docs/audit/LEGAL_COMPLIANCE_AUDIT.md` secção 7.5 (inclui aviso sobre uma "Lei n.º 57/X/2025" que é de Cabo Verde, não de Portugal, para não confundir em pesquisas futuras).
+
 | Obrigação | Base legal | Prazo | Ação no GestCondo | Alerta na app? | Risco de incumprimento |
 |---|---|---|---|---|---|
 | Convocar a assembleia (ordinária, anual; extraordinária, quando necessário) | Art. 1436º/a | Assembleia ordinária: anual (data exata fixada por regulamento/uso) | `criarAssembleia` (`app/actions/assembleias.ts`) | ❌ Sem lembrete automático de periodicidade anual | Deliberações essenciais (contas, orçamento) por fazer |

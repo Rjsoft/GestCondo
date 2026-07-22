@@ -66,7 +66,11 @@ Confirmado nesta fase: obrigatório por lei (DL 268/94 art. 4º), mínimo **10% 
 
 Ver `docs/legal/MEETINGS_AND_VOTING_MATRIX.md`. Núcleo P1 já implementado (2026-07-09) está correto na sua decisão de não codificar uma regra universal de maioria — a app mostra os números, o administrador qualifica a decisão à luz da matéria.
 
-**LEGAL-03 — Resolvido 2026-07-22**: `criarAssembleia` (`app/actions/assembleias.ts`) agora rejeita a criação se a 2ª convocatória cair no mesmo dia da 1ª, citando o art. 1432º do Código Civil. Testado em runtime (mesmo dia → erro; dias distintos → sucesso).
+**LEGAL-03 — Resolvido 2026-07-22, corrigido 2026-07-22 (sessão seguinte)**: a validação original de `criarAssembleia` (`app/actions/assembleias.ts`) rejeitava incorretamente a 2ª convocatória no mesmo dia da 1ª, com base em jurisprudência do STJ anterior à reforma de 2022. A Lei n.º 8/2022 aditou o art. 1432º/7, que permite expressamente o mesmo dia, com intervalo mínimo de 30 minutos. Corrigido: `criarAssembleia` passa a exigir apenas esse intervalo mínimo de 30 minutos, em vez de dias distintos.
+
+**Verificação de atualidade legislativa — 2026-07-22 (sessão seguinte)**: na sequência do achado LEGAL-03, pesquisou-se explicitamente se existe alguma reforma portuguesa ao regime da propriedade horizontal mais recente que a Lei n.º 8/2022. Confirmado: a única outra alteração relevante é o **Decreto-Lei n.º 10/2024** ("Simplex Urbanístico", em vigor desde 01/01/2024), que só permite a mudança de finalidade de uma fração para habitação sem unanimidade dos condóminos quando os planos municipais o permitam (arts. 1422º/1422º-A CC) — não aplicável a nenhuma funcionalidade atual do GestCondo (a app não modela alteração de finalidade de fração).
+
+**Atenção para investigações futuras**: uma pesquisa genérica na web devolve resultados sobre uma "Lei n.º 57/X/2025, de 5 de agosto de 2025", divulgada por um escritório de advogados lusófono, que aparentaria alterar a regra do título constitutivo (unanimidade → maioria absoluta) e a da 2ª convocatória. **Essa lei é de Cabo Verde** (publicada no Boletim Oficial de Cabo Verde, `boe.incv.cv`, não no Diário da República), não se aplica a Portugal — confirmado por pesquisa cruzada. A verdadeira Lei n.º 57/2025 portuguesa (24 de julho de 2025) altera os estatutos dos magistrados judiciais e do Ministério Público, sem qualquer relação com propriedade horizontal ou condomínios. Não confundir as duas em pesquisas futuras.
 
 ## 7.6 Administrador
 
@@ -82,7 +86,7 @@ Já coberto em detalhe por `FUNCTIONAL_GAPS.md` secção 4 (fornecedores, orçam
 |---|---|---|---|---|
 | LEGAL-01 | ~~Declaração de encargos/dívida (art. 1424º-A) em falta~~ **Resolvido 2026-07-22** | Alta | — | `app/actions/financas.ts`, `app/(app)/financas/declaracao-divida/[fracaoId]/page.tsx` |
 | LEGAL-02 | Orçamento sem ligação obrigatória a uma deliberação de assembleia | Média | P2 | `app/actions/orcamentos.ts` |
-| LEGAL-03 | ~~Datas de 1ª/2ª convocatória sem validação de dia distinto~~ **Resolvido 2026-07-22** | Baixa | — | `app/actions/assembleias.ts` |
+| LEGAL-03 | ~~Datas de 1ª/2ª convocatória sem validação de intervalo mínimo~~ **Resolvido 2026-07-22, corrigido 2026-07-22** | Baixa | — | `app/actions/assembleias.ts` |
 | LEGAL-04 | Execução de deliberações sem campo de prazo (15 dias úteis) nem alerta | Média | P2 | `lib/db/schema.ts` (`assembleia_ponto`) |
 | LEGAL-05 | Sem suporte a três orçamentos de fornecedor para obras extraordinárias/inovação | Média | P2 | Depende do módulo de fornecedores (`FUNCTIONAL_GAPS.md` secção 4) |
 | LEGAL-06 | Sem dever de informação semestral sobre processos judiciais em curso | Baixa | P2 (só relevante se houver processo) | Funcionalidade nova |

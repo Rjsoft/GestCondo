@@ -56,7 +56,7 @@ Ver `docs/legal/DATA_BREACH_PROCEDURE.md`. Procedimento novo, proposto nesta aud
 
 ## 14. Assembleias
 
-Ver `docs/legal/MEETINGS_AND_VOTING_MATRIX.md`. Núcleo P1 implementado corretamente — a app não codifica uma única regra de maioria, o administrador qualifica cada deliberação. Gap: datas de 1ª/2ª convocatória sem validação de dia distinto (achado LEGAL-03).
+Ver `docs/legal/MEETINGS_AND_VOTING_MATRIX.md`. Núcleo P1 implementado corretamente — a app não codifica uma única regra de maioria, o administrador qualifica cada deliberação. Datas de 1ª/2ª convocatória validadas com intervalo mínimo de 30 minutos, mesmo dia incluído (achado LEGAL-03, resolvido).
 
 ## 15. Quotas
 

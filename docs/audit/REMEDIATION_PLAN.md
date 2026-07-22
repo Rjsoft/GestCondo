@@ -36,7 +36,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 
 | Item | Achado(s) | Ação |
 |---|---|---|
-| Assembleias | ~~LEGAL-03~~ (resolvido 2026-07-22), DOC-02 | Validação de dia distinto entre convocatórias já feita; falta só considerar numeração sequencial de atas (DOC-02, baixa prioridade) |
+| Assembleias | ~~LEGAL-03~~ (resolvido 2026-07-22, corrigido 2026-07-22), DOC-02 | Validação de intervalo mínimo de 30 minutos entre convocatórias (mesmo dia ou dia distinto) já feita; falta só considerar numeração sequencial de atas (DOC-02, baixa prioridade) |
 | Maiorias | — | Já corretamente não-automatizadas (`MEETINGS_AND_VOTING_MATRIX.md`) — sem ação, considerar campo de referência opcional |
 | Atas | DOC-02 | Ver acima |
 | Dívidas | LEGAL-01 | Ver Fase 2 |

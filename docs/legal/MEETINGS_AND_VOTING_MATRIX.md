@@ -2,6 +2,8 @@
 
 Data: 2026-07-22. Produzida na Fase D da auditoria (`PROMPT_AUDITORIA_JURIDICA_RGPD.md` secção 7.5). Fontes: Código Civil (arts. 1419º, 1424º, 1425º, 1432º), consolidado em [dre.pt](https://diariodarepublica.pt/dr/legislacao-consolidada/lei/2022-177392492), consultado em 2026-07-22.
 
+**Atualidade verificada 2026-07-22 (sessão seguinte)**: confirmado que a Lei n.º 8/2022 continua a ser a reforma portuguesa mais recente aplicável a esta matriz — ver nota de verificação em `docs/audit/LEGAL_COMPLIANCE_AUDIT.md` secção 7.5 (inclui aviso sobre uma "Lei n.º 57/X/2025" que é de Cabo Verde, não de Portugal, para não confundir em pesquisas futuras).
+
 **Princípio geral desta matriz, conforme instruído no prompt**: não existe uma única "maioria" — a exigida depende da matéria. O GestCondo (`app/actions/assembleias.ts`) **não codifica nenhuma regra automática de maioria** — mostra o quórum e a votação por permilagem calculados, mas é sempre o administrador que regista o `resultado` (aprovado/reprovado/adiado) de cada ponto. Isto está correto e é a decisão certa — o risco não está na app, está em o administrador aplicar a matéria errada a uma votação.
 
 ## 1. Convocatória e funcionamento (art. 1432º CC)
@@ -11,11 +13,11 @@ Data: 2026-07-22. Produzida na Fase D da auditoria (`PROMPT_AUDITORIA_JURIDICA_R
 | Prazo de convocatória | Carta registada ou aviso com recibo de receção assinado, 10 dias de antecedência (ou email, se o condómino tiver manifestado essa vontade em assembleia anterior e o endereço constar da ata) | Art. 1432º/1-3 | Convocatória irregular pode anular as deliberações tomadas |
 | Conteúdo obrigatório da convocatória | Dia, hora, local, ordem de trabalhos; **deve informar quais os assuntos que só podem ser aprovados por unanimidade** | Art. 1432º/4 | Omitir esta informação é um vício de forma |
 | 1ª convocatória — deliberação regra geral | Maioria dos votos representativos do capital investido (permilagem) | Art. 1432º/5 | — |
-| Falta de "vencimento" na 1ª reunião | Nova reunião marcada para uma semana depois (ou período menor, desde que **dia distinto** do da 1ª convocatória — não pode ser só "meia hora depois") | Art. 1432º/6-7 (confirmado por jurisprudência) | Reconvocar para o mesmo dia é nulo — tem de ser dia diferente |
+| Falta de "vencimento" na 1ª reunião | Se a convocatória não fixar outra data: nova reunião automática uma semana depois, mesma hora/local. Se a convocatória fixar desde logo uma 2ª data: pode ser o **mesmo dia**, com intervalo mínimo de **30 minutos**, no mesmo local, desde que garantida a presença de condóminos representando ≥1/4 do valor total do prédio | Art. 1432º/6-7, na redação da Lei n.º 8/2022 (em vigor desde 10/04/2022) | Sem esse mínimo de 30 minutos (ou sem o 1/4 de presença garantida), a deliberação em 2ª convocatória é anulável |
 | 2ª convocatória — deliberação | Maioria dos votos dos presentes, desde que representem, pelo menos, **1/4 do valor total do prédio** | Art. 1432º/7 | Sem esse mínimo de 1/4, a deliberação é inválida mesmo em 2ª convocatória |
 | Deliberações por unanimidade — regra especial | Podem ser aprovadas com **2/3 dos condóminos presentes**, sujeitas a confirmação dos ausentes num prazo de 90 dias | Art. 1432º/8-11 | Sem a confirmação dos ausentes dentro do prazo, a deliberação não se consolida |
 
-**Nota sobre o GestCondo**: `assembleia.dataPrimeiraConvocatoria`/`dataSegundaConvocatoria` já modelam as duas datas — mas a app não valida que sejam dias distintos, nem alerta se coincidirem. Gap técnico menor identificado nesta auditoria (ver `LEGAL_COMPLIANCE_AUDIT.md`).
+**Nota sobre o GestCondo**: `assembleia.dataPrimeiraConvocatoria`/`dataSegundaConvocatoria` já modelam as duas datas. `criarAssembleia` (`app/actions/assembleias.ts`) valida um intervalo mínimo de 30 minutos entre as duas — permite o mesmo dia, conforme o art. 1432º/7 (Lei n.º 8/2022). Corrigido 2026-07-22 (ver `LEGAL_COMPLIANCE_AUDIT.md`, achado LEGAL-03); a versão anterior desta validação exigia incorretamente dias distintos, com base em jurisprudência anterior à reforma de 2022.
 
 ## 2. Modificação do título constitutivo e regulamento (art. 1419º CC)
 
