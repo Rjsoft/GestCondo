@@ -25,11 +25,21 @@ import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
+type FornecedorOpcao = { id: number; nome: string }
 
-export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
+const SEM_FORNECEDOR = '__sem_fornecedor__'
+
+export function NovoMovimentoDialog({
+  fracoes,
+  fornecedores,
+}: {
+  fracoes: FracaoOpcao[]
+  fornecedores: FornecedorOpcao[]
+}) {
   const [open, setOpen] = useState(false)
   const [tipo, setTipo] = useState('despesa')
   const [fracaoId, setFracaoId] = useState('')
+  const [fornecedorId, setFornecedorId] = useState(SEM_FORNECEDOR)
   const [destino, setDestino] = useState('geral')
   const [pago, setPago] = useState(true)
   const [meioPagamento, setMeioPagamento] = useState('')
@@ -39,6 +49,9 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
     formData.set('tipo', tipo)
     formData.set('destino', destino)
     if (tipo === 'receita') formData.set('fracaoId', fracaoId)
+    if (tipo === 'despesa' && fornecedorId !== SEM_FORNECEDOR) {
+      formData.set('fornecedorId', fornecedorId)
+    }
     if (pago) formData.set('meioPagamento', meioPagamento)
     startTransition(async () => {
       try {
@@ -46,6 +59,7 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
         toast.success('Movimento registado')
         setOpen(false)
         setFracaoId('')
+        setFornecedorId(SEM_FORNECEDOR)
         setDestino('geral')
         setPago(true)
         setMeioPagamento('')
@@ -123,6 +137,28 @@ export function NovoMovimentoDialog({ fracoes }: { fracoes: FracaoOpcao[] }) {
                   antes de lançar uma quota.
                 </p>
               )}
+            </div>
+          )}
+
+          {tipo === 'despesa' && (
+            <div className="flex flex-col gap-2">
+              <Label>Fornecedor (opcional)</Label>
+              <Select
+                value={fornecedorId}
+                onValueChange={(value) => value && setFornecedorId(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_FORNECEDOR}>Sem fornecedor associado</SelectItem>
+                  {fornecedores.map((f) => (
+                    <SelectItem key={f.id} value={String(f.id)}>
+                      {f.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 

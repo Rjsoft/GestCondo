@@ -256,12 +256,18 @@ export const movimento = pgTable(
     orcamentoId: integer("orcamentoId").references(() => orcamento.id, {
       onDelete: "set null",
     }),
+    // Opcional, só faz sentido em despesas. `set null` em vez de cascade:
+    // eliminar o fornecedor nunca pode apagar o movimento financeiro.
+    fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },
   (t) => [
     index("movimento_condominio_idx").on(t.condominioId),
     index("movimento_orcamento_idx").on(t.orcamentoId),
+    index("movimento_fornecedor_idx").on(t.fornecedorId),
   ],
 )
 

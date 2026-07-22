@@ -94,6 +94,7 @@ export default async function RelatorioMovimentosPage() {
                 <TableHead>Data</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Descrição</TableHead>
+                <TableHead>Fornecedor</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
@@ -102,7 +103,7 @@ export default async function RelatorioMovimentosPage() {
             <TableBody>
               {movimentos.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                     Ainda não existem movimentos registados.
                   </TableCell>
                 </TableRow>
@@ -117,6 +118,7 @@ export default async function RelatorioMovimentosPage() {
                     {m.destino === 'reserva' && ' (reserva)'}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{m.descricao}</TableCell>
+                  <TableCell className="text-muted-foreground">{m.fornecedorNome ?? '—'}</TableCell>
                   <TableCell>
                     <TipoMovimentoBadge tipo={m.tipo} />
                   </TableCell>

@@ -39,6 +39,7 @@ type Movimento = {
   destino: string
   meioPagamento: string | null
   dataLiquidacao: Date | null
+  fornecedorNome?: string | null
 }
 
 type SaldoFracao = {
@@ -102,6 +103,7 @@ export function FinancasTabs({
   orcamentos,
   seguros,
   fracoes,
+  fornecedores,
   quotasEmAtraso,
   linhasExtrato,
   movimentosPorConciliar,
@@ -122,6 +124,7 @@ export function FinancasTabs({
     permilagem: number
     isentaElevador: boolean
   }[]
+  fornecedores: { id: number; nome: string }[]
   quotasEmAtraso: { fracaoId: number | null; valor: string; data: Date }[]
   linhasExtrato: LinhaExtrato[]
   movimentosPorConciliar: MovimentoConciliar[]
@@ -147,7 +150,7 @@ export function FinancasTabs({
               Relatório (PDF)
             </Button>
             <ExportarCsvButton movimentos={movimentosCsv} />
-            {isAdmin && <NovoMovimentoDialog fracoes={fracoes} />}
+            {isAdmin && <NovoMovimentoDialog fracoes={fracoes} fornecedores={fornecedores} />}
           </div>
         </div>
         <Card>
@@ -158,6 +161,7 @@ export function FinancasTabs({
                   <TableHead>Data</TableHead>
                   <TableHead>Categoria</TableHead>
                   <TableHead className="hidden sm:table-cell">Descrição</TableHead>
+                  <TableHead className="hidden md:table-cell">Fornecedor</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
@@ -168,7 +172,7 @@ export function FinancasTabs({
                 {movimentos.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 7 : 6}
+                      colSpan={isAdmin ? 8 : 7}
                       className="py-10 text-center text-muted-foreground"
                     >
                       {pesquisaMovimentos
@@ -195,6 +199,9 @@ export function FinancasTabs({
                     </TableCell>
                     <TableCell className="hidden max-w-xs truncate text-muted-foreground sm:table-cell">
                       {m.descricao}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
+                      {m.fornecedorNome ?? '—'}
                     </TableCell>
                     <TableCell>
                       <TipoMovimentoBadge tipo={m.tipo} />

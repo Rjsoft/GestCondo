@@ -10,6 +10,7 @@ import {
 import { getOrcamentos } from '@/app/actions/orcamentos'
 import { getSeguros } from '@/app/actions/seguros'
 import { getFracoes } from '@/app/actions/fracoes'
+import { getFornecedores } from '@/app/actions/fornecedores'
 import {
   getLinhasConciliadas,
   getLinhasPorConciliar,
@@ -40,6 +41,7 @@ export default async function FinancasPage({
     orcamentos,
     seguros,
     fracoes,
+    fornecedores,
     fundoReserva,
     quotasEmAtraso,
     linhasExtrato,
@@ -52,6 +54,7 @@ export default async function FinancasPage({
     getOrcamentos(),
     getSeguros(),
     getFracoes(),
+    getFornecedores(),
     getSaldoFundoReserva(),
     getQuotasEmAtraso(),
     getLinhasPorConciliar(),
@@ -144,6 +147,7 @@ export default async function FinancasPage({
           permilagem: Number(f.permilagem),
           isentaElevador: f.isentaElevador,
         }))}
+        fornecedores={fornecedores.map((f) => ({ id: f.id, nome: f.nome }))}
         quotasEmAtraso={quotasEmAtraso}
         linhasExtrato={linhasExtrato}
         movimentosPorConciliar={movimentosPorConciliar}

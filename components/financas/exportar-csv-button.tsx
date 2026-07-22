@@ -21,6 +21,7 @@ type MovimentoCsv = {
   destino: string
   meioPagamento: string | null
   dataLiquidacao: string | Date | null
+  fornecedorNome?: string | null
 }
 
 function escaparCampo(valor: string) {
@@ -39,6 +40,7 @@ export function ExportarCsvButton({ movimentos }: { movimentos: MovimentoCsv[] }
       'Tipo',
       'Categoria',
       'Descrição',
+      'Fornecedor',
       'Valor (€)',
       'Estado',
       'Destino',
@@ -57,6 +59,7 @@ export function ExportarCsvButton({ movimentos }: { movimentos: MovimentoCsv[] }
         tipo,
         m.categoria,
         m.descricao,
+        m.fornecedorNome ?? '',
         String(m.valor).replace('.', ','),
         estado,
         destino,

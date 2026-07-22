@@ -84,7 +84,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Fotos/anexos | ✅ Implementado 2026-07-09 | `ocorrencia.fotoUrl` via Vercel Blob (`app/actions/ocorrencias.ts`), incluindo eliminação em cascata do ficheiro. | — |
 | Estado da ocorrência | ✅ Implementado | `aberta \| em_curso \| resolvida`, com validação de enum. | — |
 | Prioridade | ✅ Implementado | `normal \| importante \| urgente`. | — |
-| Fornecedores | 🟡 Entidade implementada 2026-07-22 | `/fornecedores` (nome, NIF, categoria, contacto, notas) — CRUD básico, mesmo padrão de `/fracoes`. **Falta ainda**: associação a uma ocorrência, ligação a despesas/movimentos, suporte aos "três orçamentos" para obras extraordinárias (achado LEGAL-05 da auditoria jurídica). | P2 → P3 (resto) |
+| Fornecedores | 🟡 Entidade implementada 2026-07-22, **ligação a despesas também 2026-07-22** | `/fornecedores` (nome, NIF, categoria, contacto, notas) — CRUD completo, mesmo padrão de `/fracoes`. Despesas em `/financas` podem agora ser associadas a um fornecedor (`movimento.fornecedorId`, visível na listagem, relatório e CSV). **Falta ainda**: associação a uma ocorrência, suporte aos "três orçamentos" para obras extraordinárias (achado LEGAL-05 da auditoria jurídica). | P3 (resto) |
 | Orçamentos (de obra) | ❌ Em falta | Sem suporte a anexar/comparar orçamentos de fornecedores para uma intervenção. | P2 |
 | Aprovação de despesas | ❌ Em falta | Sem fluxo de aprovação (ex. despesas acima de X requerem aprovação em assembleia — Código Civil distingue despesas de conservação corrente das que exigem deliberação). | P2 |
 | Histórico de intervenções | 🟡 Parcial | Existe `updatedAt` na ocorrência, mas sem histórico de estados (não se sabe quando passou de "aberta" a "em curso"). | P2 |

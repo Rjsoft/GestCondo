@@ -1,12 +1,12 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fracao, movimento, orcamento } from '@/lib/db/schema'
+import { fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais } from '@/lib/rateio'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, asc, count, desc, eq, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, getTableColumns, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -16,8 +16,9 @@ export async function getMovimentos() {
   // inquilino nem fornecedor (ver lib/session.ts).
   const m = await requireAcessoFinanceiro()
   return db
-    .select()
+    .select({ ...getTableColumns(movimento), fornecedorNome: fornecedor.nome })
     .from(movimento)
+    .leftJoin(fornecedor, eq(movimento.fornecedorId, fornecedor.id))
     .where(
       and(
         eq(movimento.condominioId, m.condominioId),
@@ -42,8 +43,9 @@ export async function getMovimentosPaginado({
 
   const [movimentos, [{ total }]] = await Promise.all([
     db
-      .select()
+      .select({ ...getTableColumns(movimento), fornecedorNome: fornecedor.nome })
       .from(movimento)
+      .leftJoin(fornecedor, eq(movimento.fornecedorId, fornecedor.id))
       .where(condicao)
       .orderBy(desc(movimento.data))
       .limit(PAGE_SIZE)
@@ -323,6 +325,8 @@ export async function criarMovimento(formData: FormData) {
   const pago = formData.get('pago') === 'on' || formData.get('pago') === 'true'
   const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
   const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
+  const fornecedorIdRaw = String(formData.get('fornecedorId') || '').trim()
+  const fornecedorId = fornecedorIdRaw ? Number(fornecedorIdRaw) : null
   const destino = String(formData.get('destino') || 'geral')
   const meioPagamentoRaw = String(formData.get('meioPagamento') || '').trim()
   const referenciaMbRaw = String(formData.get('referenciaMb') || '').trim()
@@ -352,6 +356,7 @@ export async function criarMovimento(formData: FormData) {
       valor,
       pago,
       fracaoId: tipo === 'receita' ? fracaoId : null,
+      fornecedorId: tipo === 'despesa' ? fornecedorId : null,
       destino,
       // Detalhe do pagamento só faz sentido quando o movimento já nasce pago.
       meioPagamento: pago && meioPagamentoRaw ? meioPagamentoRaw : null,

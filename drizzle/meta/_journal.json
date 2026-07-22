@@ -141,6 +141,13 @@
       "when": 1784724335207,
       "tag": "0019_ancient_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784727230651,
+      "tag": "0020_typical_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }
