@@ -12,6 +12,7 @@ Não repitas nada disto de memória — os ficheiros abaixo são a fonte de verd
 - `SECURITY_AUDIT.md` — achados de segurança (S1–S17+).
 - `GDPR_CHECKLIST.md`, `RAT.md` — conformidade RGPD.
 - `MVP_PLAN.md` — detalhe da Fase 2 (MVP funcional).
+- `docs/audit/ACCESSIBILITY_AUDIT.md` — acessibilidade a leitores de ecrã (NVDA), achados A1–A4. Requisito explícito do utilizador para toda a app, não só um módulo.
 
 Quando terminares uma tarefa que resolve ou contradiz algo descrito nestes ficheiros, atualiza-os na mesma sessão — já aconteceu ficarem desatualizados e contradizerem o código real.
 

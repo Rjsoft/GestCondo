@@ -187,6 +187,13 @@ export function AppShell({
 
   return (
     <div className="min-h-svh bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Saltar para o conteúdo
+      </a>
+
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
         {sidebar}
@@ -232,7 +239,7 @@ export function AppShell({
         </div>
       )}
 
-      <main className="lg:pl-64">
+      <main id="main-content" tabIndex={-1} className="lg:pl-64">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </div>
