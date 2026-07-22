@@ -106,6 +106,11 @@ export const condominio = pgTable("condominio", {
   nome: text("nome").notNull(),
   morada: text("morada"),
   nif: text("nif"),
+  // Código de convite partilhado para novos membros se juntarem a este
+  // condomínio (em vez de criarem um condomínio novo) — ver lib/session.ts
+  // e app/onboarding. Não determina o nível de acesso: quem entra por
+  // código continua "pendente" até um admin aprovar, tal como hoje.
+  codigoConvite: text("codigoConvite").unique(),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
 

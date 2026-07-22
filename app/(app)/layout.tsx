@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { PendingScreen } from '@/components/pending-screen'
-import { getCondominioAtual, getMembroAtual } from '@/lib/session'
+import { getCondominioAtual, getMembroAtual, getSession } from '@/lib/session'
 import { Toaster } from '@/components/ui/sonner'
 
 export default async function AppLayout({
@@ -10,7 +10,11 @@ export default async function AppLayout({
   children: React.ReactNode
 }) {
   const membro = await getMembroAtual()
-  if (!membro) redirect('/sign-in')
+  if (!membro) {
+    const session = await getSession()
+    if (!session?.user) redirect('/sign-in')
+    redirect('/onboarding')
+  }
 
   if (membro.estado !== 'aprovado' && !membro.isSuperAdmin) {
     return (

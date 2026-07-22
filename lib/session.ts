@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { condominio, membro, user } from '@/lib/db/schema'
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import {
@@ -42,105 +42,42 @@ export async function getSession() {
 }
 
 /**
- * Garante que o utilizador autenticado tem um registo de `membro` num
- * condomínio. Cada `membro` pertence a exactamente um `condominio`
+ * Devolve o `membro` do utilizador autenticado, se já tiver feito
+ * onboarding. Cada `membro` pertence a exactamente um `condominio`
  * (`membro.condominioId`) — ver lib/db/schema.ts para o modelo multi-tenant.
  *
- * IMPORTANTE: ainda não existe nenhum fluxo de convite/criação de um segundo
- * condomínio. Esta função só sabe: (a) criar o primeiro condomínio e tornar
- * o primeiro utilizador admin+aprovado, ou (b) juntar qualquer utilizador
- * novo seguinte ao único condomínio já existente, como condómino pendente.
- * Antes de suportar mais do que um condomínio por instância, é necessário
- * construir esse fluxo (ver FUNCTIONAL_GAPS.md) — o modelo de dados e o
- * isolamento por `condominioId` já estão prontos para isso.
+ * Devolve `null` em dois casos distintos que os chamadores tratam de forma
+ * diferente: (a) sem sessão válida, ou (b) sessão válida mas ainda sem
+ * `membro` — este segundo caso significa que o utilizador tem de passar
+ * por `/onboarding` (entrar com código de convite ou criar um condomínio
+ * novo, ver app/actions/condominio.ts) antes de aceder à aplicação. Esta
+ * função nunca cria um `membro` sozinha — ao contrário do comportamento
+ * antigo, que juntava automaticamente qualquer conta nova ao primeiro
+ * condomínio existente.
  */
 export async function getMembroAtual(): Promise<MembroSessao | null> {
   const session = await getSession()
   if (!session?.user) return null
 
-  const { id: userId, name, email } = session.user
+  const { id: userId } = session.user
 
-  const [existente, [userRow]] = await Promise.all([
-    db
-      .select()
-      .from(membro)
-      .where(eq(membro.userId, userId))
-      .orderBy(asc(membro.id))
-      .limit(1),
+  const [[existente], [userRow]] = await Promise.all([
+    db.select().from(membro).where(eq(membro.userId, userId)).orderBy(asc(membro.id)).limit(1),
     db.select({ superAdmin: user.superAdmin }).from(user).where(eq(user.id, userId)).limit(1),
   ])
   const isSuperAdmin = userRow?.superAdmin ?? false
 
-  if (existente.length > 0) {
-    const m = existente[0]
-    return {
-      id: m.id,
-      condominioId: m.condominioId,
-      userId: m.userId,
-      nome: m.nome,
-      email: m.email,
-      perfil: (m.perfil as Perfil) ?? 'condomino',
-      estado: (m.estado as EstadoMembro) ?? 'aprovado',
-      fracaoId: m.fracaoId,
-      isSuperAdmin,
-    }
-  }
-
-  // Bootstrap: ainda não existe nenhuma linha `membro` para este userId.
-  // "Ver se já existe um condomínio, senão criar o primeiro" é um
-  // check-then-act — sem serialização, dois pedidos em paralelo (ex. duas
-  // abas a completar o primeiro login em simultâneo) podiam cada um deixar
-  // de ver o condomínio do outro e criar dois condomínios "primeiros"
-  // distintos. Um lock consultivo do Postgres (válido só dentro desta
-  // transação) serializa esta secção crítica entre pedidos concorrentes.
-  const novoMembro = await db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(72110)`)
-
-    const [existenteDentroDoLock] = await tx
-      .select()
-      .from(membro)
-      .where(eq(membro.userId, userId))
-      .orderBy(asc(membro.id))
-      .limit(1)
-    if (existenteDentroDoLock) return existenteDentroDoLock
-
-    const [condominioExistente] = await tx
-      .select({ id: condominio.id })
-      .from(condominio)
-      .orderBy(asc(condominio.id))
-      .limit(1)
-
-    const condominioId = condominioExistente
-      ? condominioExistente.id
-      : (
-          await tx
-            .insert(condominio)
-            .values({ nome: 'Condomínio' })
-            .returning({ id: condominio.id })
-        )[0].id
-    // Primeiro condomínio do sistema = o seu criador fica admin, aprovado
-    // automaticamente; utilizadores seguintes juntam-se a um condomínio já
-    // existente como condómino pendente até um admin aprovar.
-    const perfil: Perfil = condominioExistente ? 'condomino' : 'admin'
-    const estado: EstadoMembro = condominioExistente ? 'pendente' : 'aprovado'
-
-    const [inserido] = await tx
-      .insert(membro)
-      .values({ condominioId, userId, nome: name ?? email, email, perfil, estado })
-      .returning()
-
-    return inserido
-  })
+  if (!existente) return null
 
   return {
-    id: novoMembro.id,
-    condominioId: novoMembro.condominioId,
-    userId: novoMembro.userId,
-    nome: novoMembro.nome,
-    email: novoMembro.email,
-    perfil: (novoMembro.perfil as Perfil) ?? 'condomino',
-    estado: (novoMembro.estado as EstadoMembro) ?? 'aprovado',
-    fracaoId: novoMembro.fracaoId,
+    id: existente.id,
+    condominioId: existente.condominioId,
+    userId: existente.userId,
+    nome: existente.nome,
+    email: existente.email,
+    perfil: (existente.perfil as Perfil) ?? 'condomino',
+    estado: (existente.estado as EstadoMembro) ?? 'aprovado',
+    fracaoId: existente.fracaoId,
     isSuperAdmin,
   }
 }
@@ -149,15 +86,17 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
  * Helper para páginas (Server Components): garante uma sessão válida,
  * redirecionando para /sign-in em vez de rebentar. Usar sempre no topo de
  * uma página em vez de `(await getMembroAtual())!` — essa asserção não-nula
- * está errada: `getMembroAtual()` pode legitimamente devolver `null` (ex.
- * sessão expirou entre o pedido do layout e o da própria página), e sem
- * este guard a página rebenta com "Cannot read properties of null" em vez
- * de simplesmente reenviar para o login.
+ * está errada: `getMembroAtual()` pode legitimamente devolver `null` por
+ * dois motivos (sessão inválida, ou sessão válida sem `membro` ainda), e
+ * sem este guard a página rebenta com "Cannot read properties of null" em
+ * vez de simplesmente reenviar para o sítio certo.
  */
 export async function requireMembroPagina(): Promise<MembroSessao> {
   const m = await getMembroAtual()
-  if (!m) redirect('/sign-in')
-  return m
+  if (m) return m
+  const session = await getSession()
+  if (!session?.user) redirect('/sign-in')
+  redirect('/onboarding')
 }
 
 /**
