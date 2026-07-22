@@ -44,9 +44,9 @@ export function NovoOrcamentoDialog() {
         <DialogHeader>
           <DialogTitle>Orçamento anual</DialogTitle>
           <DialogDescription>
-            Registe o valor total aprovado em assembleia para o ano. Já
-            existir um orçamento para o mesmo ano substitui o valor
-            anterior.
+            Registe o valor total aprovado em assembleia para o ano. Se já
+            existir um orçamento para o mesmo ano, o valor anterior é
+            substituído.
           </DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="flex flex-col gap-4">

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { formatData, formatDataHora, formatEuro } from './format'
 
-// Os testes comparam contra o próprio Intl (em vez de fixar a string exacta
+// Os testes comparam contra o próprio Intl (em vez de fixar a string exata
 // "1 234,50 €") para não ficarem frágeis a diferenças de dados ICU entre
 // máquinas/versões do Node — o que interessa validar é o comportamento da
 // função (delegação para Intl, parsing de string, fallback para valores
-// inválidos), não o formato exacto do pt-PT.
+// inválidos), não o formato exato do pt-PT.
 function euro(n: number) {
   return new Intl.NumberFormat('pt-PT', {
     style: 'currency',

@@ -12,7 +12,7 @@ Data: 2026-07-22. Consolida as subsecções 7.1 a 7.7 do `PROMPT_AUDITORIA_JURID
 |---|---|
 | Fração autónoma | ✅ `fracao` |
 | Permilagem | ✅ `fracao.permilagem` |
-| Copropriedade | ✅ mais do que um `membro` condomino pode ligar-se à mesma fração |
+| Copropriedade | ✅ mais do que um `membro` condómino pode ligar-se à mesma fração |
 | Usufruto | ❌ Sem distinção entre nu-proprietário e usufrutuário — `fracao.proprietario` é texto livre único |
 | Mudança de proprietário | 🟡 Sobrescreve sem histórico (já em `FUNCTIONAL_GAPS.md`) |
 | Histórico de titularidade | ❌ Idem |

@@ -43,7 +43,7 @@ export async function getSession() {
 
 /**
  * Devolve o `membro` do utilizador autenticado, se já tiver feito
- * onboarding. Cada `membro` pertence a exactamente um `condominio`
+ * onboarding. Cada `membro` pertence a exatamente um `condominio`
  * (`membro.condominioId`) — ver lib/db/schema.ts para o modelo multi-tenant.
  *
  * Devolve `null` em dois casos distintos que os chamadores tratam de forma

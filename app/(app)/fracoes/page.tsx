@@ -38,8 +38,8 @@ export default async function FracoesPage({
     getFracoes(),
     // Só para quem gere/audita — usado para mostrar quais contas de
     // condómino estão ligadas a cada fração (visibilidade de
-    // compropriedade: mais do que uma conta condomino na mesma fração é
-    // tecnicamente permitido, mas não tinha nenhuma UI que o mostrasse).
+    // compropriedade: mais do que uma conta de condómino na mesma fração é
+    // tecnicamente permitida, mas não tinha nenhuma UI que o mostrasse).
     veContactos ? getMembros() : Promise.resolve([]),
   ])
   // Pesquisa em memória: o número de frações por condomínio é

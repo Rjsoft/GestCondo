@@ -29,7 +29,7 @@ Um mês a contar da receção do pedido (art. 12º/3), prorrogável por mais doi
 
 ## 4. Validação de identidade
 
-Para pedidos feitos através da própria conta autenticada (a generalidade dos casos hoje), a autenticação já validam a identidade. Para pedidos processados manualmente (ex. por email a um administrador), **não existe um procedimento formal de validação de identidade** — risco de um pedido de eliminação/acesso ser aceite de alguém que não é o titular. Recomenda-se confirmar sempre a partir do email registado na conta.
+Para pedidos feitos através da própria conta autenticada (a generalidade dos casos hoje), a autenticação já valida a identidade. Para pedidos processados manualmente (ex. por email a um administrador), **não existe um procedimento formal de validação de identidade** — risco de um pedido de eliminação/acesso ser aceite de alguém que não é o titular. Recomenda-se confirmar sempre a partir do email registado na conta.
 
 ## 5. Situações em que o apagamento não pode ocorrer
 

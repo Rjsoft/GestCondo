@@ -47,7 +47,7 @@ describe('calcularQuotasMensais', () => {
     )
   })
 
-  it('isenta do elevador quem está marcado, ratear o resto pelas restantes', () => {
+  it('isenta do elevador quem está marcado, rateando o resto pelas restantes', () => {
     // R/C isento de elevador; dois pisos com direito a elevador, permilagem
     // igual entre os três. Parcela geral: por permilagem entre os três.
     // Parcela elevador: só entre os dois com direito, 50/50.
