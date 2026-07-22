@@ -95,17 +95,34 @@ export function NovoSeguroDialog() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="valorPremio">Prémio anual (€)</Label>
-            <Input
-              id="valorPremio"
-              name="valorPremio"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0,00 (opcional)"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="valorPremio">Prémio anual (€)</Label>
+              <Input
+                id="valorPremio"
+                name="valorPremio"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00 (opcional)"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="capitalSeguro">Capital seguro (€)</Label>
+              <Input
+                id="capitalSeguro"
+                name="capitalSeguro"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00 (opcional)"
+              />
+            </div>
           </div>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Capital seguro é o valor de reconstrução pelo qual o edifício está
+            seguro (diferente do prémio) — deve ser atualizado todos os anos.
+          </p>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="anexo">Apólice em PDF (opcional, até 15MB)</Label>

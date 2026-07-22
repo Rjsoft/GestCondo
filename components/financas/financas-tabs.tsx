@@ -66,6 +66,7 @@ type Seguro = {
   dataInicio: Date
   dataFim: Date
   valorPremio: string | null
+  capitalSeguro: string | null
   notas: string | null
   anexoUrl: string | null
 }
@@ -310,6 +311,7 @@ export function FinancasTabs({
                   <TableHead>Ano</TableHead>
                   <TableHead className="text-right">Valor anual</TableHead>
                   <TableHead className="hidden sm:table-cell">Notas</TableHead>
+                  <TableHead className="w-10" />
                   {isAdmin && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
@@ -317,7 +319,7 @@ export function FinancasTabs({
                 {orcamentos.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 4 : 3}
+                      colSpan={isAdmin ? 5 : 4}
                       className="py-10 text-center text-muted-foreground"
                     >
                       Ainda não existem orçamentos registados.
@@ -332,6 +334,16 @@ export function FinancasTabs({
                     </TableCell>
                     <TableCell className="hidden max-w-xs truncate text-muted-foreground sm:table-cell">
                       {o.notas || '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        render={<Link href={`/financas/balanco/${o.id}`} />}
+                      >
+                        <FileText className="h-4 w-4" />
+                        Balanço
+                      </Button>
                     </TableCell>
                     {isAdmin && (
                       <TableCell>
@@ -370,6 +382,7 @@ export function FinancasTabs({
                   <TableHead className="hidden sm:table-cell">Tipo</TableHead>
                   <TableHead>Validade</TableHead>
                   <TableHead className="text-right">Prémio anual</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">Capital seguro</TableHead>
                   {isAdmin && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
@@ -377,7 +390,7 @@ export function FinancasTabs({
                 {seguros.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 6 : 5}
+                      colSpan={isAdmin ? 7 : 6}
                       className="py-10 text-center text-muted-foreground"
                     >
                       Ainda não existe nenhum seguro registado. O seguro do
@@ -424,6 +437,9 @@ export function FinancasTabs({
                       </TableCell>
                       <TableCell className="text-right">
                         {s.valorPremio ? formatEuro(Number(s.valorPremio)) : '—'}
+                      </TableCell>
+                      <TableCell className="hidden text-right text-muted-foreground md:table-cell">
+                        {s.capitalSeguro ? formatEuro(Number(s.capitalSeguro)) : '—'}
                       </TableCell>
                       {isAdmin && (
                         <TableCell>

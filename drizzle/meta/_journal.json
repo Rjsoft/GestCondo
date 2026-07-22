@@ -113,6 +113,13 @@
       "when": 1784709604504,
       "tag": "0015_slimy_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1784713470161,
+      "tag": "0016_thin_scrambler",
+      "breakpoints": true
     }
   ]
 }

@@ -28,6 +28,7 @@ export async function criarSeguro(formData: FormData) {
   const dataInicioStr = String(formData.get('dataInicio') || '')
   const dataFimStr = String(formData.get('dataFim') || '')
   const valorPremioStr = String(formData.get('valorPremio') || '').trim()
+  const capitalSeguroStr = String(formData.get('capitalSeguro') || '').trim()
   const notas = String(formData.get('notas') || '').trim()
 
   if (!seguradora || !apolice || !dataInicioStr || !dataFimStr) {
@@ -64,6 +65,7 @@ export async function criarSeguro(formData: FormData) {
       dataInicio,
       dataFim,
       valorPremio: valorPremioStr || null,
+      capitalSeguro: capitalSeguroStr || null,
       notas: notas || null,
       anexoUrl,
       anexoNomeFicheiro,

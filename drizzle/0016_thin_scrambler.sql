@@ -1,0 +1,1 @@
+ALTER TABLE "seguro" ADD COLUMN "capitalSeguro" numeric(12, 2);

@@ -321,6 +321,10 @@ export const seguro = pgTable(
     dataInicio: timestamp("dataInicio").notNull(),
     dataFim: timestamp("dataFim").notNull(),
     valorPremio: numeric("valorPremio", { precision: 12, scale: 2 }),
+    // Capital seguro: valor de reconstrução pelo qual o edifício está
+    // seguro — distinto do prémio, obrigatório atualizar anualmente
+    // (DL nº 268/94). Opcional, tal como valorPremio.
+    capitalSeguro: numeric("capitalSeguro", { precision: 12, scale: 2 }),
     notas: text("notas"),
     // Anexo da apólice em PDF (Vercel Blob, ver lib/storage.ts). Nome
     // distinto de `apolice`, que é o número da apólice, não o ficheiro.
