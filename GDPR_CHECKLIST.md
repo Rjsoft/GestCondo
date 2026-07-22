@@ -1,6 +1,8 @@
 # Auditoria RGPD e Privacidade — GestCondo
 
-Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não um parecer jurídico. Antes de operar com condóminos reais, os pontos aqui identificados devem ser validados por um jurista especializado em RGPD/direito do condomínio em Portugal (a CNPD já se pronunciou especificamente sobre administração de condomínios e videovigilância/livros de presenças, entre outros temas relevantes).
+Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD completa — ver `PROMPT_AUDITORIA_JURIDICA_RGPD.md` e `docs/audit/RGPD_AUDIT.md` para a versão consolidada). Esta análise é uma auditoria técnica de conformidade, não um parecer jurídico. Antes de operar com condóminos reais, os pontos aqui identificados devem ser validados por um jurista especializado em RGPD/direito do condomínio em Portugal. A CNPD já se pronunciou especificamente sobre videovigilância em condomínios (consentimento expresso de todos os condóminos, retenção máx. 30 dias) — não aplicável hoje, o GestCondo não suporta videovigilância (ver `docs/legal/DPIA_SCREENING.md`).
+
+**Nota importante 2026-07-22**: o GestCondo já está em produção com um condomínio real desde antes desta auditoria. As secções abaixo mantêm-se como registo histórico da evolução da conformidade, mas os pontos ainda marcados `[ ]` (por fazer) que envolvem dados já reais devem ser tratados com prioridade mais alta do que se fosse ainda um protótipo.
 
 ## 1. Dados pessoais atualmente recolhidos
 
@@ -14,6 +16,7 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 | Dados financeiros associados a frações/pessoas | `movimento` | Proprietários | Gestão de quotas/despesas | Potencialmente dado financeiro sensível de um agregado familiar identificável através da fração. |
 | Descrição de ocorrências | `ocorrencia.descricao`, `local` | Quem reporta (e possivelmente terceiros mencionados) | Gestão de manutenção | Texto livre — pode conter dados pessoais de terceiros (ex. "o vizinho do 2ºEsq deixa o cão fazer barulho") sem qualquer aviso ou controlo. |
 | Fração/identificação de imóvel | `fracao.identificacao`, `membro.fracao` | Proprietário/inquilino | Identificação da unidade | Indiretamente é dado de propriedade/morada. |
+| Métricas de utilização (páginas visitadas, referrer, país aproximado) | Vercel Analytics (`app/layout.tsx`, só em produção) | Todos os visitantes | Métricas agregadas de utilização | **Identificado 2026-07-22.** Segundo o fornecedor, sem cookies nem armazenamento de IP em claro — não confirmado formalmente pelo operador. Não mencionado até agora na Política de Privacidade nem no `RAT.md` (já corrigido no `RAT.md`; falta a Política de Privacidade, Fase C). |
 
 **Não recolhido hoje, mas necessário para o produto-alvo** (a avaliar cuidadosamente quando implementado): NIF de proprietários (para recibos/declarações de dívida), morada de correspondência se diferente da fração, dados de inquilinos distintos dos proprietários, documentos de identificação, dados bancários/IBAN (para transferências/reconciliação), fotos anexadas a ocorrências (podem conter pessoas identificáveis).
 
@@ -52,6 +55,8 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 ## 6. Logs de auditoria
 
+**Atualizado 2026-07-22**: cobertura operação-a-operação do `audit_log` (login, falhas de login, exportação, download, etc.) auditada em detalhe em `docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md` secção 9 — 3 gaps novos identificados (AUDIT-01 a AUDIT-03), o mais relevante sendo login/recuperação de conta e exportação de dados pessoais não ficarem registados no `audit_log`.
+
 **Atualizado 2026-07-06:** implementado um `audit_log` (ver `SECURITY_AUDIT.md` S17) — ator, ação, entidade, id, timestamp, mais um resumo em texto livre opcional (`detalhes`), sem duplicar dados pessoais de outras tabelas. Cobre as ações sensíveis: criar/eliminar movimentos, alternar pago, criar/eliminar avisos/documentos/frações, aprovar/rejeitar/editar/mudar perfil de condóminos, criar/atualizar/eliminar ocorrências. Consultável em `/auditoria` por admin/gestor/auditor. Isto resolve a ambivalência identificada anteriormente entre "menos logging = menos exposição" e a exigência de accountability do art. 5º/2 RGPD — o log guarda quem fez o quê, não dados pessoais duplicados.
 
 ## 7. Documentos e dados pessoais de terceiros
@@ -60,11 +65,12 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 
 ## 8. Textos legais em falta
 
-- [x] Política de Privacidade — `/privacidade`, implementado 2026-07-09 (rascunho técnico, marcado como tal na própria página — **precisa de revisão jurídica antes de utilizadores reais**)
-- [x] Termos de Utilização — `/termos`, implementado 2026-07-09 (mesma nota de rascunho)
+- [x] Política de Privacidade — `/privacidade`, implementado 2026-07-09 (rascunho técnico, marcado como tal na própria página — **precisa de revisão jurídica antes de utilizadores reais**). Revisão detalhada com 10 gaps encontrados em `docs/legal/PRIVACY_POLICY_REVIEW.md` (2026-07-22) — texto ainda não alterado, aguarda decisão.
+- [x] Termos de Utilização — `/termos`, implementado 2026-07-09 (mesma nota de rascunho). Revisão detalhada com 12 gaps encontrados em `docs/legal/TERMS_OF_USE_REVIEW.md` (2026-07-22), incluindo um achado técnico novo (`criarCondominio` sem verificação de legitimidade de representação) — texto ainda não alterado, aguarda decisão.
 - [x] Informação sobre Tratamento de Dados (aviso no momento do registo, art. 13º RGPD) — checkbox obrigatório em `components/auth-form.tsx` com link para ambos os textos, implementado 2026-07-09
 - [x] Registo de Atividades de Tratamento (art. 30º RGPD) — `RAT.md`, implementado 2026-07-09
-- [ ] Modelo de Acordo de Subcontratação (DPA) — **necessário assim que uma empresa de administração de condomínios (terceira entidade responsável por vários condomínios de clientes diferentes) usar a plataforma**, porque nesse cenário a empresa de administração é responsável pelo tratamento e o operador da plataforma (quem gere o SaaS) é subcontratado. Adiado até o fluxo de onboarding multi-condomínio existir (ver `FUNCTIONAL_GAPS.md`).
+- [ ] Modelo de Acordo de Subcontratação (DPA) — **atualizado 2026-07-22: já não pode ficar adiado.** O onboarding multi-condomínio (que este documento apontava como condição para isto ser necessário) já existe em produção desde 2026-07-22 — uma empresa administradora já pode gerir vários condomínios na mesma conta. Ver análise completa por cenário em `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md` e o registo de documentos necessários em `docs/legal/LEGAL_DOCUMENTS_REGISTER.md`.
+- [ ] Divulgação do Vercel Analytics como subprocessador — **novo, identificado 2026-07-22.** Integração ativa em produção (`app/layout.tsx`), ausente da Política de Privacidade e deste registo até agora. Ver `docs/legal/DATA_SUBPROCESSORS_REGISTER.md`.
 
 ## 9. Checklist de conformidade RGPD (para acompanhar progresso)
 
@@ -99,12 +105,23 @@ Data: 2026-07-06. Esta análise é uma auditoria técnica de conformidade, não 
 - [ ] Rotina de limpeza de sessões expiradas confirmada
 
 ### Terceiros
-- [ ] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — adiado até existir o fluxo de onboarding multi-condomínio
-- [x] Lista de subprocessadores documentada — `RAT.md` e `/privacidade`, 2026-07-09 (Neon/PostgreSQL, Resend, Vercel Blob); comunicação formal aos utilizadores ainda por fazer além da própria política de privacidade
+- [ ] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — **atualizado 2026-07-22: o onboarding multi-condomínio já existe, isto já não pode ficar adiado.** Ver `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`.
+- [x] Lista de subprocessadores documentada — `RAT.md` e `/privacidade`, 2026-07-09; **atualizada 2026-07-22** com o Vercel Analytics (`docs/legal/DATA_SUBPROCESSORS_REGISTER.md`) — a Política de Privacidade em `/privacidade` ainda não foi atualizada com esta adição (ver Fase C da auditoria).
+
+### Novo desde 2026-07-22 (Fase B da auditoria — ver `docs/audit/RGPD_AUDIT.md`)
+- [x] Matriz responsável/subcontratante por cenário de uso — `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`
+- [x] Registo de subcontratantes com detalhe (localização, salvaguardas) — `docs/legal/DATA_SUBPROCESSORS_REGISTER.md`
+- [x] Matriz de retenção formal por categoria de dado — `docs/legal/DATA_RETENTION_MATRIX.md`
+- [x] Procedimento de exercício de direitos formalizado — `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md`
+- [x] Procedimento de resposta a violações de dados — `docs/legal/DATA_BREACH_PROCEDURE.md`
+- [x] Avaliação de necessidade de DPIA — `docs/legal/DPIA_SCREENING.md` (conclusão: não necessária hoje)
+- [ ] DPIA_TEMPLATE.md — não criado, por não ser necessário face à conclusão acima
 
 ## 10. Prioridade
 
-**Atualizado 2026-07-09:** as três ações de maior relação impacto/esforço identificadas em 2026-07-06 estão feitas. Prioridades seguintes: MFA para administradores (`SECURITY_AUDIT.md` S3), DPA (quando o onboarding multi-condomínio existir), e auditoria de segurança externa antes do primeiro cliente pagante.
+**Atualizado 2026-07-22:** com o DPA agora ativamente necessário (onboarding multi-condomínio em produção) e o gap do Vercel Analytics identificado, a prioridade imediata passou a ser: (1) negociar/redigir o DPA, (2) atualizar `/privacidade` com o Vercel Analytics, (3) decidir sobre a exportação de dados incompleta (`docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md`). MFA já está feito (`SECURITY_AUDIT.md` S3, 2026-07-21); auditoria de segurança externa continua recomendada antes do primeiro cliente pagante fora do piloto.
+
+**Histórico (2026-07-09):** as três ações de maior relação impacto/esforço identificadas em 2026-07-06 estão feitas.
 
 1. ✅ Redigir e publicar Política de Privacidade + Termos, e mostrar o aviso de finalidade no registo — **feito 2026-07-09**.
 2. ✅ Substituir `DELETE` físico por soft-delete em `movimento` — feito 2026-07-06. Falta ainda para (no futuro) atas/deliberações, quando esse módulo existir.

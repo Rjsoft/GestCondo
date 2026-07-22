@@ -1,8 +1,10 @@
 # Registo de Atividades de Tratamento — GestCondo
 
-Data: 2026-07-09. Documento interno de governação (art. 30º RGPD), não uma peça jurídica nem um documento público — o equivalente para o titular do dado é a Política de Privacidade (`/privacidade`). Elaborado a partir do inventário de dados já feito em `GDPR_CHECKLIST.md` secção 1. Deve ser revisto por um jurista e mantido atualizado sempre que uma nova finalidade de tratamento for introduzida (ex. quando o fluxo de onboarding multi-condomínio ou o módulo de fornecedores existirem).
+Data: 2026-07-09, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD — `PROMPT_AUDITORIA_JURIDICA_RGPD.md`). Documento interno de governação (art. 30º RGPD), não uma peça jurídica nem um documento público — o equivalente para o titular do dado é a Política de Privacidade (`/privacidade`). Elaborado a partir do inventário de dados já feito em `GDPR_CHECKLIST.md` secção 1 e em `docs/audit/SYSTEM_DATA_MAP.md`. Deve ser revisto por um jurista e mantido atualizado sempre que uma nova finalidade de tratamento for introduzida.
 
-**Responsável pelo tratamento:** o operador da instância GestCondo (o administrador/empresa gestora que opera a aplicação para o(s) seu(s) condomínio(s)). **Subcontratados (processadores):** fornecedor de alojamento e base de dados (Neon/PostgreSQL), fornecedor de email transacional (Resend), fornecedor de armazenamento de ficheiros (Vercel Blob).
+**Atualização 2026-07-22:** o fluxo de onboarding multi-condomínio referido abaixo como condição para o Acordo de Subcontratação (DPA) **já existe em produção** — uma empresa administradora (`perfil: gestor`) já pode gerir mais do que um condomínio na mesma conta. O DPA deixou de ser uma necessidade futura hipotética — ver `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md` e `docs/legal/LEGAL_DOCUMENTS_REGISTER.md`.
+
+**Responsável pelo tratamento:** o operador da instância GestCondo, ou a empresa administradora/condomínio que a contrata, consoante o cenário (ver `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md` para a distinção completa por cenário). **Subcontratados (processadores):** fornecedor de alojamento e base de dados (Neon/PostgreSQL), fornecedor de email transacional (Resend), fornecedor de armazenamento de ficheiros (Vercel Blob), e **Vercel Analytics** (métricas de utilização, ativo em produção desde antes desta auditoria mas **não documentado até agora** — ver `docs/legal/DATA_SUBPROCESSORS_REGISTER.md`).
 
 ## 1. Gestão administrativa do condomínio (frações, condóminos, avisos, ocorrências)
 
@@ -73,4 +75,8 @@ Data: 2026-07-09. Documento interno de governação (art. 30º RGPD), não uma p
 
 ## Direitos dos titulares — como são exercidos
 
-Ver `/privacidade` e `/os-meus-dados` (autogestão: ver, corrigir nome/telefone, exportar dados próprios, eliminar conta). Pedidos que não possam ser resolvidos por autogestão (ex. oposição, correção de dados geridos só por admin) são processados manualmente pelo administrador do condomínio até existir um fluxo dedicado.
+Ver `/privacidade` e `/os-meus-dados` (autogestão: ver, corrigir nome/telefone, exportar dados próprios, eliminar conta). Pedidos que não possam ser resolvidos por autogestão (ex. oposição, correção de dados geridos só por admin) são processados manualmente pelo administrador do condomínio até existir um fluxo dedicado. Procedimento formal e limitações identificadas (ex. a exportação não inclui ainda movimentos financeiros/ocorrências do titular) em `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md`.
+
+## Documentos relacionados (Fase B da auditoria, 2026-07-22)
+
+`docs/legal/CONTROLLER_PROCESSOR_MATRIX.md` (papéis por cenário de uso), `docs/legal/DATA_SUBPROCESSORS_REGISTER.md` (detalhe de cada subcontratante), `docs/legal/DATA_RETENTION_MATRIX.md` (prazos de conservação formalizados), `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md`, `docs/legal/DATA_BREACH_PROCEDURE.md`, `docs/legal/DPIA_SCREENING.md`.

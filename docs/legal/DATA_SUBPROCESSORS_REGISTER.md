@@ -1,0 +1,18 @@
+# Registo de Subcontratantes — GestCondo
+
+Data: 2026-07-22. Ver `CONTROLLER_PROCESSOR_MATRIX.md` para a análise de papéis. Este registo deve ser mantido atualizado e ser referenciado (ou publicado) na Política de Privacidade, para cumprir o dever de transparência sobre destinatários e subcontratantes (art. 13º/1/e RGPD).
+
+| Subcontratante | Finalidade | Dados partilhados | Localização/transferência | Salvaguardas | Contrato em vigor? |
+|---|---|---|---|---|---|
+| **Neon** (PostgreSQL gerido) | Alojamento de toda a base de dados da aplicação | Todos os dados estruturados (ver `SYSTEM_DATA_MAP.md` secção 2) | Instância de produção observada na região `eu-west-2` (AWS, Londres) — **confirmar formalmente a região contratada e se há replicação fora do EEE** | Cifra em trânsito (TLS/`sslmode=require`); cifra em repouso a confirmar com o fornecedor | Termos de serviço da Neon — **DPA próprio da Neon a localizar/confirmar** |
+| **Resend** | Envio de email transacional (verificação de conta, reset de password, eliminação de conta, convocatórias de assembleia, avisos importantes) | Nome, email, conteúdo do email (pode incluir dados financeiros no texto, ex. valor de quota em atraso) | A confirmar região de processamento | TLS no envio | Termos de serviço da Resend — **DPA próprio a localizar/confirmar** |
+| **Vercel Blob** | Armazenamento de ficheiros (documentos do condomínio, fotos de ocorrências, apólices de seguro) | Ficheiros carregados, potencialmente com dados pessoais de terceiros (ex. pessoas visíveis numa foto de ocorrência) | Vercel (infraestrutura global) | **Bucket configurado como público** — qualquer pessoa com o URL acede ao ficheiro, sem autenticação adicional (ver `FUNCTIONAL_GAPS.md` secção 6 e `SECURITY_AUDIT.md`) | Termos de serviço da Vercel — **DPA a confirmar** |
+| **Vercel Analytics** (`@vercel/analytics`) | Métricas de utilização (páginas visitadas, referrer, país aproximado), só em produção | Sem identificadores diretos de utilizador segundo a documentação do fornecedor — a confirmar se algum dado é considerado pessoal (IP truncado/país) | Vercel (infraestrutura global) | Segundo o fornecedor, sem cookies e sem armazenamento de IP em claro — **por confirmar/documentar formalmente antes de assumir isto como facto** | **Não identificado nenhum contrato/anexo RGPD específico — ação a tomar** |
+| **Have I Been Pwned API** (via plugin `haveIBeenPwned` do better-auth) | Verificar se a password escolhida já foi exposta em fugas de dados conhecidas | Só um prefixo de hash SHA-1 da password (k-anonimato) — nunca a password em claro nem qualquer identificador da conta | Serviço público (Cloudflare), fora da UE possivelmente | O modelo k-anonimato é uma salvaguarda técnica reconhecida (não é possível reconstituir a password a partir do prefixo) | Serviço público gratuito, sem contrato — **a considerar se precisa de menção na Política de Privacidade mesmo sem dado pessoal identificável, por transparência** |
+
+## Ações identificadas nesta fase
+
+1. **Vercel Analytics não está mencionado na Política de Privacidade nem no `RAT.md`** — corrigir em ambos (ver `RGPD_AUDIT.md`, achado RGPD-01).
+2. Confirmar formalmente as regiões de processamento da Neon e da Resend (hoje inferidas, não documentadas).
+3. Localizar ou solicitar o DPA/anexo RGPD de cada subcontratante (Neon, Resend, Vercel) — sem isto, o operador não consegue demonstrar accountability (art. 28º/1) sobre os seus próprios subcontratantes.
+4. Decidir se o Have I Been Pwned deve constar da Política de Privacidade por transparência, mesmo não processando dados pessoais identificáveis.
