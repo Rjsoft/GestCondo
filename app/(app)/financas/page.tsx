@@ -3,6 +3,7 @@ import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/
 import {
   getMapaSaldos,
   getMovimentos,
+  getMovimentosPaginado,
   getQuotasEmAtraso,
   getSaldoFundoReserva,
 } from '@/app/actions/financas'
@@ -20,13 +21,21 @@ import { Card, CardContent } from '@/components/ui/card'
 import { formatEuro } from '@/lib/format'
 import { TrendingUp, TrendingDown, Wallet, ShieldCheck } from 'lucide-react'
 
-export default async function FinancasPage() {
+export default async function FinancasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>
+}) {
   const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
+  const params = await searchParams
+  const search = params.q ?? ''
+  const page = Math.max(1, Number(params.page) || 1)
 
   const [
     movimentos,
+    movimentosPaginado,
     mapaSaldos,
     orcamentos,
     seguros,
@@ -38,6 +47,7 @@ export default async function FinancasPage() {
     linhasConciliadas,
   ] = await Promise.all([
     getMovimentos(),
+    getMovimentosPaginado({ page, search }),
     getMapaSaldos(),
     getOrcamentos(),
     getSeguros(),
@@ -120,7 +130,11 @@ export default async function FinancasPage() {
       </div>
 
       <FinancasTabs
-        movimentos={movimentos}
+        movimentos={movimentosPaginado.movimentos}
+        movimentosCsv={movimentos}
+        paginaMovimentos={movimentosPaginado.page}
+        totalPaginasMovimentos={movimentosPaginado.totalPages}
+        pesquisaMovimentos={search}
         mapaSaldos={mapaSaldos}
         orcamentos={orcamentos}
         seguros={seguros}

@@ -5,8 +5,10 @@ import { fracao, movimento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, asc, desc, eq, isNotNull, isNull, lt } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+
+const PAGE_SIZE = 20
 
 export async function getMovimentos() {
   // Dados financeiros: admin, gestor, condómino ou auditor — não
@@ -22,6 +24,33 @@ export async function getMovimentos() {
       ),
     )
     .orderBy(desc(movimento.data))
+}
+
+export async function getMovimentosPaginado({
+  page = 1,
+  search = '',
+}: { page?: number; search?: string } = {}) {
+  const m = await requireAcessoFinanceiro()
+  const condicao = search
+    ? and(
+        eq(movimento.condominioId, m.condominioId),
+        isNull(movimento.deletedAt),
+        or(ilike(movimento.categoria, `%${search}%`), ilike(movimento.descricao, `%${search}%`)),
+      )
+    : and(eq(movimento.condominioId, m.condominioId), isNull(movimento.deletedAt))
+
+  const [movimentos, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(movimento)
+      .where(condicao)
+      .orderBy(desc(movimento.data))
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE),
+    db.select({ total: count() }).from(movimento).where(condicao),
+  ])
+
+  return { movimentos, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
 }
 
 /**

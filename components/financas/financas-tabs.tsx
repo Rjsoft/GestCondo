@@ -1,6 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { FileText } from 'lucide-react'
 import { NovoMovimentoDialog } from '@/components/financas/novo-movimento-dialog'
 import { MovimentoActions } from '@/components/financas/movimento-actions'
 import { ExportarCsvButton } from '@/components/financas/exportar-csv-button'
@@ -13,6 +16,8 @@ import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { TipoMovimentoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { SearchInput } from '@/components/ui/search-input'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import {
   Table,
   TableBody,
@@ -86,6 +91,10 @@ type LinhaConciliada = LinhaExtrato & {
 
 export function FinancasTabs({
   movimentos,
+  movimentosCsv,
+  paginaMovimentos,
+  totalPaginasMovimentos,
+  pesquisaMovimentos,
   mapaSaldos,
   orcamentos,
   seguros,
@@ -97,6 +106,10 @@ export function FinancasTabs({
   isAdmin,
 }: {
   movimentos: Movimento[]
+  movimentosCsv: Movimento[]
+  paginaMovimentos: number
+  totalPaginasMovimentos: number
+  pesquisaMovimentos: string
   mapaSaldos: SaldoFracao[]
   orcamentos: Orcamento[]
   seguros: Seguro[]
@@ -123,9 +136,16 @@ export function FinancasTabs({
       </TabsList>
 
       <TabsContent value="movimentos" className="mt-4">
-        <div className="mb-3 flex flex-wrap justify-end gap-2">
-          <ExportarCsvButton movimentos={movimentos} />
-          {isAdmin && <NovoMovimentoDialog fracoes={fracoes} />}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <SearchInput placeholder="Pesquisar movimentos..." />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" render={<Link href="/financas/relatorio" />}>
+              <FileText className="h-4 w-4" />
+              Relatório (PDF)
+            </Button>
+            <ExportarCsvButton movimentos={movimentosCsv} />
+            {isAdmin && <NovoMovimentoDialog fracoes={fracoes} />}
+          </div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -148,7 +168,9 @@ export function FinancasTabs({
                       colSpan={isAdmin ? 7 : 6}
                       className="py-10 text-center text-muted-foreground"
                     >
-                      Ainda não existem movimentos registados.
+                      {pesquisaMovimentos
+                        ? 'Nenhum movimento encontrado.'
+                        : 'Ainda não existem movimentos registados.'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -214,6 +236,13 @@ export function FinancasTabs({
             </Table>
           </CardContent>
         </Card>
+        <PaginationControls
+          page={paginaMovimentos}
+          totalPages={totalPaginasMovimentos}
+          buildHref={(p) =>
+            `/financas?${new URLSearchParams({ ...(pesquisaMovimentos ? { q: pesquisaMovimentos } : {}), page: String(p) }).toString()}`
+          }
+        />
       </TabsContent>
 
       <TabsContent value="dividas" className="mt-4">
