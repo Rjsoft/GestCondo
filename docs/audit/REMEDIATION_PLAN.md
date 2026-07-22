@@ -26,9 +26,9 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 | Acordo de Tratamento de Dados (DPA) | RGPD-03, `LEGAL_DOCUMENTS_REGISTER.md` | ~~Redigir~~ **Modelo pronto** (`DPA_TEMPLATE.md`, 2026-07-22) — falta preencher e celebrar quando surgir o primeiro cliente administradora real (hoje não há nenhum) |
 | Contrato SaaS | `LEGAL_DOCUMENTS_REGISTER.md` | Redigir documento comercial formal |
 | Retenção | RGPD-04 (fechado), RGPD-05 | Expurgo automático de sessões/logs — soft-delete já cobre todas as tabelas relevantes |
-| Direitos | RGPD-02, RGPD-06 | Completar exportação de dados pessoais; registo formal de pedidos de oposição/limitação |
+| Direitos | ~~RGPD-02~~ (resolvido), RGPD-06 | Exportação de dados pessoais já completa (2026-07-22); falta só o registo formal de pedidos de oposição/limitação (RGPD-06, não-autosserviço) |
 | Incidentes | — | Procedimento já desenhado (`DATA_BREACH_PROCEDURE.md`) — falta designar formalmente um responsável e comunicar aos subcontratantes a obrigação de notificação |
-| Logs | AUDIT-01, AUDIT-02 | Auditar login/falhas de login/recuperação de conta e exportações |
+| Logs | ~~AUDIT-01~~ (resolvido 2026-07-22), AUDIT-02 (resolvido para `exportarMeusDados`) | Falta só a exportação CSV de movimentos (AUDIT-02, restante) |
 | Exportação/cancelamento | RGPD-02 | Ver acima |
 | Fluxos jurídicos essenciais | LEGAL-01 | ~~**Declaração de encargos/dívida (art. 1424º-A)**~~ **Resolvido 2026-07-22** — `/financas/declaracao-divida/[fracaoId]` |
 
@@ -36,7 +36,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 
 | Item | Achado(s) | Ação |
 |---|---|---|
-| Assembleias | LEGAL-03, DOC-02 | Validar dia distinto entre convocatórias; considerar numeração sequencial de atas |
+| Assembleias | ~~LEGAL-03~~ (resolvido 2026-07-22), DOC-02 | Validação de dia distinto entre convocatórias já feita; falta só considerar numeração sequencial de atas (DOC-02, baixa prioridade) |
 | Maiorias | — | Já corretamente não-automatizadas (`MEETINGS_AND_VOTING_MATRIX.md`) — sem ação, considerar campo de referência opcional |
 | Atas | DOC-02 | Ver acima |
 | Dívidas | LEGAL-01 | Ver Fase 2 |
@@ -69,4 +69,5 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 3. ~~**Fechar gaps de Privacidade/Termos**~~ — **18/22 resolvidos 2026-07-22.** Restam 4, todos bloqueados em decisões que só o utilizador pode tomar: identidade legal do operador + contacto de privacidade (PP-1/TU-1), foro competente (TU-5) e classificação B2B/B2C (TU-7, precisa também de confirmação jurídica). Assinalados com `[A preencher]` diretamente nas páginas publicadas.
 4. ~~**Soft-delete em `seguro`**~~ — **feito 2026-07-22**, e estendido também a `aviso`/`documento`/`ocorrencia` (DOC-01 fechado).
 5. ~~**Bucket de ficheiros deixar de ser público**~~ — **feito 2026-07-22**, via novo store privado (ver `FUNCTIONAL_GAPS.md`).
-6. Resto da Fase 2/3, depois Fase 4 por oportunidade.
+6. ~~**Auditar login/falha de login/recuperação de conta** (AUDIT-01)~~ — **feito 2026-07-22**, hook `after` do better-auth em `lib/auth.ts`.
+7. Resto da Fase 2/3, depois Fase 4 por oportunidade.

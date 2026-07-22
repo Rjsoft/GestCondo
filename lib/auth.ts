@@ -1,8 +1,9 @@
 import { betterAuth } from 'better-auth'
 import { twoFactor, haveIBeenPwned } from 'better-auth/plugins'
+import { createAuthMiddleware, APIError } from 'better-auth/api'
 import { pool, db } from '@/lib/db'
 import { membro } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { registarAuditoria, registarEventoAutenticacao } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import type { MembroSessao } from '@/lib/perfis'
 import { eq } from 'drizzle-orm'
@@ -105,6 +106,31 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
+  },
+  // Auditoria de login/falha de login/pedido de reset de password (achado
+  // AUDIT-01 da auditoria jurídica) — só existiam nos logs efémeros da
+  // Vercel. `hooks.after` do better-auth não é por rota; corre para todos
+  // os pedidos, por isso filtra por `ctx.path`. Uma falha de login lança
+  // um `APIError` em vez de devolver o resultado normal — `ctx.context.returned`
+  // é o `APIError` nesse caso (ver lib/audit.ts para a lógica de resolução
+  // de condomínio a partir do userId/email).
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === '/sign-in/email') {
+        const email = String((ctx.body as { email?: string } | undefined)?.email ?? '')
+        const returned = ctx.context.returned
+        if (returned instanceof APIError) {
+          if (email) await registarEventoAutenticacao('login_falhado', { email })
+        } else {
+          const userId = (returned as { user?: { id?: string } } | undefined)?.user?.id
+          if (userId) await registarEventoAutenticacao('login', { userId })
+        }
+      }
+      if (ctx.path === '/request-password-reset') {
+        const email = String((ctx.body as { email?: string } | undefined)?.email ?? '')
+        if (email) await registarEventoAutenticacao('pedido_reset_password', { email })
+      }
+    }),
   },
   plugins: [
     // Verificação de password comprometida (Fase 3, item 5) — usa a API

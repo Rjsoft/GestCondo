@@ -39,9 +39,9 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 
 | Operação pedida pelo prompt | Auditada hoje? |
 |---|---|
-| Login | ❌ Não — gerido só pelo better-auth (tabela `session`), sem espelho no `audit_log` |
-| Falhas de login | ❌ Não — só nos logs efémeros da plataforma (Vercel), sem retenção definida nem consulta pela aplicação |
-| Recuperação de conta (reset de password) | ❌ Não |
+| Login | ✅ **Resolvido 2026-07-22** — hook `after` do better-auth (`lib/auth.ts`) em `/sign-in/email`, regista em `audit_log` para cada `membro` da conta |
+| Falhas de login | ✅ **Resolvido 2026-07-22** — mesmo hook, deteta `ctx.context.returned instanceof APIError`; só regista se o email corresponder a uma conta real (não há `condominioId` a que atribuir tentativas contra emails inexistentes — ver `lib/audit.ts`) |
+| Recuperação de conta (reset de password) | ✅ **Resolvido 2026-07-22** — hook em `/request-password-reset`, mesma limitação (só emails de contas reais) |
 | Alteração de permissões (perfil) | ✅ `atualizarPerfilMembro` |
 | Criação de utilizadores | ✅ (aprovação/rejeição de `membro`) |
 | Exportação | 🟡 `exportarMeusDados()` (portabilidade RGPD) **passou a ser auditada 2026-07-22** (`registarAuditoria`, confirmado em runtime via `/auditoria`); a exportação CSV de movimentos continua sem registo, por ser só client-side, sem round-trip ao servidor |
@@ -84,7 +84,7 @@ A decisão de **não auditar leituras**, só escritas, é uma decisão de desenh
 
 | ID | Título | Severidade | Prioridade |
 |---|---|---|---|
-| AUDIT-01 | Login, falhas de login e recuperação de conta não ficam no `audit_log` — só nos logs efémeros da plataforma | Média | P2 |
+| AUDIT-01 | ~~Login, falhas de login e recuperação de conta não ficam no `audit_log`~~ **Resolvido 2026-07-22** | Média | — |
 | AUDIT-02 | ~~Exportação de dados (portabilidade RGPD) não é auditada~~ **Resolvido 2026-07-22** para `exportarMeusDados`; CSV de movimentos continua por auditar (exigiria converter para server action) | Média | P3 (restante) |
 | AUDIT-03 | Download de documentos não é auditado | Baixa | P3 |
 
