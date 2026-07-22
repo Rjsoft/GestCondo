@@ -134,6 +134,13 @@
       "when": 1784723350641,
       "tag": "0018_busy_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1784724335207,
+      "tag": "0019_ancient_prism",
+      "breakpoints": true
     }
   ]
 }

@@ -25,7 +25,7 @@ Nenhum bloqueador que impeça o funcionamento técnico. Bloqueador **comercial/l
 
 ## 5. Lacunas RGPD
 
-10 achados (RGPD-01 a RGPD-10, `docs/audit/RGPD_AUDIT.md`) — destaque: Vercel Analytics não divulgado (corrigido parcialmente), exportação de dados pessoais incompleta, sem soft-delete fora de `movimento`, sem expurgo automático de logs.
+10 achados (RGPD-01 a RGPD-10, `docs/audit/RGPD_AUDIT.md`) — destaque: Vercel Analytics não divulgado (corrigido parcialmente); exportação de dados pessoais e soft-delete (RGPD-02, RGPD-04) já resolvidos 2026-07-22; falta ainda expurgo automático de logs.
 
 ## 6. Lacunas jurídicas
 

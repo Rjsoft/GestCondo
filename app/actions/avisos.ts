@@ -5,19 +5,17 @@ import { aviso, membro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
 
 export async function getAvisos({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
   const m = await requireMembroAprovado()
+  const base = and(eq(aviso.condominioId, m.condominioId), isNull(aviso.deletedAt))
   const condicao = search
-    ? and(
-        eq(aviso.condominioId, m.condominioId),
-        or(ilike(aviso.titulo, `%${search}%`), ilike(aviso.conteudo, `%${search}%`)),
-      )
-    : eq(aviso.condominioId, m.condominioId)
+    ? and(base, or(ilike(aviso.titulo, `%${search}%`), ilike(aviso.conteudo, `%${search}%`)))
+    : base
 
   const [avisos, [{ total }]] = await Promise.all([
     db
@@ -91,7 +89,8 @@ export async function criarAviso(formData: FormData) {
 export async function eliminarAviso(id: number) {
   const admin = await requireAdmin()
   await db
-    .delete(aviso)
+    .update(aviso)
+    .set({ deletedAt: new Date() })
     .where(and(eq(aviso.id, id), eq(aviso.condominioId, admin.condominioId)))
 
   await registarAuditoria({

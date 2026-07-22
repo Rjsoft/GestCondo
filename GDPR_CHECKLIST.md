@@ -101,7 +101,7 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 
 ### Retenção e ciclo de vida
 - [x] Política de retenção definida por tipo de dado — proposta em secção 5 (2026-07-09), ainda não validada por jurista/contabilista nem automatizada (expurgo automático continua por fazer)
-- [x] Soft-delete + expurgo programado em vez de `DELETE` imediato — 2026-07-06 para `movimento`, **2026-07-22 também para `seguro`** (achado DOC-01 da auditoria jurídica); `fracao`/`aviso`/`documento`/`ocorrencia` continuam com `DELETE` físico; `membro` também, exceto no caso da autoeliminação de conta (2026-07-09), que já regista auditoria antes de remover
+- [x] Soft-delete em vez de `DELETE` imediato — 2026-07-06 para `movimento`, **2026-07-22 também para `seguro`, `aviso`, `documento`, `ocorrencia`** (achado DOC-01 da auditoria jurídica, agora resolvido); expurgo automático programado continua por fazer; `fracao`/`membro` continuam com `DELETE` físico, exceto a autoeliminação de conta (2026-07-09), que já regista auditoria antes de remover
 - [ ] Rotina de limpeza de sessões expiradas confirmada
 
 ### Terceiros

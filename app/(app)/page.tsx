@@ -38,13 +38,13 @@ export default async function DashboardPage() {
     db
       .select()
       .from(aviso)
-      .where(eq(aviso.condominioId, membro.condominioId))
+      .where(and(eq(aviso.condominioId, membro.condominioId), isNull(aviso.deletedAt)))
       .orderBy(desc(aviso.createdAt))
       .limit(4),
     db
       .select()
       .from(ocorrencia)
-      .where(eq(ocorrencia.condominioId, membro.condominioId))
+      .where(and(eq(ocorrencia.condominioId, membro.condominioId), isNull(ocorrencia.deletedAt)))
       .orderBy(desc(ocorrencia.createdAt))
       .limit(5),
     veFinancas

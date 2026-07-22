@@ -70,7 +70,13 @@ export async function exportarMeusDados() {
   const ocorrenciasReportadas = await db
     .select()
     .from(ocorrencia)
-    .where(and(eq(ocorrencia.condominioId, m.condominioId), eq(ocorrencia.userId, m.userId)))
+    .where(
+      and(
+        eq(ocorrencia.condominioId, m.condominioId),
+        eq(ocorrencia.userId, m.userId),
+        isNull(ocorrencia.deletedAt),
+      ),
+    )
 
   let movimentosDaFracao: (typeof movimento.$inferSelect)[] = []
   let presencasDaFracao: (typeof assembleiaPresenca.$inferSelect)[] = []

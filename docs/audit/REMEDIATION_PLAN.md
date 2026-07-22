@@ -13,7 +13,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 | Documentos publicamente acessíveis | ❌ **Bucket Vercel Blob é público** | Corrigir antes de qualquer documento com dados pessoais sensíveis ser carregado em maior volume |
 | Passwords/segredos expostos | ✅ Nenhum encontrado | Nenhuma |
 | Ausência de auditoria financeira | ✅ Resolvido (`audit_log`) | Nenhuma |
-| Eliminações irreversíveis sem rasto | 🟡 Resolvido para `movimento`; **não para `seguro`/`aviso`/`documento`/`ocorrencia`** (DOC-01) | Aplicar soft-delete, começando por `seguro` (documento com valor probatório legal) |
+| Eliminações irreversíveis sem rasto | ✅ Resolvido — soft-delete em `movimento`, `seguro`, `aviso`, `documento`, `ocorrencia` (DOC-01 fechado 2026-07-22) | Nenhuma |
 | Falhas graves de base jurídica | ✅ Nenhuma encontrada — bases jurídicas corretamente não-consentimento | Nenhuma |
 | Textos legais enganadores | ✅ Não enganadores, mas incompletos (22 gaps, ver Fase 2) | Ver abaixo |
 
@@ -25,7 +25,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 | Termos de Utilização | TU-1 a TU-12 | Fechar os 12 gaps (identidade, propriedade intelectual, documentos carregados, pagamentos, lei aplicável/foro, RAL/ODR, legitimidade de representação ao criar condomínio) |
 | Acordo de Tratamento de Dados (DPA) | RGPD-03, `LEGAL_DOCUMENTS_REGISTER.md` | ~~Redigir~~ **Modelo pronto** (`DPA_TEMPLATE.md`, 2026-07-22) — falta preencher e celebrar quando surgir o primeiro cliente administradora real (hoje não há nenhum) |
 | Contrato SaaS | `LEGAL_DOCUMENTS_REGISTER.md` | Redigir documento comercial formal |
-| Retenção | RGPD-04, RGPD-05, DOC-01 | Soft-delete adicional, expurgo automático de sessões/logs |
+| Retenção | RGPD-04 (fechado), RGPD-05 | Expurgo automático de sessões/logs — soft-delete já cobre todas as tabelas relevantes |
 | Direitos | RGPD-02, RGPD-06 | Completar exportação de dados pessoais; registo formal de pedidos de oposição/limitação |
 | Incidentes | — | Procedimento já desenhado (`DATA_BREACH_PROCEDURE.md`) — falta designar formalmente um responsável e comunicar aos subcontratantes a obrigação de notificação |
 | Logs | AUDIT-01, AUDIT-02 | Auditar login/falhas de login/recuperação de conta e exportações |
@@ -67,6 +67,6 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 1. ~~**Declaração de encargos/dívida** (LEGAL-01)~~ — **Resolvido 2026-07-22.**
 2. ~~**DPA**~~ — **Modelo pronto 2026-07-22** (`DPA_TEMPLATE.md`); sem cliente real ainda, deixa de ser urgente até haver um.
 3. **Fechar gaps de Privacidade/Termos** (22 no total) — a maioria são adições de texto, não código. Próximo passo mais importante em aberto.
-4. **Soft-delete em `seguro`** (parte de DOC-01) — esforço pequeno, mesmo padrão já usado em `movimento`.
+4. ~~**Soft-delete em `seguro`**~~ — **feito 2026-07-22**, e estendido também a `aviso`/`documento`/`ocorrencia` (DOC-01 fechado).
 5. **Bucket de ficheiros deixar de ser público** — depende de recriar o Blob store (ver nota operacional em `FUNCTIONAL_GAPS.md`), mais disruptivo.
 6. Resto da Fase 2/3, depois Fase 4 por oportunidade.

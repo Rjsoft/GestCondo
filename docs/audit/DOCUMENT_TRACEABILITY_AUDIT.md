@@ -22,7 +22,7 @@ Data: 2026-07-22. Consolida as secções 8 (Documentos e Prova) e 9 (Auditoria e
 
 ### 8.2 Regra "não apagar documentos financeiros/jurídicos" — verificação
 
-A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jurídicos emitidos; deve usar anulação/substituição/nova versão/estorno/aditamento/retificação") está **corretamente aplicada a `movimento`** (soft-delete, nunca `DELETE` físico — confirmado no schema e em `eliminarMovimento`) e, **desde 2026-07-22, também a `seguro`** (`eliminarSeguro` passou a soft-delete, `deletedAt`, testado em runtime — o registo mantém-se na BD mesmo depois de "eliminado" na UI). **Ainda não está aplicada a**: `aviso`, `documento`, `ocorrencia` — continuam com `DELETE` físico.
+A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jurídicos emitidos; deve usar anulação/substituição/nova versão/estorno/aditamento/retificação") está agora **aplicada a todas as tabelas de dados do condomínio**: `movimento` (já existia), e desde 2026-07-22 também `seguro`, `aviso`, `documento`, `ocorrencia` — todas com soft-delete (`deletedAt`), nunca `DELETE` físico. Testado em runtime (aviso criado/eliminado, confirmado que desaparece da UI mas mantém-se na BD com `deletedAt` definido). Corrigido também um ponto que só usava a query direta sem passar pela server action: o painel (`app/(app)/page.tsx`) lia `aviso`/`ocorrencia` diretamente sem filtrar `deletedAt` — ficaria a mostrar registos "eliminados" se não fosse corrigido no mesmo lote.
 
 ### 8.3 Achados novos desta fase (secção 8)
 

@@ -376,6 +376,9 @@ export const aviso = pgTable(
     conteudo: text("conteudo").notNull(),
     prioridade: text("prioridade").notNull().default("normal"), // "normal" | "importante" | "urgente"
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01) — mesmo
+    // padrão de movimento/seguro.deletedAt.
+    deletedAt: timestamp("deletedAt"),
   },
   (t) => [index("aviso_condominio_idx").on(t.condominioId)],
 )
@@ -403,6 +406,9 @@ export const ocorrencia = pgTable(
     fotoNomeFicheiro: text("fotoNomeFicheiro"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+    // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01) — mesmo
+    // padrão de movimento/seguro.deletedAt.
+    deletedAt: timestamp("deletedAt"),
   },
   (t) => [index("ocorrencia_condominio_idx").on(t.condominioId)],
 )
@@ -426,6 +432,9 @@ export const documento = pgTable(
     url: text("url"), // link para o ficheiro
     nomeFicheiro: text("nomeFicheiro"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01) — mesmo
+    // padrão de movimento/seguro.deletedAt.
+    deletedAt: timestamp("deletedAt"),
   },
   (t) => [index("documento_condominio_idx").on(t.condominioId)],
 )

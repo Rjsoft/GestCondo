@@ -11,7 +11,7 @@ import {
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -21,8 +21,12 @@ export async function getOcorrencias({ page = 1, search = '' }: { page?: number;
   // Admin/gestor/auditor veem todas as do seu condomínio; os restantes
   // (condómino, inquilino, fornecedor) veem só as suas.
   const escopo = temConsultaGestao(m)
-    ? eq(ocorrencia.condominioId, m.condominioId)
-    : and(eq(ocorrencia.condominioId, m.condominioId), eq(ocorrencia.userId, m.userId))
+    ? and(eq(ocorrencia.condominioId, m.condominioId), isNull(ocorrencia.deletedAt))
+    : and(
+        eq(ocorrencia.condominioId, m.condominioId),
+        eq(ocorrencia.userId, m.userId),
+        isNull(ocorrencia.deletedAt),
+      )
 
   const condicao = search
     ? and(escopo, or(ilike(ocorrencia.titulo, `%${search}%`), ilike(ocorrencia.descricao, `%${search}%`)))
@@ -165,7 +169,7 @@ export async function eliminarOcorrencia(id: number) {
     .where(condicao)
     .limit(1)
 
-  await db.delete(ocorrencia).where(condicao)
+  await db.update(ocorrencia).set({ deletedAt: new Date() }).where(condicao)
 
   await registarAuditoria({
     actor: m,

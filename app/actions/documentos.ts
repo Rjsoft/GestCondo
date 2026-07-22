@@ -5,19 +5,17 @@ import { documento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
 
 export async function getDocumentos({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
   const m = await requireMembroAprovado()
+  const base = and(eq(documento.condominioId, m.condominioId), isNull(documento.deletedAt))
   const condicao = search
-    ? and(
-        eq(documento.condominioId, m.condominioId),
-        or(ilike(documento.titulo, `%${search}%`), ilike(documento.descricao, `%${search}%`)),
-      )
-    : eq(documento.condominioId, m.condominioId)
+    ? and(base, or(ilike(documento.titulo, `%${search}%`), ilike(documento.descricao, `%${search}%`)))
+    : base
 
   const [documentos, [{ total }]] = await Promise.all([
     db
@@ -86,7 +84,7 @@ export async function eliminarDocumento(id: number) {
 
   const [existente] = await db.select({ url: documento.url }).from(documento).where(condicao).limit(1)
 
-  await db.delete(documento).where(condicao)
+  await db.update(documento).set({ deletedAt: new Date() }).where(condicao)
 
   await registarAuditoria({
     actor: admin,
