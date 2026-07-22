@@ -13,6 +13,8 @@ Não repitas nada disto de memória — os ficheiros abaixo são a fonte de verd
 - `GDPR_CHECKLIST.md`, `RAT.md` — conformidade RGPD.
 - `MVP_PLAN.md` — detalhe da Fase 2 (MVP funcional).
 - `docs/audit/ACCESSIBILITY_AUDIT.md` — acessibilidade a leitores de ecrã (NVDA), achados A1–A4. Requisito explícito do utilizador para toda a app, não só um módulo.
+- `docs/audit/PRE_CLIENTE_EXTERNO.md` — lista consolidada do que tem de estar concluído antes do primeiro cliente externo (não bloqueia o piloto atual).
+- `docs/CHECKLIST_TESTE_MANUAL.md` — checklist para o utilizador percorrer a app com dados reais, não substitui os testes automáticos.
 
 Quando terminares uma tarefa que resolve ou contradiz algo descrito nestes ficheiros, atualiza-os na mesma sessão — já aconteceu ficarem desatualizados e contradizerem o código real.
 
@@ -34,8 +36,9 @@ pnpm test:db     # integração real contra Neon dev — só quando relevante (i
 pnpm run lint
 pnpm exec tsc --noEmit
 pnpm run build
-pnpm db:generate # gera migração a partir de lib/db/schema.ts
-pnpm db:migrate  # aplica migrações pendentes — ver gotcha de produção abaixo
+pnpm db:generate     # gera migração a partir de lib/db/schema.ts
+pnpm db:migrate      # aplica migrações pendentes — ver gotcha de produção abaixo
+pnpm db:check-drift  # compara migrações aplicadas em dev vs produção (exige PROD_DATABASE_URL=<connection string> no ambiente)
 ```
 
 Neste ambiente Windows, `pnpm` pode não estar no PATH do shell da sessão — usar `.\node_modules\.bin\<ferramenta>.cmd` ou `npx` como alternativa.
@@ -53,6 +56,7 @@ Neste ambiente Windows, `pnpm` pode não estar no PATH do shell da sessão — u
 
 ## Gotchas conhecidos
 
-- **Duas bases de dados Neon distintas** (branches `development` e `production`), sem nenhum passo automático de migração no deploy — ver `TECHNICAL_DEBT.md` D8. Depois de gerar uma migração nova, é preciso lembrar de a aplicar manualmente às duas, incluindo produção. Já causou um incidente real (`/financas` a devolver 500 em produção, tabela em falta).
+- **Duas bases de dados Neon distintas** (branches `development` e `production`), sem nenhum passo automático de migração no deploy — ver `TECHNICAL_DEBT.md` D8. Depois de gerar uma migração nova, é preciso lembrar de a aplicar manualmente às duas, incluindo produção. Já causou um incidente real (`/financas` a devolver 500 em produção, tabela em falta). Correr `pnpm db:check-drift` para confirmar que produção está alinhada.
+- **Aplicar uma migração a produção colando o SQL diretamente no SQL Editor da Neon funciona no schema, mas nunca atualiza a tabela `drizzle.__drizzle_migrations`** — a bookkeeping do drizzle-kit fica incorreta, e um `pnpm db:migrate` futuro tentaria reaplicar essa migração e falhar (coluna/tabela já existe). Preferir sempre `DATABASE_URL="<produção>" pnpm db:migrate` em vez de copiar o SQL à mão; se for mesmo preciso aplicar à mão (ex. problemas de rede), inserir depois a linha correspondente em `drizzle.__drizzle_migrations` (hash igual ao de dev) e confirmar com `pnpm db:check-drift`.
 - O `DATABASE_URL` de produção está marcado **"Sensitive"** na Vercel — `vercel env pull` devolve `[SENSITIVE]`, nunca o valor real. Para obter a connection string de produção, ir diretamente ao Neon (branch `production`, connection string **sem pooling** — a ligação com `-pooler` falha silenciosamente no `drizzle-kit migrate`).
 - Nunca alterar produção (dados, migrações, deploy) sem autorização explícita do utilizador, mesmo quando tecnicamente acessível.

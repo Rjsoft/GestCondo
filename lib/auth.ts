@@ -96,7 +96,12 @@ export const auth = betterAuth({
       },
     },
   },
+  // BETTER_AUTH_URL já é usado acima para o baseURL — incluído aqui também
+  // para que configurar um domínio próprio (ex. gestcondo.pt) baste alterar
+  // essa única variável de ambiente, sem tocar no código. Sem isto, o login
+  // falharia nesse domínio (origem não confiável) mesmo com o baseURL certo.
   trustedOrigins: [
+    ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
     ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
     ...(process.env.VERCEL_PROJECT_PRODUCTION_URL

@@ -10,7 +10,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 |---|---|---|
 | Fuga de dados entre condomínios | ✅ Resolvido e verificado (teste de integração real, `SECURITY_AUDIT.md` S9) | Nenhuma |
 | Permissões incorretas | ✅ Resolvido (7 perfis, `SECURITY_AUDIT.md` S8) | Nenhuma |
-| Documentos publicamente acessíveis | ✅ **Resolvido 2026-07-22** para novos uploads — store privado dedicado (`gestcondo-ficheiros-privado`) + rota autenticada (`app/api/ficheiros/route.ts`). Ficheiros anteriores a esta data continuam no store público antigo, não migrados (risco residual baixo e aceite) | Migrar ficheiros antigos, se algum dia justificar o esforço |
+| Documentos publicamente acessíveis | ✅ **Resolvido 2026-07-22** — store privado dedicado (`gestcondo-ficheiros-privado`) + rota autenticada (`app/api/ficheiros/route.ts`). **Confirmado que não há ficheiros antigos por migrar**: 0 registos com `url` em `documento`/`ocorrencia`/`seguro` em produção, 0 blobs no store antigo. | Nenhuma |
 | Passwords/segredos expostos | ✅ Nenhum encontrado | Nenhuma |
 | Ausência de auditoria financeira | ✅ Resolvido (`audit_log`) | Nenhuma |
 | Eliminações irreversíveis sem rasto | ✅ Resolvido — soft-delete em `movimento`, `seguro`, `aviso`, `documento`, `ocorrencia` (DOC-01 fechado 2026-07-22) | Nenhuma |
