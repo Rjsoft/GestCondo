@@ -52,12 +52,16 @@ export default async function ReciboPage({
               {condominio?.morada && (
                 <p className="text-xs text-muted-foreground">{condominio.morada}</p>
               )}
+              {condominio?.nif && (
+                <p className="text-xs text-muted-foreground">NIF: {condominio.nif}</p>
+              )}
             </div>
           </div>
 
           <div className="text-center">
             <h1 className="font-serif text-xl font-bold text-foreground">Recibo</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">Nº {movimento.id}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               {movimento.pago ? 'Pagamento recebido' : 'Quota — por liquidar'}
             </p>
           </div>
@@ -75,6 +79,12 @@ export default async function ReciboPage({
                 {fracaoDoMovimento?.proprietario ?? '—'}
               </dd>
             </div>
+            {fracaoDoMovimento?.nif && (
+              <div className="flex justify-between border-b border-border pb-2">
+                <dt className="text-muted-foreground">NIF do condómino</dt>
+                <dd className="font-medium text-foreground">{fracaoDoMovimento.nif}</dd>
+              </div>
+            )}
             <div className="flex justify-between border-b border-border pb-2">
               <dt className="text-muted-foreground">Categoria</dt>
               <dd className="font-medium text-foreground">{movimento.categoria}</dd>

@@ -21,11 +21,13 @@ import {
   LogOut,
   Menu,
   X,
+  Settings,
 } from 'lucide-react'
 import {
   PERFIL_LABEL,
   PERFIS_ACESSO_FINANCEIRO,
   PERFIS_CONSULTA_GESTAO,
+  PERFIS_GESTAO,
   type Perfil,
 } from '@/lib/perfis'
 
@@ -71,6 +73,12 @@ const NAV: NavItem[] = [
       isSuperAdmin || PERFIS_CONSULTA_GESTAO.includes(perfil),
   },
   { href: '/os-meus-dados', label: 'Os meus dados', icon: UserCog },
+  {
+    href: '/condominio',
+    label: 'Condomínio',
+    icon: Settings,
+    visivel: (perfil, isSuperAdmin) => isSuperAdmin || PERFIS_GESTAO.includes(perfil),
+  },
 ]
 
 export function AppShell({

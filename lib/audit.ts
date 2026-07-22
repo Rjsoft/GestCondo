@@ -20,6 +20,7 @@ export type EntidadeAuditoria =
   | 'seguro'
   | 'assembleia'
   | 'extratoBancario'
+  | 'condominio'
 
 /**
  * Escreve uma linha no registo de auditoria. Chamar depois de a operação na

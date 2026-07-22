@@ -20,3 +20,6 @@ node_modules
 .claude/settings.local.json
 .vercel
 .env*
+
+# Documentos com dados pessoais reais de condóminos — nunca no repositório
+*.pdf
