@@ -243,7 +243,13 @@ export function AppShell({
       )}
 
       <main id="main-content" tabIndex={-1} className="print:pl-0 lg:pl-64">
-        <div className="mx-auto max-w-6xl px-4 py-6 print:max-w-none print:p-0 sm:px-6 lg:px-8">
+        {/* 1600px em vez do max-w-6xl (1152px) anterior: aproveita a
+            largura disponível em ecrãs grandes sem deixar as linhas de
+            texto/tabelas absurdamente esticadas em monitores ultra-largos.
+            Páginas imprimíveis (recibos, atas, minutas) têm o seu próprio
+            max-w intencional, tipo folha A4, e ficam de fora
+            (print:max-w-none aqui só remove este limite geral). */}
+        <div className="mx-auto max-w-[1600px] px-4 py-6 print:max-w-none print:p-0 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
