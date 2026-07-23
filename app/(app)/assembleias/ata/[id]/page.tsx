@@ -4,8 +4,8 @@ import { getCondominioAtual, requireMembroPagina } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ImprimirButton } from '@/components/imprimir-button'
+import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
 import { formatDataHora } from '@/lib/format'
-import { Building2 } from 'lucide-react'
 
 const TIPO_LABEL: Record<string, string> = {
   ordinaria: 'Ordinária',
@@ -39,43 +39,28 @@ export default async function AtaPage({
   const quorumPct = totalPermilagem > 0 ? (permilagemPresente / totalPermilagem) * 100 : 0
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl print:max-w-none">
       <div className="mb-4 flex justify-end print:hidden">
         <ImprimirButton />
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-6 p-8">
-          <div className="flex items-center gap-3 border-b border-border pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-serif text-lg font-bold text-foreground">
-                {condominio?.nome ?? 'Condomínio'}
-              </p>
-              {condominio?.morada && (
-                <p className="text-xs text-muted-foreground">{condominio.morada}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <h1 className="font-serif text-xl font-bold text-foreground">
-              Ata de Assembleia {TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {formatDataHora(assembleia.dataPrimeiraConvocatoria)} — {assembleia.local}
-            </p>
-            {assembleia.estado !== 'aprovada' && (
+      <Card className="print:border-0 print:shadow-none">
+        <CardContent className="flex flex-col gap-6 p-8 print:p-0">
+          <CabecalhoDocumento
+            condominio={condominio}
+            titulo={`Ata de Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}`}
+            subtitulo={`${formatDataHora(assembleia.dataPrimeiraConvocatoria)} — ${assembleia.local}`}
+          />
+          {assembleia.estado !== 'aprovada' && (
+            <div className="-mt-4 text-center">
               <Badge
                 variant="outline"
-                className="mt-2 border-amber-200 bg-amber-100 text-amber-800"
+                className="border-amber-200 bg-amber-100 text-amber-800"
               >
                 Rascunho — ata ainda não aprovada
               </Badge>
-            )}
-          </div>
+            </div>
+          )}
 
           <div>
             <h2 className="mb-2 font-serif text-sm font-bold text-foreground">

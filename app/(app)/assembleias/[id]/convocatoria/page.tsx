@@ -3,8 +3,8 @@ import { getAssembleiaDetalhe } from '@/app/actions/assembleias'
 import { getCondominioAtual, requireMembroPagina } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { ImprimirButton } from '@/components/imprimir-button'
+import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
 import { formatData, formatDataHora } from '@/lib/format'
-import { Building2 } from 'lucide-react'
 
 const TIPO_LABEL: Record<string, string> = {
   ordinaria: 'Ordinária',
@@ -44,7 +44,7 @@ export default async function ConvocatoriaPage({
     assembleia.estado === 'convocada'
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl print:max-w-none">
       <div className="mb-4 flex justify-end print:hidden">
         <ImprimirButton />
       </div>
@@ -58,34 +58,16 @@ export default async function ConvocatoriaPage({
         </p>
       )}
 
-      <Card>
-        <CardContent className="flex flex-col gap-6 p-8">
-          <div className="flex items-center gap-3 border-b border-border pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-serif text-lg font-bold text-foreground">
-                {condominio?.nome ?? 'Condomínio'}
-              </p>
-              {condominio?.morada && (
-                <p className="text-xs text-muted-foreground">{condominio.morada}</p>
-              )}
-              {condominio?.nif && (
-                <p className="text-xs text-muted-foreground">NIF {condominio.nif}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <h1 className="font-serif text-xl font-bold text-foreground">
-              Convocatória — Assembleia {TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo} de
-              Condóminos
-            </h1>
-          </div>
+      <Card className="print:border-0 print:shadow-none">
+        <CardContent className="flex flex-col gap-6 p-8 print:p-0">
+          <CabecalhoDocumento
+            condominio={condominio}
+            titulo={`Convocatória — Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo} de Condóminos`}
+          />
 
           <p className="text-sm text-foreground">
-            Nos termos do artigo 1432.º do Código Civil, convocam-se todos os
+            Nos termos dos artigos 1431.º e 1432.º do Código Civil,
+            convocam-se todos os
             condóminos do prédio acima identificado para a Assembleia{' '}
             {(TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo).toLowerCase()} de
             condóminos, a realizar em <strong>{assembleia.local}</strong>, no
@@ -100,9 +82,9 @@ export default async function ConvocatoriaPage({
               assembleia reunirá em <strong>segunda convocatória</strong> em{' '}
               <strong>{formatDataHora(assembleia.dataSegundaConvocatoria)}</strong>,
               no mesmo local, podendo então deliberar por maioria dos votos
-              dos condóminos presentes, desde que representem, pelo menos, um
-              quarto do valor total do prédio (art. 1432.º, n.º 7 do Código
-              Civil).
+              dos condóminos presentes ou representados, desde que
+              representem, pelo menos, um quarto do valor total do prédio
+              (art. 1432.º, n.os 6 e 7 do Código Civil).
             </p>
           )}
 
@@ -143,19 +125,34 @@ export default async function ConvocatoriaPage({
             <ul className="flex list-disc flex-col gap-1 pl-5">
               <li>
                 Os condóminos podem fazer-se representar por procurador,
-                mediante procuração (art. 1431.º, n.º 3 do Código Civil).
+                mediante procuração escrita (art. 1431.º, n.º 3 do Código
+                Civil).
               </li>
               <li>
-                Em primeira convocatória, a assembleia delibera por maioria
-                dos votos representativos do capital investido (art. 1432.º,
-                n.º 5 do Código Civil).
+                Não devem ser tomadas deliberações sobre matérias que não
+                constem expressamente da presente ordem de trabalhos, salvo
+                se estiverem presentes ou representados todos os condóminos e
+                todos concordarem com a sua apreciação.
               </li>
               <li>
-                As deliberações sobre assuntos identificados como sujeitos a
-                unanimidade podem ser aprovadas por dois terços dos condóminos
-                presentes, ficando sujeitas a confirmação pelos condóminos
-                ausentes no prazo de 90 dias (art. 1432.º, n.os 8 a 11 do
-                Código Civil).
+                Salvo disposição legal especial, as deliberações são tomadas
+                por maioria dos votos representativos do capital investido
+                (art. 1432.º, n.º 5 do Código Civil).
+              </li>
+              <li>
+                As deliberações que careçam de unanimidade podem ser
+                aprovadas por unanimidade dos condóminos presentes ou
+                representados, desde que estes representem, pelo menos, dois
+                terços do capital investido, ficando sujeitas a aprovação
+                pelos condóminos ausentes (art. 1432.º, n.º 8 do Código
+                Civil).
+              </li>
+              <li>
+                Nesse caso, as deliberações são comunicadas aos condóminos
+                ausentes no prazo de 30 dias, dispondo estes de 90 dias após
+                a receção para manifestarem, por escrito, o seu assentimento
+                ou discordância; o silêncio é considerado aprovação
+                (art. 1432.º, n.os 9 a 11 do Código Civil).
               </li>
             </ul>
           </div>

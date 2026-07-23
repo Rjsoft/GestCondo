@@ -69,6 +69,15 @@ export default async function AssembleiaDetalhePage({
               Convocatória (PDF)
             </Button>
           )}
+          {assembleia.estado !== 'cancelada' && (
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={`/assembleias/${assembleia.id}/procuracao`} />}
+            >
+              Procuração (PDF)
+            </Button>
+          )}
           {isAdmin && assembleia.estado === 'realizada' && (
             <AprovarAtaDialog assembleiaId={assembleia.id} textoAtaAtual={assembleia.textoAta} />
           )}

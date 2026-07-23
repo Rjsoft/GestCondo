@@ -125,6 +125,11 @@ export async function getAssembleiaDetalhe(id: number) {
     fracoes: fracoes.map((f) => ({
       id: f.id,
       identificacao: f.identificacao,
+      // Nome do proprietário registado — usado para pré-preencher a minuta
+      // da procuração. Visível para qualquer membro aprovado, tal como já
+      // acontece na listagem de /fracoes (os contactos, esses, continuam
+      // restritos a quem gere).
+      proprietario: f.proprietario,
       permilagem: Number(f.permilagem),
       temPresenca: fracoesComPresenca.has(f.id),
     })),

@@ -163,3 +163,35 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Impressão: os documentos da app (recibo, ata, minutas, relatórios) são
+   sempre para folhas A4. As margens físicas ficam a cargo da @page; os
+   espaçamentos de ecrã são removidos nas próprias páginas (print:*). */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 16mm 18mm;
+
+    /* Rodapé comum a todos os documentos impressos, no padrão dos
+       relatórios profissionais de administração de condomínios. As margin
+       boxes de @page são suportadas no Chromium desde a versão 131. */
+    @bottom-left {
+      content: "GestCondo";
+      font-size: 8pt;
+      color: #6b7280;
+    }
+    @bottom-right {
+      content: "Pág. " counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #6b7280;
+    }
+  }
+
+  /* Tipografia de documento formal em A4: as classes text-* do Tailwind
+     são relativas ao root, por isso escalar aqui escala tudo em proporção.
+     Com 17px de base: texto corrente (text-sm) ≈ 11 pt, notas (text-xs)
+     ≈ 9,5 pt, título (text-xl) ≈ 16 pt. */
+  html {
+    font-size: 17px;
+  }
+}

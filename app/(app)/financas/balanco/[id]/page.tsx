@@ -11,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatEuro, formatDataHora } from '@/lib/format'
-import { Building2 } from 'lucide-react'
+import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
+import { formatEuro } from '@/lib/format'
 
 export default async function BalancoOrcamentoPage({
   params,
@@ -37,35 +37,18 @@ export default async function BalancoOrcamentoPage({
     balanco
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl print:max-w-none">
       <div className="mb-4 flex justify-end print:hidden">
         <ImprimirButton />
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-6 p-8">
-          <div className="flex items-center gap-3 border-b border-border pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-serif text-lg font-bold text-foreground">
-                {condominio?.nome ?? 'Condomínio'}
-              </p>
-              {condominio?.morada && (
-                <p className="text-xs text-muted-foreground">{condominio.morada}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="text-center">
-            <h1 className="font-serif text-xl font-bold text-foreground">
-              Balanço — Orçamento aprovado vs. contas reais de {orcamento.ano}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Gerado em {formatDataHora(new Date())}
-            </p>
-          </div>
+      <Card className="print:border-0 print:shadow-none">
+        <CardContent className="flex flex-col gap-6 p-8 print:p-0">
+          <CabecalhoDocumento
+            condominio={condominio}
+            titulo="Balanço — Orçamento aprovado vs. contas reais"
+            subtitulo={`Exercício de ${orcamento.ano}`}
+          />
 
           <div className="grid grid-cols-2 gap-3 border-b border-border pb-6 sm:grid-cols-4">
             <div>

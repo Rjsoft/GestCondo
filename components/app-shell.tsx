@@ -195,12 +195,15 @@ export function AppShell({
       </a>
 
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 print:hidden lg:block">
         {sidebar}
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card px-4 lg:hidden">
+      {/* print:hidden: em impressão a largura da página A4 fica abaixo do
+          breakpoint lg, o que fazia este cabeçalho móvel aparecer nos PDF
+          (recibo, ata, minutas). */}
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card px-4 print:hidden lg:hidden">
         <Button
           variant="outline"
           size="icon"
@@ -239,8 +242,8 @@ export function AppShell({
         </div>
       )}
 
-      <main id="main-content" tabIndex={-1} className="lg:pl-64">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      <main id="main-content" tabIndex={-1} className="print:pl-0 lg:pl-64">
+        <div className="mx-auto max-w-6xl px-4 py-6 print:max-w-none print:p-0 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
