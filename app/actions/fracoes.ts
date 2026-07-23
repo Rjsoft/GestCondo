@@ -21,7 +21,7 @@ export async function getFracoes() {
     .select()
     .from(fracao)
     .where(eq(fracao.condominioId, m.condominioId))
-    .orderBy(asc(fracao.identificacao))
+    .orderBy(asc(fracao.letra), asc(fracao.identificacao))
 
   // Contactos pessoais (email/telefone do proprietário) só para quem gere
   // o condomínio ou audita — um condómino comum não precisa de ver o
@@ -44,11 +44,22 @@ export async function getFracaoPorId(id: number) {
   return f ?? null
 }
 
+const TIPOS_TITULAR = ['proprietario', 'inquilino', 'usufrutuario', 'locatario', 'antigo'] as const
+
+function lerTipoTitular(formData: FormData) {
+  const valor = String(formData.get('tipoTitular') || '')
+  return (TIPOS_TITULAR as readonly string[]).includes(valor)
+    ? (valor as (typeof TIPOS_TITULAR)[number])
+    : null
+}
+
 export async function criarFracao(formData: FormData) {
   const admin = await requireAdmin()
 
+  const letra = String(formData.get('letra') || '').trim()
   const identificacao = String(formData.get('identificacao') || '').trim()
   const proprietario = String(formData.get('proprietario') || '').trim()
+  const tipoTitular = lerTipoTitular(formData)
   const nif = String(formData.get('nif') || '').trim()
   const permilagem = String(formData.get('permilagem') || '0')
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
@@ -65,8 +76,10 @@ export async function criarFracao(formData: FormData) {
     .values({
       condominioId: admin.condominioId,
       userId: admin.userId,
+      letra: letra || null,
       identificacao,
       proprietario,
+      tipoTitular,
       nif: nif || null,
       permilagem,
       contactoEmail: contactoEmail || null,
@@ -81,6 +94,51 @@ export async function criarFracao(formData: FormData) {
     acao: 'criar',
     entidade: 'fracao',
     entidadeId: nova.id,
+    detalhes: `${identificacao} — ${proprietario}`,
+  })
+
+  revalidatePath('/fracoes')
+  revalidatePath('/')
+}
+
+export async function atualizarFracao(formData: FormData) {
+  const admin = await requireAdmin()
+
+  const id = Number(formData.get('id'))
+  const letra = String(formData.get('letra') || '').trim()
+  const identificacao = String(formData.get('identificacao') || '').trim()
+  const proprietario = String(formData.get('proprietario') || '').trim()
+  const tipoTitular = lerTipoTitular(formData)
+  const nif = String(formData.get('nif') || '').trim()
+  const permilagem = String(formData.get('permilagem') || '0')
+  const contactoEmail = String(formData.get('contactoEmail') || '').trim()
+  const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
+  const notas = String(formData.get('notas') || '').trim()
+
+  if (!identificacao || !proprietario) {
+    throw new Error('Preencha a identificação e o proprietário')
+  }
+
+  await db
+    .update(fracao)
+    .set({
+      letra: letra || null,
+      identificacao,
+      proprietario,
+      tipoTitular,
+      nif: nif || null,
+      permilagem,
+      contactoEmail: contactoEmail || null,
+      contactoTelefone: contactoTelefone || null,
+      notas: notas || null,
+    })
+    .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'fracao',
+    entidadeId: id,
     detalhes: `${identificacao} — ${proprietario}`,
   })
 

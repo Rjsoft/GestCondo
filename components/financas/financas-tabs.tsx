@@ -299,14 +299,26 @@ export function FinancasTabs({
                       {formatEuro(s.emDivida)}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        render={<Link href={`/financas/declaracao-divida/${s.fracaoId}`} />}
-                      >
-                        <FileText className="h-4 w-4" />
-                        Declaração
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          render={<Link href={`/financas/declaracao-divida/${s.fracaoId}`} />}
+                        >
+                          <FileText className="h-4 w-4" />
+                          Declaração
+                        </Button>
+                        {s.emDivida > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            render={<Link href={`/financas/interpelacao/${s.fracaoId}`} />}
+                          >
+                            <FileText className="h-4 w-4" />
+                            Interpelação
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

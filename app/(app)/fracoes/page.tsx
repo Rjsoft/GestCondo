@@ -9,6 +9,7 @@ import { getFracoes, getMembros } from '@/app/actions/fracoes'
 import { getSeguros } from '@/app/actions/seguros'
 import { PageHeader } from '@/components/page-header'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
+import { EditarFracaoDialog } from '@/components/fracoes/editar-fracao-dialog'
 import { FracaoActions } from '@/components/fracoes/fracao-actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { SearchInput } from '@/components/ui/search-input'
@@ -51,7 +52,8 @@ export default async function FracoesPage({
     ? todasFracoes.filter(
         (f) =>
           f.identificacao.toLowerCase().includes(search) ||
-          f.proprietario.toLowerCase().includes(search),
+          f.proprietario.toLowerCase().includes(search) ||
+          (f.letra ?? '').toLowerCase().includes(search),
       )
     : todasFracoes
   const condominosPorFracao = new Map<number, string[]>()
@@ -95,14 +97,11 @@ export default async function FracoesPage({
                 <TableHead>Identificação</TableHead>
                 <TableHead>Proprietário</TableHead>
                 {veContactos && (
-                  <TableHead className="hidden sm:table-cell">Contacto</TableHead>
-                )}
-                {veContactos && (
-                  <TableHead className="hidden md:table-cell">Condómino(s) com conta</TableHead>
+                  <TableHead className="hidden xl:table-cell">Condómino(s) com conta</TableHead>
                 )}
                 <TableHead className="text-right">Permilagem</TableHead>
                 <TableHead className="hidden sm:table-cell">Elevador</TableHead>
-                <TableHead className="hidden lg:table-cell">Seguro</TableHead>
+                <TableHead className="hidden xl:table-cell">Seguro</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
             </TableHeader>
@@ -110,7 +109,7 @@ export default async function FracoesPage({
               {fracoes.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={5 + (veContactos ? 2 : 0) + (isAdmin ? 1 : 0)}
+                    colSpan={5 + (veContactos ? 1 : 0) + (isAdmin ? 1 : 0)}
                     className="py-10 text-center text-muted-foreground"
                   >
                     {search ? 'Nenhuma fração encontrada.' : 'Ainda não existem frações registadas.'}
@@ -122,29 +121,23 @@ export default async function FracoesPage({
                 return (
                   <TableRow key={f.id}>
                     <TableCell className="font-medium">
-                      {f.identificacao}
+                      {f.letra ? `${f.letra} — ${f.identificacao}` : f.identificacao}
                     </TableCell>
                     <TableCell>
                       {f.proprietario}
                       {f.nif && (
                         <span className="block text-xs text-muted-foreground">NIF: {f.nif}</span>
                       )}
+                      {veContactos && (f.contactoEmail || f.contactoTelefone) && (
+                        <span className="block text-xs text-muted-foreground">
+                          {f.contactoEmail}
+                          {f.contactoEmail && f.contactoTelefone ? ' · ' : ''}
+                          {f.contactoTelefone}
+                        </span>
+                      )}
                     </TableCell>
                     {veContactos && (
-                      <TableCell className="hidden text-muted-foreground sm:table-cell">
-                        {f.contactoEmail || f.contactoTelefone ? (
-                          <span>
-                            {f.contactoEmail}
-                            {f.contactoEmail && f.contactoTelefone ? ' · ' : ''}
-                            {f.contactoTelefone}
-                          </span>
-                        ) : (
-                          '—'
-                        )}
-                      </TableCell>
-                    )}
-                    {veContactos && (
-                      <TableCell className="hidden text-muted-foreground md:table-cell">
+                      <TableCell className="hidden text-muted-foreground xl:table-cell">
                         {condominos.length > 0 ? condominos.join(', ') : '—'}
                       </TableCell>
                     )}
@@ -154,12 +147,26 @@ export default async function FracoesPage({
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
                       {f.isentaElevador ? 'Isenta' : '—'}
                     </TableCell>
-                    <TableCell className="hidden text-muted-foreground lg:table-cell">
+                    <TableCell className="hidden text-muted-foreground xl:table-cell">
                       {(segurosPorFracao.get(f.id) ?? []).join('; ') || '—'}
                     </TableCell>
                     {isAdmin && (
                       <TableCell>
-                        <FracaoActions id={f.id} isentaElevador={f.isentaElevador} />
+                        <div className="flex items-center gap-1">
+                          <EditarFracaoDialog
+                            id={f.id}
+                            letra={f.letra}
+                            identificacao={f.identificacao}
+                            proprietario={f.proprietario}
+                            tipoTitular={f.tipoTitular}
+                            nif={f.nif}
+                            permilagem={Number(f.permilagem)}
+                            contactoEmail={f.contactoEmail}
+                            contactoTelefone={f.contactoTelefone}
+                            notas={f.notas}
+                          />
+                          <FracaoActions id={f.id} isentaElevador={f.isentaElevador} />
+                        </div>
                       </TableCell>
                     )}
                   </TableRow>

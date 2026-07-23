@@ -191,8 +191,17 @@ export const fracao = pgTable(
       .notNull()
       .references(() => condominio.id, { onDelete: "cascade" }),
     userId: text("userId").notNull(), // criador (admin)
+    // Letra/código curto da fração (ex: "A", "D"), como usado nos mapas de
+    // quotas e documentação de administrações (ex. MBD Gest). Distinto de
+    // `identificacao`, que descreve a localização ("R/C Dto").
+    letra: text("letra"),
     identificacao: text("identificacao").notNull(), // ex: "R/C Dto", "2ºEsq"
     proprietario: text("proprietario").notNull(),
+    // Qualidade do titular indicado em `proprietario`, relevante para saber
+    // a quem endereçar correspondência (convocatórias, interpelações).
+    tipoTitular: text("tipoTitular").$type<
+      "proprietario" | "inquilino" | "usufrutuario" | "locatario" | "antigo"
+    >(),
     // NIF do proprietário registado (fracao.proprietario) — útil para
     // recibos/declarações fiscais. Texto livre, sem validação de checksum,
     // pelo mesmo padrão já usado em condominio.nif.
