@@ -148,6 +148,13 @@
       "when": 1784727230651,
       "tag": "0020_typical_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784740400622,
+      "tag": "0021_thankful_frightful_four",
+      "breakpoints": true
     }
   ]
 }

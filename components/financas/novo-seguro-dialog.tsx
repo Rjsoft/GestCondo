@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -25,7 +26,11 @@ import {
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function NovoSeguroDialog() {
+export function NovoSeguroDialog({
+  fracoes,
+}: {
+  fracoes: { id: number; identificacao: string }[]
+}) {
   const [open, setOpen] = useState(false)
   const [tipo, setTipo] = useState('multirriscos')
   const [pending, startTransition] = useTransition()
@@ -123,6 +128,28 @@ export function NovoSeguroDialog() {
             Capital seguro é o valor de reconstrução pelo qual o edifício está
             seguro (diferente do prémio) — deve ser atualizado todos os anos.
           </p>
+
+          {fracoes.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Label>Frações cobertas por esta apólice (opcional)</Label>
+              <p className="-mt-1 text-xs text-muted-foreground">
+                Deixe todas por marcar se esta apólice cobrir só o edifício e
+                partes comuns. Marque as frações cuja fração/recheio também
+                esteja incluída nesta mesma apólice.
+              </p>
+              <div className="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-border p-2">
+                {fracoes.map((f) => (
+                  <label
+                    key={f.id}
+                    className="flex items-center gap-2 text-sm text-foreground"
+                  >
+                    <Checkbox name="fracaoIds" value={String(f.id)} />
+                    {f.identificacao}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="anexo">Apólice em PDF (opcional, até 15MB)</Label>

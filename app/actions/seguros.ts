@@ -1,22 +1,51 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { seguro } from '@/lib/db/schema'
+import { fracao, seguro, seguroFracao } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const TIPOS = ['multirriscos', 'incendio', 'outro']
 
 export async function getSeguros() {
   const m = await requireAcessoFinanceiro()
-  return db
+  const lista = await db
     .select()
     .from(seguro)
     .where(and(eq(seguro.condominioId, m.condominioId), isNull(seguro.deletedAt)))
     .orderBy(desc(seguro.dataFim))
+
+  if (lista.length === 0) return lista.map((s) => ({ ...s, fracoes: [] as { id: number; identificacao: string }[] }))
+
+  // Frações cobertas por cada seguro (além do edifício) — junção
+  // seguro_fracao, agrupada em memória (poucas linhas, um condomínio típico
+  // tem dezenas de frações, não milhares).
+  const cobertura = await db
+    .select({
+      seguroId: seguroFracao.seguroId,
+      fracaoId: fracao.id,
+      identificacao: fracao.identificacao,
+    })
+    .from(seguroFracao)
+    .innerJoin(fracao, eq(fracao.id, seguroFracao.fracaoId))
+    .where(
+      inArray(
+        seguroFracao.seguroId,
+        lista.map((s) => s.id),
+      ),
+    )
+
+  const fracoesPorSeguro = new Map<number, { id: number; identificacao: string }[]>()
+  for (const c of cobertura) {
+    const atual = fracoesPorSeguro.get(c.seguroId) ?? []
+    atual.push({ id: c.fracaoId, identificacao: c.identificacao })
+    fracoesPorSeguro.set(c.seguroId, atual)
+  }
+
+  return lista.map((s) => ({ ...s, fracoes: fracoesPorSeguro.get(s.id) ?? [] }))
 }
 
 export async function criarSeguro(formData: FormData) {
@@ -45,6 +74,14 @@ export async function criarSeguro(formData: FormData) {
     throw new Error('A data de fim tem de ser posterior à data de início')
   }
 
+  // Frações cobertas por esta apólice, além do edifício/partes comuns —
+  // vazio se for só o seguro do prédio. Validadas contra o condomínio do
+  // admin para não ligar a frações de outro condomínio (IDOR).
+  const fracaoIds = formData
+    .getAll('fracaoIds')
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n) && n > 0)
+
   let anexoUrl: string | null = null
   let anexoNomeFicheiro: string | null = null
   const anexo = formData.get('anexo')
@@ -71,6 +108,18 @@ export async function criarSeguro(formData: FormData) {
       anexoNomeFicheiro,
     })
     .returning({ id: seguro.id })
+
+  if (fracaoIds.length > 0) {
+    const fracoesDoCondominio = await db
+      .select({ id: fracao.id })
+      .from(fracao)
+      .where(and(eq(fracao.condominioId, admin.condominioId), inArray(fracao.id, fracaoIds)))
+    if (fracoesDoCondominio.length > 0) {
+      await db.insert(seguroFracao).values(
+        fracoesDoCondominio.map((f) => ({ seguroId: novo.id, fracaoId: f.id })),
+      )
+    }
+  }
 
   await registarAuditoria({
     actor: admin,

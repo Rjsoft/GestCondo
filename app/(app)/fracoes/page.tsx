@@ -6,6 +6,7 @@ import {
   temPermissaoGestao,
 } from '@/lib/session'
 import { getFracoes, getMembros } from '@/app/actions/fracoes'
+import { getSeguros } from '@/app/actions/seguros'
 import { PageHeader } from '@/components/page-header'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
 import { FracaoActions } from '@/components/fracoes/fracao-actions'
@@ -19,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { formatData } from '@/lib/format'
 
 export default async function FracoesPage({
   searchParams,
@@ -34,13 +36,14 @@ export default async function FracoesPage({
   // (SECURITY_AUDIT.md S13). Para os restantes, getFracoes() já devolve
   // esses campos como null; aqui só se decide esconder a própria coluna.
   const veContactos = temConsultaGestao(membro)
-  const [todasFracoes, membros] = await Promise.all([
+  const [todasFracoes, membros, seguros] = await Promise.all([
     getFracoes(),
     // Só para quem gere/audita — usado para mostrar quais contas de
     // condómino estão ligadas a cada fração (visibilidade de
     // compropriedade: mais do que uma conta de condómino na mesma fração é
     // tecnicamente permitida, mas não tinha nenhuma UI que o mostrasse).
     veContactos ? getMembros() : Promise.resolve([]),
+    getSeguros(),
   ])
   // Pesquisa em memória: o número de frações por condomínio é
   // tipicamente pequeno (dezenas), não justifica paginação no servidor.
@@ -57,6 +60,18 @@ export default async function FracoesPage({
     const lista = condominosPorFracao.get(m.fracaoId) ?? []
     lista.push(m.nome)
     condominosPorFracao.set(m.fracaoId, lista)
+  }
+  // Seguro(s) que cobrem cada fração, além do edifício (ver
+  // app/actions/seguros.ts) — normalmente uma só apólice (a do prédio, se a
+  // fração estiver incluída, ou uma própria), mas pode haver mais do que
+  // uma em teoria.
+  const segurosPorFracao = new Map<number, string[]>()
+  for (const s of seguros) {
+    for (const f of s.fracoes) {
+      const lista = segurosPorFracao.get(f.id) ?? []
+      lista.push(`${s.seguradora} (até ${formatData(s.dataFim)})`)
+      segurosPorFracao.set(f.id, lista)
+    }
   }
 
   return (
@@ -87,6 +102,7 @@ export default async function FracoesPage({
                 )}
                 <TableHead className="text-right">Permilagem</TableHead>
                 <TableHead className="hidden sm:table-cell">Elevador</TableHead>
+                <TableHead className="hidden lg:table-cell">Seguro</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
             </TableHeader>
@@ -94,7 +110,7 @@ export default async function FracoesPage({
               {fracoes.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={3 + (veContactos ? 2 : 0) + (isAdmin ? 1 : 0)}
+                    colSpan={5 + (veContactos ? 2 : 0) + (isAdmin ? 1 : 0)}
                     className="py-10 text-center text-muted-foreground"
                   >
                     {search ? 'Nenhuma fração encontrada.' : 'Ainda não existem frações registadas.'}
@@ -137,6 +153,9 @@ export default async function FracoesPage({
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
                       {f.isentaElevador ? 'Isenta' : '—'}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">
+                      {(segurosPorFracao.get(f.id) ?? []).join('; ') || '—'}
                     </TableCell>
                     {isAdmin && (
                       <TableCell>

@@ -368,6 +368,29 @@ export const seguro = pgTable(
   (t) => [index("seguro_condominio_idx").on(t.condominioId)],
 )
 
+// Frações cobertas por um seguro, além do edifício/partes comuns (relação
+// muitos-para-muitos: a mesma apólice do prédio pode incluir várias
+// frações; outras frações têm seguro próprio, noutra seguradora, como um
+// segundo registo `seguro` à parte). Um seguro sem nenhuma linha aqui só
+// cobre o edifício.
+export const seguroFracao = pgTable(
+  "seguro_fracao",
+  {
+    id: serial("id").primaryKey(),
+    seguroId: integer("seguroId")
+      .notNull()
+      .references(() => seguro.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("seguro_fracao_seguro_idx").on(t.seguroId),
+    uniqueIndex("seguro_fracao_seguro_fracao_idx").on(t.seguroId, t.fracaoId),
+  ],
+)
+
 // Avisos / comunicados
 export const aviso = pgTable(
   "aviso",

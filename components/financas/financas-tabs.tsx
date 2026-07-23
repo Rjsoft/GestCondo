@@ -70,6 +70,7 @@ type Seguro = {
   capitalSeguro: string | null
   notas: string | null
   anexoUrl: string | null
+  fracoes: { id: number; identificacao: string }[]
 }
 
 const TIPO_SEGURO_LABEL: Record<string, string> = {
@@ -387,7 +388,7 @@ export function FinancasTabs({
       <TabsContent value="seguro" className="mt-4">
         {isAdmin && (
           <div className="mb-3 flex justify-end">
-            <NovoSeguroDialog />
+            <NovoSeguroDialog fracoes={fracoes} />
           </div>
         )}
         <Card>
@@ -401,6 +402,7 @@ export function FinancasTabs({
                   <TableHead>Validade</TableHead>
                   <TableHead className="text-right">Prémio anual</TableHead>
                   <TableHead className="hidden text-right md:table-cell">Capital seguro</TableHead>
+                  <TableHead className="hidden lg:table-cell">Frações</TableHead>
                   {isAdmin && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
@@ -408,7 +410,7 @@ export function FinancasTabs({
                 {seguros.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 7 : 6}
+                      colSpan={isAdmin ? 8 : 7}
                       className="py-10 text-center text-muted-foreground"
                     >
                       Ainda não existe nenhum seguro registado. O seguro do
@@ -458,6 +460,11 @@ export function FinancasTabs({
                       </TableCell>
                       <TableCell className="hidden text-right text-muted-foreground md:table-cell">
                         {s.capitalSeguro ? formatEuro(Number(s.capitalSeguro)) : '—'}
+                      </TableCell>
+                      <TableCell className="hidden text-muted-foreground lg:table-cell">
+                        {s.fracoes.length > 0
+                          ? s.fracoes.map((f) => f.identificacao).join(', ')
+                          : 'Edifício'}
                       </TableCell>
                       {isAdmin && (
                         <TableCell>
