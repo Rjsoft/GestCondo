@@ -507,6 +507,10 @@ export const assembleiaPonto = pgTable(
     ordem: integer("ordem").notNull(),
     titulo: text("titulo").notNull(),
     descricao: text("descricao"),
+    // Art. 1432º/4 CC: a convocatória tem de identificar os assuntos que só
+    // podem ser aprovados por unanimidade — omiti-lo é vício de forma que
+    // pode anular a deliberação. Marcado pelo administrador ao criar o ponto.
+    exigeUnanimidade: boolean("exigeUnanimidade").notNull().default(false),
     resultado: text("resultado"), // "aprovado" | "reprovado" | "adiado", null até decidido
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },

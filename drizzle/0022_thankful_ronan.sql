@@ -1,0 +1,1 @@
+ALTER TABLE "assembleia_ponto" ADD COLUMN "exigeUnanimidade" boolean DEFAULT false NOT NULL;

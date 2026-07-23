@@ -24,10 +24,41 @@ import {
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
+// Formata uma Date para o valor aceite por <input type="datetime-local">
+// (hora local, sem segundos).
+function paraDatetimeLocal(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export function NovaAssembleiaDialog() {
   const [open, setOpen] = useState(false)
   const [tipo, setTipo] = useState('ordinaria')
+  const [primeira, setPrimeira] = useState('')
+  const [segunda, setSegunda] = useState('')
+  // Deixa de sugerir automaticamente assim que o utilizador mexer na 2ª.
+  const [segundaEditada, setSegundaEditada] = useState(false)
   const [pending, startTransition] = useTransition()
+
+  const onPrimeiraChange = (value: string) => {
+    setPrimeira(value)
+    // Sugestão: 2ª convocatória 30 min depois da 1ª (mínimo legal,
+    // art. 1432.º/7 CC) — o caso mais comum na prática.
+    if (!segundaEditada && value) {
+      const d = new Date(value)
+      if (!Number.isNaN(d.getTime())) {
+        d.setMinutes(d.getMinutes() + 30)
+        setSegunda(paraDatetimeLocal(d))
+      }
+    }
+  }
+
+  const limpar = () => {
+    setTipo('ordinaria')
+    setPrimeira('')
+    setSegunda('')
+    setSegundaEditada(false)
+  }
 
   const onSubmit = (formData: FormData) => {
     formData.set('tipo', tipo)
@@ -36,7 +67,7 @@ export function NovaAssembleiaDialog() {
         await criarAssembleia(formData)
         toast.success('Assembleia convocada — email enviado aos condóminos')
         setOpen(false)
-        setTipo('ordinaria')
+        limpar()
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao convocar')
       }
@@ -82,24 +113,39 @@ export function NovaAssembleiaDialog() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="dataPrimeiraConvocatoria">1ª convocatória</Label>
-              <Input
-                id="dataPrimeiraConvocatoria"
-                name="dataPrimeiraConvocatoria"
-                type="datetime-local"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="dataSegundaConvocatoria">2ª convocatória (opcional)</Label>
-              <Input
-                id="dataSegundaConvocatoria"
-                name="dataSegundaConvocatoria"
-                type="datetime-local"
-              />
-            </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="dataPrimeiraConvocatoria">1ª convocatória (data e hora)</Label>
+            <Input
+              id="dataPrimeiraConvocatoria"
+              name="dataPrimeiraConvocatoria"
+              type="datetime-local"
+              required
+              value={primeira}
+              min={paraDatetimeLocal(new Date())}
+              onChange={(e) => onPrimeiraChange(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              A lei exige que a convocatória seja expedida com, pelo menos, 10
+              dias de antecedência.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="dataSegundaConvocatoria">2ª convocatória (opcional)</Label>
+            <Input
+              id="dataSegundaConvocatoria"
+              name="dataSegundaConvocatoria"
+              type="datetime-local"
+              value={segunda}
+              min={primeira || undefined}
+              onChange={(e) => {
+                setSegunda(e.target.value)
+                setSegundaEditada(true)
+              }}
+            />
+            <p className="text-xs text-muted-foreground">
+              Sugerida automaticamente para 30 minutos depois da 1ª (o mínimo
+              legal — pode ser no mesmo dia). Ajuste se quiser outra data.
+            </p>
           </div>
 
           <DialogFooter>

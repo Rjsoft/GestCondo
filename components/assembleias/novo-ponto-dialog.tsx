@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -60,6 +61,17 @@ export function NovoPontoDialog({ assembleiaId }: { assembleiaId: number }) {
           <div className="flex flex-col gap-2">
             <Label htmlFor="descricao">Descrição (opcional)</Label>
             <Textarea id="descricao" name="descricao" rows={3} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <Checkbox name="exigeUnanimidade" />
+              Este assunto só pode ser aprovado por unanimidade
+            </label>
+            <p className="text-xs text-muted-foreground">
+              A lei obriga a convocatória a identificar estes assuntos
+              (art. 1432.º, n.º 4 do Código Civil) — ficam assinalados na
+              minuta da convocatória.
+            </p>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending}>

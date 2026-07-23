@@ -217,6 +217,9 @@ export async function adicionarPonto(assembleiaId: number, formData: FormData) {
 
   const titulo = String(formData.get('titulo') || '').trim()
   const descricao = String(formData.get('descricao') || '').trim()
+  // Art. 1432º/4 CC — a convocatória tem de identificar os assuntos que
+  // exigem unanimidade; ver a minuta em /assembleias/[id]/convocatoria.
+  const exigeUnanimidade = formData.get('exigeUnanimidade') === 'on'
   if (!titulo) throw new Error('Indique o título do ponto')
 
   const existentes = await db
@@ -229,6 +232,7 @@ export async function adicionarPonto(assembleiaId: number, formData: FormData) {
     ordem: existentes.length + 1,
     titulo,
     descricao: descricao || null,
+    exigeUnanimidade,
   })
 
   await registarAuditoria({

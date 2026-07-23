@@ -37,7 +37,7 @@ Módulo inteiro pedido como essencial para o mercado português — **Assembleia
 
 | Funcionalidade | Estado | Prioridade |
 |---|---|---|
-| Convocatórias | ✅ Tipo (ordinária/extraordinária), local, 1ª e 2ª convocatória (`app/actions/assembleias.ts:criarAssembleia`) | P1 |
+| Convocatórias | ✅ Tipo (ordinária/extraordinária), local, 1ª e 2ª convocatória (`app/actions/assembleias.ts:criarAssembleia`). **2026-07-23**: minuta formal imprimível (`/assembleias/[id]/convocatoria`) com as menções obrigatórias do art. 1432.º CC — datas/local/ordem de trabalhos, identificação dos assuntos que exigem unanimidade (novo campo `assembleia_ponto.exigeUnanimidade`, art. 1432.º/4), notas de quórum e aviso no ecrã quando a antecedência legal de 10 dias já não é cumprível | P1 |
 | Ordem de trabalhos | ✅ Pontos numerados sequencialmente, adicionáveis enquanto a assembleia não está encerrada | P1 |
 | Registo de presenças | ✅ Por fração, com nome do representante | P1 |
 | Representações/procurações | ✅ Campo `tipo` (`presencial`/`procuracao`) na presença | P1 |
