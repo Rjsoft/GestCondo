@@ -13,6 +13,7 @@ import { NovoSeguroDialog } from '@/components/financas/novo-seguro-dialog'
 import { SeguroActions } from '@/components/financas/seguro-actions'
 import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
 import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
+import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
 import { TipoMovimentoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -39,6 +40,8 @@ type Movimento = {
   destino: string
   meioPagamento: string | null
   dataLiquidacao: Date | null
+  fracaoId: number | null
+  fornecedorId: number | null
   fornecedorNome?: string | null
 }
 
@@ -49,6 +52,23 @@ type SaldoFracao = {
   totalLancado: number
   totalPago: number
   emDivida: number
+}
+
+type CelulaMapaMensal = {
+  mes: number
+  valor: number
+  estado: 'vazio' | 'pago' | 'parcial' | 'pendente'
+  movimentos: Movimento[]
+}
+
+type LinhaMapaMensal = {
+  fracaoId: number
+  letra: string | null
+  identificacao: string
+  proprietario: string
+  meses: CelulaMapaMensal[]
+  totalAno: number
+  totalPagoAno: number
 }
 
 type Orcamento = {
@@ -101,6 +121,8 @@ export function FinancasTabs({
   totalPaginasMovimentos,
   pesquisaMovimentos,
   mapaSaldos,
+  mapaMensal,
+  anoMapaMensal,
   orcamentos,
   seguros,
   fracoes,
@@ -117,6 +139,8 @@ export function FinancasTabs({
   totalPaginasMovimentos: number
   pesquisaMovimentos: string
   mapaSaldos: SaldoFracao[]
+  mapaMensal: LinhaMapaMensal[]
+  anoMapaMensal: number
   orcamentos: Orcamento[]
   seguros: Seguro[]
   fracoes: {
@@ -137,6 +161,7 @@ export function FinancasTabs({
       <TabsList>
         <TabsTrigger value="movimentos">Movimentos</TabsTrigger>
         <TabsTrigger value="dividas">Dívidas por fração</TabsTrigger>
+        <TabsTrigger value="mapaMensal">Mapa mensal</TabsTrigger>
         <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         <TabsTrigger value="seguro">Seguro</TabsTrigger>
         <TabsTrigger value="conciliacao">Conciliação bancária</TabsTrigger>
@@ -238,7 +263,20 @@ export function FinancasTabs({
                     </TableCell>
                     {isAdmin && (
                       <TableCell>
-                        <MovimentoActions id={m.id} pago={m.pago} tipo={m.tipo} />
+                        <MovimentoActions
+                          id={m.id}
+                          pago={m.pago}
+                          tipo={m.tipo}
+                          categoria={m.categoria}
+                          descricao={m.descricao}
+                          valor={m.valor}
+                          data={m.data}
+                          destino={m.destino}
+                          fracaoId={m.fracaoId}
+                          fornecedorId={m.fornecedorId}
+                          fracoes={fracoes}
+                          fornecedores={fornecedores}
+                        />
                       </TableCell>
                     )}
                   </TableRow>
@@ -326,6 +364,16 @@ export function FinancasTabs({
             </Table>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="mapaMensal" className="mt-4">
+        <MapaMensalTab
+          dadosIniciais={mapaMensal}
+          anoInicial={anoMapaMensal}
+          fracoes={fracoes}
+          fornecedores={fornecedores}
+          isAdmin={isAdmin}
+        />
       </TabsContent>
 
       <TabsContent value="orcamentos" className="mt-4">

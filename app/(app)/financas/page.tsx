@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import {
+  getMapaMensalQuotas,
   getMapaSaldos,
   getMovimentos,
   getMovimentosPaginado,
@@ -33,11 +34,13 @@ export default async function FinancasPage({
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
+  const anoMapaMensal = new Date().getFullYear()
 
   const [
     movimentos,
     movimentosPaginado,
     mapaSaldos,
+    mapaMensal,
     orcamentos,
     seguros,
     fracoes,
@@ -51,6 +54,7 @@ export default async function FinancasPage({
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
     getMapaSaldos(),
+    getMapaMensalQuotas(anoMapaMensal),
     getOrcamentos(),
     getSeguros(),
     getFracoes(),
@@ -139,6 +143,8 @@ export default async function FinancasPage({
         totalPaginasMovimentos={movimentosPaginado.totalPages}
         pesquisaMovimentos={search}
         mapaSaldos={mapaSaldos}
+        mapaMensal={mapaMensal}
+        anoMapaMensal={anoMapaMensal}
         orcamentos={orcamentos}
         seguros={seguros}
         fracoes={fracoes.map((f) => ({

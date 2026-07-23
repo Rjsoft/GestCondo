@@ -6,7 +6,7 @@ import { registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais } from '@/lib/rateio'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, asc, count, desc, eq, getTableColumns, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, getTableColumns, gte, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -139,6 +139,73 @@ export async function getMapaSaldos() {
       totalLancado,
       totalPago,
       emDivida: totalLancado - totalPago,
+    }
+  })
+}
+
+/**
+ * Mapa mensal de quotas: para cada fração, o que foi lançado em cada um dos
+ * 12 meses do `ano` pedido (quotas, juros de mora, etc. — qualquer receita
+ * ligada a essa fração cuja data caia nesse mês), com o estado de
+ * pagamento agregado da célula. Layout inspirado no mapa "Quotas" usado
+ * por administrações de condomínio externas (fração × mês, com total),
+ * ver `Exemplo MBD.pdf` — mas aqui o valor é o realmente lançado em
+ * `movimento`, não uma simulação de orçamento.
+ */
+export async function getMapaMensalQuotas(ano: number) {
+  const m = await requireAcessoFinanceiro()
+
+  const inicio = new Date(Date.UTC(ano, 0, 1))
+  const fim = new Date(Date.UTC(ano + 1, 0, 1))
+
+  const [fracoes, quotas] = await Promise.all([
+    db
+      .select()
+      .from(fracao)
+      .where(eq(fracao.condominioId, m.condominioId))
+      .orderBy(asc(fracao.identificacao)),
+    db
+      .select({ ...getTableColumns(movimento), fornecedorNome: fornecedor.nome })
+      .from(movimento)
+      .leftJoin(fornecedor, eq(movimento.fornecedorId, fornecedor.id))
+      .where(
+        and(
+          eq(movimento.condominioId, m.condominioId),
+          eq(movimento.tipo, 'receita'),
+          isNull(movimento.deletedAt),
+          gte(movimento.data, inicio),
+          lt(movimento.data, fim),
+        ),
+      ),
+  ])
+
+  return fracoes.map((f) => {
+    const quotasDaFracao = quotas.filter((q) => q.fracaoId === f.id)
+    const meses = Array.from({ length: 12 }, (_, mes) => {
+      const movimentosDoMes = quotasDaFracao.filter((q) => q.data.getUTCMonth() === mes)
+      const valor = movimentosDoMes.reduce((s, q) => s + Number(q.valor), 0)
+      const todosPagos = movimentosDoMes.length > 0 && movimentosDoMes.every((q) => q.pago)
+      const algunsPagos = movimentosDoMes.some((q) => q.pago)
+      const estado: 'vazio' | 'pago' | 'parcial' | 'pendente' =
+        movimentosDoMes.length === 0
+          ? 'vazio'
+          : todosPagos
+            ? 'pago'
+            : algunsPagos
+              ? 'parcial'
+              : 'pendente'
+      return { mes, valor, estado, movimentos: movimentosDoMes }
+    })
+    const totalAno = meses.reduce((s, c) => s + c.valor, 0)
+    const totalPagoAno = quotasDaFracao.filter((q) => q.pago).reduce((s, q) => s + Number(q.valor), 0)
+    return {
+      fracaoId: f.id,
+      letra: f.letra,
+      identificacao: f.identificacao,
+      proprietario: f.proprietario,
+      meses,
+      totalAno,
+      totalPagoAno,
     }
   })
 }
@@ -376,6 +443,71 @@ export async function criarMovimento(formData: FormData) {
 
   revalidatePath('/financas')
   revalidatePath('/')
+}
+
+/**
+ * Corrige os dados de um movimento já lançado (valor, categoria, descrição,
+ * data, destino, fração/fornecedor). O tipo (receita/despesa) não é
+ * editável aqui — mudar de tipo tem implicações demasiado grandes (fração
+ * vs. fornecedor, cálculo de dívida) para ser um simples campo de edição;
+ * quem se enganar no tipo deve eliminar e lançar de novo. O estado
+ * pago/pendente e o detalhe do pagamento continuam a ser geridos por
+ * `alternarPago`/`marcarComoPago`, não por aqui.
+ */
+export async function atualizarMovimento(formData: FormData) {
+  const admin = await requireAdmin()
+
+  const id = Number(formData.get('id'))
+  const categoria = String(formData.get('categoria') || '').trim()
+  const descricao = String(formData.get('descricao') || '').trim()
+  const valor = String(formData.get('valor') || '0')
+  const dataStr = String(formData.get('data') || '')
+  const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
+  const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
+  const fornecedorIdRaw = String(formData.get('fornecedorId') || '').trim()
+  const fornecedorId = fornecedorIdRaw ? Number(fornecedorIdRaw) : null
+  const destino = String(formData.get('destino') || 'geral')
+
+  if (!categoria || !descricao || !valor || !dataStr) {
+    throw new Error('Preencha todos os campos obrigatórios')
+  }
+  if (destino !== 'geral' && destino !== 'reserva') {
+    throw new Error('Destino inválido')
+  }
+
+  const [atual] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!atual) throw new Error('Movimento não encontrado')
+
+  if (atual.tipo === 'receita' && !fracaoId) {
+    throw new Error('Selecione a fração a que esta quota diz respeito')
+  }
+
+  await db
+    .update(movimento)
+    .set({
+      categoria,
+      descricao,
+      valor,
+      data: new Date(dataStr),
+      destino,
+      fracaoId: atual.tipo === 'receita' ? fracaoId : null,
+      fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
+    })
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'movimento',
+    entidadeId: id,
+    detalhes: `De "${atual.categoria} — ${atual.descricao} (${atual.valor} €)" para "${categoria} — ${descricao} (${valor} €)"`,
+  })
+
+  revalidatePath('/financas')
 }
 
 export async function eliminarMovimento(id: number) {
