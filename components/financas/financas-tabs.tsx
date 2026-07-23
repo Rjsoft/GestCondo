@@ -28,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatEuro, formatData } from '@/lib/format'
+import { TIPO_SEGURO_LABEL } from '@/lib/financas'
 
 type Movimento = {
   id: number
@@ -91,12 +92,6 @@ type Seguro = {
   notas: string | null
   anexoUrl: string | null
   fracoes: { id: number; identificacao: string }[]
-}
-
-const TIPO_SEGURO_LABEL: Record<string, string> = {
-  multirriscos: 'Multirriscos',
-  incendio: 'Incêndio',
-  outro: 'Outro',
 }
 
 type LinhaExtrato = { id: number; data: Date; descricao: string; valor: string }

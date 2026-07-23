@@ -93,7 +93,13 @@ export function EditarMembroDialog({
                 onValueChange={(value) => value && setFracaoSelecionada(value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      if (v === SEM_FRACAO || v == null) return 'Sem fração associada'
+                      const f = fracoes.find((f) => String(f.id) === v)
+                      return f ? f.identificacao : 'Sem fração associada'
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={SEM_FRACAO}>Sem fração associada</SelectItem>

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DESTINO_LABEL, MEIO_PAGAMENTO_LABEL, TIPO_MOVIMENTO_LABEL } from '@/lib/financas'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -91,7 +92,7 @@ export function NovoMovimentoDialog({
                 onValueChange={(value) => value && setTipo(value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{(v: string | null) => (v ? TIPO_MOVIMENTO_LABEL[v] : '')}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="receita">Receita (quota)</SelectItem>
@@ -121,7 +122,12 @@ export function NovoMovimentoDialog({
                 onValueChange={(value) => value && setFracaoId(value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a fração" />
+                  <SelectValue placeholder="Selecione a fração">
+                    {(v: string | null) => {
+                      const f = fracoes.find((f) => String(f.id) === v)
+                      return f ? f.identificacao : 'Selecione a fração'
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {fracoes.map((f) => (
@@ -148,7 +154,13 @@ export function NovoMovimentoDialog({
                 onValueChange={(value) => value && setFornecedorId(value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      if (v === SEM_FORNECEDOR || v == null) return 'Sem fornecedor associado'
+                      const f = fornecedores.find((f) => String(f.id) === v)
+                      return f ? f.nome : 'Sem fornecedor associado'
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={SEM_FORNECEDOR}>Sem fornecedor associado</SelectItem>
@@ -169,7 +181,7 @@ export function NovoMovimentoDialog({
               onValueChange={(value) => value && setDestino(value)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? DESTINO_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="geral">Conta corrente do condomínio</SelectItem>
@@ -232,7 +244,9 @@ export function NovoMovimentoDialog({
                     onValueChange={(value) => setMeioPagamento(value ?? '')}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Não especificado" />
+                      <SelectValue>
+                        {(v: string | null) => (v ? MEIO_PAGAMENTO_LABEL[v] : 'Não especificado')}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="transferencia">Transferência</SelectItem>

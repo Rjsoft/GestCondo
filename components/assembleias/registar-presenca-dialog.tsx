@@ -26,6 +26,11 @@ import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string; temPresenca: boolean }
 
+const TIPO_PRESENCA_LABEL: Record<string, string> = {
+  presencial: 'Presencial',
+  procuracao: 'Procuração',
+}
+
 export function RegistarPresencaDialog({
   assembleiaId,
   fracoes,
@@ -73,7 +78,12 @@ export function RegistarPresencaDialog({
             <Label>Fração</Label>
             <Select value={fracaoId} onValueChange={(value) => value && setFracaoId(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a fração" />
+                <SelectValue placeholder="Selecione a fração">
+                  {(v: string | null) => {
+                    const f = fracoes.find((f) => String(f.id) === v)
+                    return f ? f.identificacao : 'Selecione a fração'
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {fracoes.map((f) => (
@@ -90,7 +100,7 @@ export function RegistarPresencaDialog({
             <Label>Tipo</Label>
             <Select value={tipo} onValueChange={(value) => value && setTipo(value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? TIPO_PRESENCA_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="presencial">Presencial</SelectItem>

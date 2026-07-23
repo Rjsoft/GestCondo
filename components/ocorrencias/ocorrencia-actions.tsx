@@ -71,7 +71,9 @@ export function OcorrenciaActions({
           disabled={pending}
         >
           <SelectTrigger size="sm">
-            <SelectValue />
+            <SelectValue>
+              {(v: string | null) => ESTADOS.find((e) => e.value === v)?.label ?? ''}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {ESTADOS.map((e) => (

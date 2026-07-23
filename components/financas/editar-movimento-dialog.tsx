@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DESTINO_LABEL } from '@/lib/financas'
 import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
@@ -120,7 +121,12 @@ export function EditarMovimentoDialog({
               <Label>Fração</Label>
               <Select value={fracaoIdValor} onValueChange={(v) => v && setFracaoIdValor(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a fração" />
+                  <SelectValue placeholder="Selecione a fração">
+                    {(v: string | null) => {
+                      const f = fracoes.find((f) => String(f.id) === v)
+                      return f ? f.identificacao : 'Selecione a fração'
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {fracoes.map((f) => (
@@ -138,7 +144,13 @@ export function EditarMovimentoDialog({
               <Label>Fornecedor (opcional)</Label>
               <Select value={fornecedorIdValor} onValueChange={(v) => v && setFornecedorIdValor(v)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {(v: string | null) => {
+                      if (v === SEM_FORNECEDOR || v == null) return 'Sem fornecedor associado'
+                      const f = fornecedores.find((f) => String(f.id) === v)
+                      return f ? f.nome : 'Sem fornecedor associado'
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={SEM_FORNECEDOR}>Sem fornecedor associado</SelectItem>
@@ -156,7 +168,7 @@ export function EditarMovimentoDialog({
             <Label>Destino</Label>
             <Select value={destinoValor} onValueChange={(v) => v && setDestinoValor(v)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? DESTINO_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="geral">Conta corrente do condomínio</SelectItem>

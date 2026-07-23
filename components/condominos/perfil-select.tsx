@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { PERFIL_LABEL, PERFIS } from '@/lib/perfis'
+import { PERFIL_LABEL, PERFIS, type Perfil } from '@/lib/perfis'
 import { toast } from 'sonner'
 
 export function PerfilSelect({ id, perfil }: { id: number; perfil: string }) {
@@ -33,7 +33,7 @@ export function PerfilSelect({ id, perfil }: { id: number; perfil: string }) {
       disabled={pending}
     >
       <SelectTrigger size="sm">
-        <SelectValue />
+        <SelectValue>{(v: Perfil | null) => (v ? PERFIL_LABEL[v] : '')}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {PERFIS.map((p) => (

@@ -24,6 +24,12 @@ import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
 
+const VOTO_LABEL: Record<string, string> = {
+  favor: 'A favor',
+  contra: 'Contra',
+  abstencao: 'Abstenção',
+}
+
 export function RegistarVotoDialog({
   pontoId,
   titulo,
@@ -71,7 +77,12 @@ export function RegistarVotoDialog({
           <div className="flex flex-col gap-2">
             <Select value={fracaoId} onValueChange={(value) => value && setFracaoId(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a fração" />
+                <SelectValue placeholder="Selecione a fração">
+                  {(v: string | null) => {
+                    const f = fracoes.find((f) => String(f.id) === v)
+                    return f ? f.identificacao : 'Selecione a fração'
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {fracoes.map((f) => (
@@ -86,7 +97,7 @@ export function RegistarVotoDialog({
           <div className="flex flex-col gap-2">
             <Select value={voto} onValueChange={(value) => value && setVoto(value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? VOTO_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="favor">A favor</SelectItem>

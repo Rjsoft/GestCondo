@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { MEIO_PAGAMENTO_LABEL } from '@/lib/financas'
 import { toast } from 'sonner'
 
 export function MarcarPagoDialog({
@@ -69,7 +70,9 @@ export function MarcarPagoDialog({
                 onValueChange={(value) => setMeioPagamento(value ?? '')}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Não especificado" />
+                  <SelectValue>
+                    {(v: string | null) => (v ? MEIO_PAGAMENTO_LABEL[v] : 'Não especificado')}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="transferencia">Transferência</SelectItem>

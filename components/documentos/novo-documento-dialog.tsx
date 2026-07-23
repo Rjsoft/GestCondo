@@ -82,7 +82,9 @@ export function NovoDocumentoDialog() {
               onValueChange={(value) => value && setCategoria(value)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>
+                  {(v: string | null) => CATEGORIAS.find((c) => c.value === v)?.label ?? ''}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {CATEGORIAS.map((c) => (

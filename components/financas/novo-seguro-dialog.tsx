@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { TIPO_SEGURO_LABEL } from '@/lib/financas'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -79,7 +80,7 @@ export function NovoSeguroDialog({
             <Label>Tipo de seguro</Label>
             <Select value={tipo} onValueChange={(value) => value && setTipo(value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? TIPO_SEGURO_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="multirriscos">Multirriscos</SelectItem>

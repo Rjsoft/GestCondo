@@ -1,15 +1,8 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { MEIO_PAGAMENTO_LABEL } from '@/lib/financas'
 import { Download } from 'lucide-react'
-
-const MEIO_PAGAMENTO_LABEL: Record<string, string> = {
-  transferencia: 'Transferência',
-  multibanco: 'Multibanco',
-  numerario: 'Numerário',
-  cheque: 'Cheque',
-  outro: 'Outro',
-}
 
 type MovimentoCsv = {
   data: string | Date

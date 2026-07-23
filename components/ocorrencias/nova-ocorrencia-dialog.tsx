@@ -33,6 +33,12 @@ const CATEGORIAS = [
   { value: 'outro', label: 'Outro' },
 ]
 
+const PRIORIDADE_LABEL: Record<string, string> = {
+  normal: 'Normal',
+  importante: 'Importante',
+  urgente: 'Urgente',
+}
+
 export function NovaOcorrenciaDialog() {
   const [open, setOpen] = useState(false)
   const [categoria, setCategoria] = useState('manutencao')
@@ -100,7 +106,9 @@ export function NovaOcorrenciaDialog() {
                 onValueChange={(value) => value && setCategoria(value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {(v: string | null) => CATEGORIAS.find((c) => c.value === v)?.label ?? ''}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIAS.map((c) => (
@@ -123,7 +131,7 @@ export function NovaOcorrenciaDialog() {
               onValueChange={(value) => value && setPrioridade(value)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? PRIORIDADE_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="normal">Normal</SelectItem>

@@ -25,6 +25,12 @@ import {
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
+const PRIORIDADE_LABEL: Record<string, string> = {
+  normal: 'Normal',
+  importante: 'Importante',
+  urgente: 'Urgente',
+}
+
 export function NovoAvisoDialog() {
   const [open, setOpen] = useState(false)
   const [prioridade, setPrioridade] = useState('normal')
@@ -79,7 +85,7 @@ export function NovoAvisoDialog() {
               onValueChange={(value) => value && setPrioridade(value)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? PRIORIDADE_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="normal">Normal</SelectItem>

@@ -24,6 +24,11 @@ import {
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
+const TIPO_ASSEMBLEIA_LABEL: Record<string, string> = {
+  ordinaria: 'Ordinária',
+  extraordinaria: 'Extraordinária',
+}
+
 // Formata uma Date para o valor aceite por <input type="datetime-local">
 // (hora local, sem segundos).
 function paraDatetimeLocal(d: Date) {
@@ -94,7 +99,7 @@ export function NovaAssembleiaDialog() {
             <Label>Tipo</Label>
             <Select value={tipo} onValueChange={(value) => value && setTipo(value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{(v: string | null) => (v ? TIPO_ASSEMBLEIA_LABEL[v] : '')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ordinaria">Ordinária</SelectItem>
