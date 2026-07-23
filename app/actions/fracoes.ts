@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { fracao, membro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { TIPOS_TITULAR } from '@/lib/fracoes'
 import {
   PERFIS,
   requireAcessoFinanceiro,
@@ -21,7 +22,11 @@ export async function getFracoes() {
     .select()
     .from(fracao)
     .where(eq(fracao.condominioId, m.condominioId))
-    .orderBy(asc(fracao.letra), asc(fracao.identificacao))
+    // Ordenar por `identificacao` apenas: `letra` é opcional e, enquanto só
+    // algumas frações a tiverem preenchida, ordenar também por ela empurra
+    // as restantes (NULL) para o fim em vez de as manter na ordem de
+    // construção habitual — ver achado da revisão de 2026-07-23.
+    .orderBy(asc(fracao.identificacao))
 
   // Contactos pessoais (email/telefone do proprietário) só para quem gere
   // o condomínio ou audita — um condómino comum não precisa de ver o
@@ -43,8 +48,6 @@ export async function getFracaoPorId(id: number) {
     .limit(1)
   return f ?? null
 }
-
-const TIPOS_TITULAR = ['proprietario', 'inquilino', 'usufrutuario', 'locatario', 'antigo'] as const
 
 function lerTipoTitular(formData: FormData) {
   const valor = String(formData.get('tipoTitular') || '')

@@ -14,17 +14,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { TIPO_TITULAR_LABEL, TIPOS_TITULAR } from '@/lib/fracoes'
 import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 
-const TIPOS_TITULAR = [
-  { value: 'proprietario', label: 'Proprietário' },
-  { value: 'inquilino', label: 'Inquilino' },
-  { value: 'usufrutuario', label: 'Usufrutuário' },
-  { value: 'locatario', label: 'Locatário' },
-  { value: 'antigo', label: 'Antigo condómino' },
-] as const
+const SEM_TITULAR = 'nao_especificado'
 
 export function EditarFracaoDialog({
   id,
@@ -51,8 +47,10 @@ export function EditarFracaoDialog({
 }) {
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
+  const [tipoTitularValor, setTipoTitularValor] = useState(tipoTitular ?? SEM_TITULAR)
 
   const onSubmit = (formData: FormData) => {
+    formData.set('tipoTitular', tipoTitularValor === SEM_TITULAR ? '' : tipoTitularValor)
     startTransition(async () => {
       try {
         await atualizarFracao(formData)
@@ -110,19 +108,23 @@ export function EditarFracaoDialog({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="tipoTitular">Tipo de titular</Label>
-              <select
-                id="tipoTitular"
-                name="tipoTitular"
-                defaultValue={tipoTitular ?? ''}
-                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-              >
-                <option value="">Não especificado</option>
-                {TIPOS_TITULAR.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={tipoTitularValor} onValueChange={(v) => v && setTipoTitularValor(v)}>
+                <SelectTrigger id="tipoTitular" className="w-full">
+                  <SelectValue>
+                    {(v: string | null) =>
+                      v && v !== SEM_TITULAR ? TIPO_TITULAR_LABEL[v as (typeof TIPOS_TITULAR)[number]] : 'Não especificado'
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_TITULAR}>Não especificado</SelectItem>
+                  {TIPOS_TITULAR.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {TIPO_TITULAR_LABEL[t]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
