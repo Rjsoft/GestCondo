@@ -17,6 +17,8 @@ import {
   getLinhasPorConciliar,
   getMovimentosPorConciliar,
 } from '@/app/actions/extrato'
+import { getExercicios } from '@/app/actions/exercicios'
+import { getSaldosContas } from '@/app/actions/contas-financeiras'
 import { PageHeader } from '@/components/page-header'
 import { FinancasTabs } from '@/components/financas/financas-tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -50,6 +52,7 @@ export default async function FinancasPage({
     linhasExtrato,
     movimentosPorConciliar,
     linhasConciliadas,
+    exercicios,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -64,7 +67,16 @@ export default async function FinancasPage({
     getLinhasPorConciliar(),
     getMovimentosPorConciliar(),
     getLinhasConciliadas(),
+    getExercicios(),
   ])
+
+  // Exercício por omissão para mostrar saldos: o aberto mais recente (o
+  // caso normal) ou, na sua falta, o mais recente de todos — nunca
+  // consultado antes de existir pelo menos um (ver ExerciciosTab, que
+  // mostra o assistente de configuração inicial nesse caso).
+  const exercicioEmVistaId =
+    exercicios.find((e) => e.estado === 'aberto')?.id ?? exercicios[0]?.id ?? null
+  const contasComSaldo = exercicioEmVistaId ? await getSaldosContas(exercicioEmVistaId) : []
 
   // Conta corrente do condomínio: movimentos com destino "geral", excluindo
   // o fundo de reserva (obrigatório por lei e seguido à parte — ver
@@ -158,6 +170,9 @@ export default async function FinancasPage({
         linhasExtrato={linhasExtrato}
         movimentosPorConciliar={movimentosPorConciliar}
         linhasConciliadas={linhasConciliadas}
+        exercicios={exercicios}
+        contasComSaldo={contasComSaldo}
+        exercicioEmVistaId={exercicioEmVistaId}
         isAdmin={isAdmin}
       />
     </div>

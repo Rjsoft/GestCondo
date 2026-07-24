@@ -14,6 +14,7 @@ import { SeguroActions } from '@/components/financas/seguro-actions'
 import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
 import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
+import { ExerciciosTab, type ContaComSaldo, type ExercicioLinha } from '@/components/financas/exercicios-tab'
 import { TipoMovimentoBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -126,6 +127,9 @@ export function FinancasTabs({
   linhasExtrato,
   movimentosPorConciliar,
   linhasConciliadas,
+  exercicios,
+  contasComSaldo,
+  exercicioEmVistaId,
   isAdmin,
 }: {
   movimentos: Movimento[]
@@ -149,6 +153,9 @@ export function FinancasTabs({
   linhasExtrato: LinhaExtrato[]
   movimentosPorConciliar: MovimentoConciliar[]
   linhasConciliadas: LinhaConciliada[]
+  exercicios: ExercicioLinha[]
+  contasComSaldo: ContaComSaldo[]
+  exercicioEmVistaId: number | null
   isAdmin: boolean
 }) {
   return (
@@ -160,6 +167,7 @@ export function FinancasTabs({
         <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         <TabsTrigger value="seguro">Seguro</TabsTrigger>
         <TabsTrigger value="conciliacao">Conciliação bancária</TabsTrigger>
+        <TabsTrigger value="exercicios">Exercícios e contas</TabsTrigger>
       </TabsList>
 
       <TabsContent value="movimentos" className="mt-4">
@@ -540,6 +548,15 @@ export function FinancasTabs({
           linhas={linhasExtrato}
           movimentos={movimentosPorConciliar}
           conciliadas={linhasConciliadas}
+          isAdmin={isAdmin}
+        />
+      </TabsContent>
+
+      <TabsContent value="exercicios" className="mt-4">
+        <ExerciciosTab
+          exerciciosIniciais={exercicios}
+          contasIniciais={contasComSaldo}
+          exercicioEmVistaIdInicial={exercicioEmVistaId}
           isAdmin={isAdmin}
         />
       </TabsContent>
