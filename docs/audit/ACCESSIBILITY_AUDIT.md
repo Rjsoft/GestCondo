@@ -80,15 +80,21 @@ Revisão de usabilidade/acessibilidade pedida especificamente para esta funciona
 - Estado: **Resolvida em desenvolvimento; validação com tecnologia de apoio ainda pendente.**
 - Bloqueia desenvolvimento ou migração: não. Bloqueia declaração de acessibilidade completa do assistente: continua a bloquear, mas agora só por depender de L4.
 
-**L3 — Erros de campo sem associação semântica ao controlo**
-- Evidência: erros apresentados sobretudo por `toast.error()`, sem erro inline nem `aria-describedby` nos casos revistos.
-- Distinção necessária: **erros de campo** (ex. IBAN inválido, data em falta) vs. **erros gerais** (ex. conflito de exercício, falha de rede, operação não permitida) — nem todos correspondem a um campo individual.
-- Impacto: quando o erro corresponde a um campo concreto, o utilizador pode ouvir/ver a mensagem sem identificar imediatamente o controlo a corrigir.
-- Gravidade: **Média**. Prioridade: **P2 para os campos críticos da Fase A.1** (ex. IBAN, datas do exercício).
-- Estado: parcial.
-- Bloqueia migração: não. Bloqueia declaração de formulários plenamente acessíveis: sim.
-- Correção futura recomendada — erros de campo: mensagem junto ao campo, `aria-invalid="true"`, ligação via `aria-describedby`, foco no primeiro campo inválido quando adequado, resumo geral opcional no topo. Erros gerais: manter região de estado/alerta, confirmar em runtime que o toast é anunciado, não associar artificialmente a um campo.
-- **Tarefa transversal separada**: uniformizar este padrão de erro inline em todo o GestCondo (não só na Fase A.1) é uma melhoria maior, à parte desta correção específica — a decisão de âmbito fica registada aqui, não implementada nesta revisão documental.
+**L3 — Erros de campo sem associação semântica ao controlo** — **Corrigida em desenvolvimento (commit `6f96358`)**
+- Componentes: `nova-conta-financeira-dialog.tsx`, `editar-conta-financeira-dialog.tsx`, `novo-exercicio-dialog.tsx`.
+- Correção aplicada: erros inequivocamente atribuíveis a um único campo (nome obrigatório, IBAN inválido, nota transitória obrigatória, tipo inválido, data de fim antes do início) passaram a aparecer junto ao campo, com `aria-invalid`, `aria-describedby` (ID único por instância via `useId()`, evita colisão entre diálogos montados em simultâneo), `role="alert"`, e foco automático movido para o primeiro campo inválido. Erros gerais (sobreposição de exercícios, "preencha os campos obrigatórios", "conta/exercício não encontrado") mantêm-se em `toast`, por não serem atribuíveis a um único campo.
+- Preservação de valores: corrigida no commit `43f6504` — os campos deixaram de ser repostos a vazio após um erro de validação. Causa identificada: o React 19 repõe automaticamente os campos não controlados de um `<form>` quando a prop `action` recebe uma função síncrona (o `onSubmit` anterior só iniciava um `startTransition`, sem devolver uma Promise) — corrigido trocando para `onSubmit` tradicional com `event.preventDefault()`. No diálogo de edição, reabrir depois de cancelar uma alteração de tipo volta a mostrar o tipo real da conta, nunca um valor abandonado.
+- Validação: confirmada manualmente em desenvolvimento (smoke test em browser: erro de IBAN inválido com valores preservados, erro de data de fim corrigido isoladamente, nota transitória vazia bloqueada nativamente pelo `required` do HTML5, cancelamento e reabertura da edição). **Não validada ainda com leitor de ecrã real (NVDA)** — ver L4.
+- Gravidade/Prioridade: mantém-se P2 enquanto a validação com leitor de ecrã (L4) não estiver concluída.
+- Estado: **Resolvida em desenvolvimento; validação formal com leitor de ecrã ainda pendente.**
+- Bloqueia desenvolvimento ou migração: não. Bloqueia declaração de formulários plenamente acessíveis: continua a bloquear, mas agora só por depender de L4.
+- **Limitação residual registada**: o mapeamento mensagem→campo depende de mensagens partilhadas em `lib/financas.ts` (`MSG_CONTA`, `MSG_EXERCICIO`); é uma solução intermédia adequada à correção pontual, não uma refatoração transversal — uma futura substituição de exceções textuais por resultados estruturados e tipados em todas as server actions continua registada como melhoria maior separada, não implementada nesta correção.
+
+**Nota técnica — responsividade dos diálogos financeiros (fora da numeração L1–L4)**
+- Grelhas de 2 colunas de `nova-conta-financeira-dialog.tsx`, `editar-conta-financeira-dialog.tsx` e `novo-exercicio-dialog.tsx` corrigidas no commit `8114ad4`: uma coluna abaixo do breakpoint `sm` (640px), duas colunas a partir daí — evita colunas demasiado estreitas em ecrãs pequenos.
+- `nova-conta-financeira-dialog.tsx` (o cenário mais denso, com "Opções avançadas" expandidas) limitado a `max-h-[calc(100dvh-2rem)] overflow-y-auto` no commit `66a4182`, para impedir que o conteúdo exceda a altura visível do ecrã e que os botões fiquem inacessíveis.
+- Validado objetivamente por inspeção de estilos computados em desenvolvimento (desktop): `max-height` calculado corretamente a partir de `100dvh`, `overflow-y: auto` aplicado, sem scrollbar desnecessária quando o conteúdo cabe no ecrã.
+- **Não validado visualmente** em viewport 320px, 375px, 768px nem a zoom 200% — limitação da ferramenta de automação usada nesta sessão (o redimensionamento de janela não afetou o viewport de renderização real, confirmado repetidamente). **Não afirmar validação móvel completa.**
 
 **L4 — Ausência de validação real com leitor de ecrã**
 - Evidência: não foi realizado teste com NVDA, Narrator, JAWS, VoiceOver ou equivalente, nem para esta fase nem para o resto da aplicação.
@@ -199,6 +205,8 @@ Classificação: linguagem simples — observada por leitura de código. Compree
 A Fase A.1 segue as convenções de acessibilidade já adotadas no projeto e apresenta várias evidências positivas de código. Foi validada funcionalmente em desenvolvimento, sobretudo com rato, e apenas um diálogo teve foco e Escape confirmados diretamente. Não foi realizada validação completa por teclado, leitor de ecrã, zoom, reflow ou dispositivos físicos. Por isso, **não pode ser declarada plenamente acessível nem compatível com tecnologias de apoio**. Permanece implementada e validada em desenvolvimento, pendente de promoção e validação em produção e de validação específica de acessibilidade.
 
 **Atualização (commit `a1e8c0e`)**: L1 e L2 foram corrigidas e validadas manualmente em desenvolvimento — typecheck, lint, 83/83 testes unitários e 23/23 testes de integração aprovados, além de smoke test manual em browser (produção não utilizada, nenhuma migração executada). L3 e L4 permanecem abertas, sem alteração. A Fase A.1 continua sem validação completa com leitor de ecrã, zoom, reflow e dispositivos físicos, pelo que não deve ser declarada plenamente acessível.
+
+**Atualização (commits `6f96358`, `43f6504`, `8114ad4`, `66a4182`)**: L3 foi corrigida e validada manualmente em desenvolvimento — erros de campo passam a aparecer junto ao controlo (`aria-invalid`/`aria-describedby`/`role="alert"`/foco automático), com os valores introduzidos preservados após erro. A grelha responsiva e o limite de altura/scroll dos diálogos financeiros também foram corrigidos, mas sem validação visual em viewport móvel real nem a zoom elevado (limitação da ferramenta de automação usada nesta sessão, registada com honestidade). Typecheck, lint, 83/83 testes unitários e 31/31 testes de integração aprovados; produção não utilizada, nenhuma migração executada. **L1, L2 e L3 estão corrigidas em desenvolvimento; L4 permanece aberta — a validação formal com NVDA, navegação exclusiva por teclado, zoom, reflow e dispositivos físicos continua pendente. A acessibilidade da Fase A.1 não deve ser declarada concluída.**
 
 ### 4a.8 Critérios para considerar a acessibilidade da Fase A.1 validada
 

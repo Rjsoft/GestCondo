@@ -245,7 +245,7 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 - Pré-condições: Linha de extrato com conta A; movimento com conta B (diferente).
 - Passos: 1. Tentar conciliar essa linha com esse movimento.
 - Resultado esperado: Rejeitado com "Esta linha e este movimento pertencem a contas financeiras diferentes."; conciliar mesma conta funciona.
-- Nota (T3, `DOCUMENT_TRACEABILITY_AUDIT.md`, P3): confirmar que a conciliação fica registada em `/auditoria`; verificar que o texto **não identifica a conta financeira envolvida** (só o id do movimento) — limitação conhecida, **não resolvida**.
+- Nota (T3, `DOCUMENT_TRACEABILITY_AUDIT.md`, P3): **resolvida em desenvolvimento no commit `8ac97f6`** — confirmar que conciliação e desconciliação registam o ID da conta financeira em `/auditoria` (`— conta financeira ID N`) e nunca IBAN ou banco.
 - Estado: Não executado
 
 **[FA1-F33] Impedir cruzamento entre condomínios e validar permissões**
@@ -304,7 +304,8 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 
 **[FA1-A09] Associação dos erros aos campos (L3)**
 - Passos: 1. Provocar erro de campo (ex. IBAN inválido). 2. Verificar se o campo fica identificado como inválido.
-- Resultado esperado: Ver lacuna L3 (`docs/audit/ACCESSIBILITY_AUDIT.md`) — hoje não há associação inline; registar Falhou/Bloqueado até corrigido.
+- Resultado esperado: Ver lacuna L3 (`docs/audit/ACCESSIBILITY_AUDIT.md`).
+- Nota (L3): L3 corrigida no commit `6f96358`. Erros específicos aparecem junto dos campos com `aria-invalid`, `aria-describedby`, `role="alert"` e foco no primeiro campo inválido. Os valores passam a ser preservados após erro no commit `43f6504`. Validar formalmente com NVDA durante a execução desta checklist.
 - Estado: Não executado
 
 **[FA1-A10] Anúncio de erros e sucessos (L3)**
@@ -337,16 +338,19 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 **[FA1-A15] Zoom a 200%**
 - Passos: 1. Zoom do browser a 200% em "Exercícios e contas".
 - Resultado esperado: Conteúdo e ações essenciais continuam visíveis e utilizáveis, sem texto cortado.
+- Nota: Grelhas responsivas corrigidas no commit `8114ad4`. 320/375/768 e zoom 200% ainda não foram testados visualmente (limitação da ferramenta de automação usada) — manter como não executado.
 - Estado: Não executado
 
 **[FA1-A16] Reflow sem perda de conteúdo**
 - Passos: 1. Reduzir a largura para 320 CSS px.
 - Resultado esperado: Conteúdo reflui em coluna única, sem scroll horizontal para informação essencial.
+- Nota: Grelhas responsivas corrigidas no commit `8114ad4`. Não validado visualmente a 320px — manter como não executado.
 - Estado: Não executado
 
 **[FA1-A17] Telemóvel**
 - Passos: 1. Testar em viewport ~390×844px.
 - Resultado esperado: Assistente, tabelas e diálogos utilizáveis, sem perda de ações por scroll horizontal.
+- Nota: Grelhas responsivas corrigidas no commit `8114ad4`. Diálogo de nova conta: altura limitada e scroll vertical acrescentados no commit `66a4182`. Não validado visualmente em viewport móvel real — manter como não executado.
 - Estado: Não executado
 
 **[FA1-A18] Tablet**
@@ -362,6 +366,7 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 **[FA1-A20] Tabelas e operações em massa em ecrã pequeno**
 - Passos: 1. Em viewport de telemóvel, abrir a tabela de contas e um diálogo de associação em massa.
 - Resultado esperado: Colunas ocultas não escondem informação crítica; diálogo de associação em massa totalmente utilizável.
+- Nota: Grelhas responsivas corrigidas no commit `8114ad4`. Não validado visualmente em viewport móvel real — manter como não executado.
 - Estado: Não executado
 
 ### Testes de usabilidade (9 — FA1-U01 a FA1-U09)
