@@ -16,8 +16,10 @@ node_modules
 .DS_Store
 *.tsbuildinfo
 
-# Local tool/editor config
-.claude/
+# Local tool/editor config — .claude/skills/ é versionado (ferramentas do projeto),
+# o resto (settings.local.json, etc.) é local de cada máquina
+.claude/*
+!.claude/skills/
 .vercel
 .env*
 
