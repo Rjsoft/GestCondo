@@ -469,23 +469,24 @@ Executar preferencialmente com uma pessoa que não participou no desenvolvimento
 
 **[FA1-P13] Smoke tests**
 - Resultado esperado: Páginas principais (`/financas` e as restantes) carregam sem erro 500 depois da migração.
-- Estado: Bloqueado · Motivo: só foi possível verificar páginas públicas sem sessão — confirmado que `gestcondo.vercel.app` carrega normalmente a página de login (sem erro 500, sem redireccionamento inesperado) — e os logs de runtime da Vercel dos 15 minutos seguintes ao deploy mostram 0 erros funcionais em `/financas` e `/index.rsc` (só o aviso benigno de SSL do driver `pg`, o mesmo que aparece nos nossos próprios scripts). Não foi possível percorrer as páginas autenticadas principal a principal, porque isso exige sessão iniciada — ver regra em P14.
+- Estado: Passou · Evidência: percorridas em produção, com sessão iniciada pelo Rui (2026-07-24, ~17:30), todas as páginas principais, sem erro 500 nem ecrã de erro: Painel, `/financas` (separadores Movimentos, Dívidas por fração, Mapa mensal, Orçamentos, Seguro, Conciliação bancária, Exercícios e contas) e `/auditoria`. Os logs de runtime da Vercel após o deploy mostram 0 erros funcionais (só o aviso benigno de SSL do driver `pg`).
 
 **[FA1-P14] Validação por perfil**
 - Resultado esperado: Cada perfil (admin, gestor, condómino, inquilino, fornecedor, auditor) vê exatamente o que é esperado em "Exercícios e contas".
-- Estado: Bloqueado · Motivo: exige sessão autenticada por perfil em produção, com dados reais. Recuso-me, por regra pessoal inegociável, a introduzir palavras-passe ou autenticar em qualquer conta, mesmo com autorização explícita — já recusado nesta mesma sessão para o Preview. Só executável pelo Rui, com as suas próprias credenciais.
+- Estado: Bloqueado · Motivo: só o perfil **Admin** foi verificado (sessão iniciada pelo Rui, 2026-07-24) — separador "Exercícios e contas" visível e funcional. Os restantes perfis (gestor, condómino, inquilino, fornecedor, auditor) não foram verificados: não existem utilizadores desses perfis disponíveis nesta sessão, e a verificação exigiria autenticar em cada conta, o que não faço em circunstância alguma. Só executável pelo Rui ou com contas de teste dedicadas.
 
 **[FA1-P15] Validação completa da Fase A.1**
 - Resultado esperado: Repetir os casos FA1-F01 a FA1-F34 relevantes com dados reais de produção, sem regressão face ao comportamento validado em dev.
-- Estado: Bloqueado · Motivo: idem P14 — exige sessão autenticada e interação extensa com dados reais de produção, que não posso realizar eu próprio.
+- Estado: Bloqueado · Motivo: executado apenas um subconjunto de leitura em produção (equivalente a F01/F02 — separador abre e mostra o assistente com o estado correto). O Rui criou o exercício "2026" (2026-01-01 a 2026-12-31) diretamente em produção às 17:25, o que confirma na prática o equivalente a F03/F04, com registo correto em `audit_log` (`Criou · exercicioFinanceiro #1`). Os restantes casos exigiriam criar e apagar dados de teste em produção, o que não foi feito deliberadamente.
 
 **[FA1-P16] Confirmação de ausência de regressões**
 - Resultado esperado: Funcionalidades já existentes (`Movimentos`, `Dívidas por fração`, `Conciliação`, etc.) continuam a funcionar sem alteração de comportamento.
-- Estado: Bloqueado · Motivo: idem P14 — exige sessão autenticada em produção.
+- Estado: Passou · Evidência: verificados em produção depois da migração, todos com dados reais e coerentes entre si — Movimentos (histórico completo), Dívidas por fração (valores por fração e botões Declaração/Interpelação), Mapa mensal (grelha e navegação de ano), Orçamentos (orçamento 2026 de 7786,96 €), Seguro, Conciliação bancária (0 linhas por conciliar, 29 movimentos por conciliar) e Painel. Totais idênticos ao baseline em todos os ecrãs: receitas 67 094,89 €, despesas 31 774,52 €, saldo 35 320,37 €.
+- Observação (não é regressão): o Mapa mensal aparece a zeros em 2025 e 2026. Confirmado em `app/actions/financas.ts:156` que `getMapaMensalQuotas` não usa nenhuma das colunas novas da migração 0024 — filtra por condomínio, tipo receita e datas, e cruza por `fracaoId`. Os movimentos de 2025 são totais importados agregados, sem fração associada, pelo que não aparecem na grelha. Comportamento anterior à migração.
 
 **[FA1-P17] Atualização documental**
 - Resultado esperado: `ROADMAP.md`, `FUNCTIONAL_GAPS.md`, `docs/product/MBD_GEST_GAP_ANALYSIS.md` e os 8 documentos desta revisão atualizados de "dev, pendente produção" para o estado real, só depois de P01–P16 concluídos.
-- Estado: Bloqueado · Motivo: P02, P03, P09, P14, P15 e P16 não estão concluídos — a condição de gate não está satisfeita.
+- Estado: Bloqueado · Motivo: P02, P03, P09, P14 e P15 continuam por concluir — a condição de gate não está satisfeita.
 
 **[FA1-P18] Decisão final de disponibilização**
 - Resultado esperado: Decisão explícita e registada sobre disponibilizar a funcionalidade a clientes, distinta da decisão de aplicar a migração.
@@ -495,13 +496,13 @@ Executar preferencialmente com uma pessoa que não participou no desenvolvimento
 
 | Estado | Total |
 |---|---|
-| Passou | 49 |
+| Passou | 51 |
 | Falhou | 0 |
-| Bloqueado | 28 |
+| Bloqueado | 26 |
 | Não executado | 4 |
 | Não aplicável | 0 |
 
-Por categoria: funcionais 34 (30 Passou + 4 Bloqueado — F14, F32, F33, F34); acessibilidade 20 (10 Passou + 10 Bloqueado); usabilidade 9 (0 Passou + 9 Bloqueado); produção 18 (9 Passou — P01, P04, P05, P06, P07, P08, P10, P11, P12 + 5 Bloqueado — P13, P14, P15, P16, P17 + 4 Não executado — P02, P03, P09, P18). Total geral = 34 + 20 + 9 + 18 = 81.
+Por categoria: funcionais 34 (30 Passou + 4 Bloqueado — F14, F32, F33, F34); acessibilidade 20 (10 Passou + 10 Bloqueado); usabilidade 9 (0 Passou + 9 Bloqueado); produção 18 (11 Passou — P01, P04, P05, P06, P07, P08, P10, P11, P12, P13, P16 + 3 Bloqueado — P14, P15, P17 + 4 Não executado — P02, P03, P09, P18). Total geral = 34 + 20 + 9 + 18 = 81.
 
 Distribuição dos 10 casos de acessibilidade bloqueados: 4 dependentes de NVDA (A08, A10, A11, A12); 5 dependentes de viewport/zoom não funcional na ferramenta de automação (A15, A16, A17, A18, A20); 1 dependente de medição de contraste indisponível (A19).
 
@@ -513,14 +514,15 @@ Distribuição dos 10 casos de acessibilidade bloqueados: 4 dependentes de NVDA 
   - **P02**: migração aplicada sem janela de baixo impacto acordada previamente.
   - **P03**: sem snapshot explícito criado/confirmado antes da migração (Neon plano atual só tem PITR de 6h — `TECHNICAL_DEBT.md` D7). Risco residual, ainda que a migração já esteja aplicada e confirmada como aditiva (P12).
   - **P09**: sem plano de rollback formal documentado/testado; mitigação informal é a natureza puramente aditiva da migração.
-  - **P13-P16**: smoke test e validações por perfil em produção exigem sessão autenticada, que não posso realizar (regra pessoal inegociável contra inserir credenciais/autenticar em contas) — só executáveis pelo Rui.
+  - **P13 e P16**: resolvidos em 2026-07-24 — o Rui iniciou sessão em produção e a verificação foi feita a partir dessa sessão já iniciada (sem eu introduzir credenciais).
+  - **P14 / P15**: só o perfil Admin foi verificado; os restantes perfis e a repetição completa dos casos funcionais em produção continuam por fazer.
 - Falhas críticas: —
 - Falhas altas: —
 - Falhas médias: —
 - Falhas baixas: —
 - Decisão sobre desenvolvimento: Fase A.1 funcionalmente validada em dev quanto ao que foi executável nesta sessão (30/34 casos funcionais Passou; 4/34 Bloqueado por dependências fora do controlo da execução — condomínio de teste dedicado, utilizador condómino, fluxo de UI inexistente para um sub-caso). Acessibilidade parcialmente validada (10/20 Passou por evidência direta; 10/20 Bloqueado — 4 por NVDA, 5 por viewport/zoom, 1 por medição de contraste, todos indisponíveis nesta sessão). Usabilidade totalmente por validar (9/9 Bloqueado, sem utilizador não-treinado disponível).
 - Decisão sobre migração: migração 0024 aplicada em produção em 2026-07-24, com drift confirmado a zero antes e depois e totais financeiros idênticos antes/depois — ver P01-P12.
-- Decisão sobre produção: migração e merge para `main` concluídos e verificados tecnicamente (P01, P04-P08, P10-P12 Passou; P13 parcialmente confirmado por telemetria, sem varrimento completo); janela de intervenção e snapshot formal ficaram por fazer (P02, P03) e o plano de rollback não foi testado (P09); validação funcional por perfil com dados reais (P14-P16) e a decisão final de disponibilização a clientes (P18) continuam pendentes, dependentes de o Rui testar com a sua própria sessão.
+- Decisão sobre produção: migração e merge para `main` concluídos e verificados (P01, P04-P08, P10-P13, P16 Passou), incluindo smoke test completo das páginas principais e confirmação de ausência de regressões, feitos em produção a partir de uma sessão iniciada pelo Rui. A funcionalidade foi usada com sucesso em produção com dados reais (exercício "2026" criado pelo Rui, registado em `audit_log`). Ficam por fazer: janela de intervenção e snapshot formal (P02, P03), plano de rollback testado (P09), validação dos perfis não-Admin e repetição completa dos casos funcionais em produção (P14, P15), e a decisão final de disponibilização a clientes (P18).
 - Decisão sobre cliente externo: não avaliada nesta execução.
 - Executor: Claude (Claude Code), autorizado por Rui Coelho
 - Data: 2026-07-24
