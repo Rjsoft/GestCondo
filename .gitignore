@@ -17,7 +17,7 @@ node_modules
 *.tsbuildinfo
 
 # Local tool/editor config
-.claude/settings.local.json
+.claude/
 .vercel
 .env*
 
