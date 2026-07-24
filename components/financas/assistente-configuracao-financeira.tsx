@@ -11,6 +11,12 @@ import { CheckCircle2 } from 'lucide-react'
 
 type Passo = 1 | 2 | 3
 
+function descricaoEstadoPasso(numero: Passo, passoAtual: Passo): string {
+  if (passoAtual > numero) return 'concluído'
+  if (passoAtual === numero) return 'atual'
+  return 'ainda não disponível'
+}
+
 /**
  * Assistente de primeira configuração das contas do condomínio — mostrado
  * em vez da lista normal enquanto não existir pelo menos um exercício
@@ -39,6 +45,13 @@ export function AssistenteConfiguracaoFinanceira({
       .catch(() => setMovimentosPorAssociar(0))
   }, [passo, exercicioRecente])
 
+  const tituloPassoAtual =
+    passo === 1
+      ? 'Criar o primeiro exercício financeiro'
+      : passo === 2
+        ? 'Adicionar a primeira conta'
+        : 'Associar movimentos já existentes'
+
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
@@ -50,17 +63,30 @@ export function AssistenteConfiguracaoFinanceira({
           associá-los.
         </p>
 
-        <div className="flex w-full max-w-sm flex-col gap-3 text-left">
-          <div className="flex items-center gap-3 rounded-md border border-border p-3">
+        <p aria-live="polite" aria-atomic="true" className="sr-only">
+          Passo {passo} de 3: {tituloPassoAtual}
+        </p>
+
+        <ol aria-label="Progresso da configuração financeira" className="flex w-full max-w-sm flex-col gap-3 text-left">
+          <li
+            aria-current={passo === 1 ? 'step' : undefined}
+            className="flex items-center gap-3 rounded-md border border-border p-3"
+          >
             {passo > 1 ? (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+              <CheckCircle2 aria-hidden="true" className="h-5 w-5 shrink-0 text-emerald-600" />
             ) : (
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground text-xs font-medium">
+              <span
+                aria-hidden="true"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground text-xs font-medium"
+              >
                 1
               </span>
             )}
             <div className="flex-1">
-              <p className="text-sm font-medium">Criar o primeiro exercício financeiro</p>
+              <p className="text-sm font-medium">
+                <span className="sr-only">Passo 1 de 3, {descricaoEstadoPasso(1, passo)}: </span>
+                Criar o primeiro exercício financeiro
+              </p>
               <p className="text-xs text-muted-foreground">O período a que as contas vão pertencer.</p>
             </div>
             {passo === 1 && (
@@ -76,20 +102,27 @@ export function AssistenteConfiguracaoFinanceira({
                 }}
               />
             )}
-          </div>
+          </li>
 
-          <div
+          <li
+            aria-current={passo === 2 ? 'step' : undefined}
             className={`flex items-center gap-3 rounded-md border border-border p-3 ${passo < 2 ? 'opacity-50' : ''}`}
           >
             {passo > 2 ? (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+              <CheckCircle2 aria-hidden="true" className="h-5 w-5 shrink-0 text-emerald-600" />
             ) : (
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground text-xs font-medium">
+              <span
+                aria-hidden="true"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground text-xs font-medium"
+              >
                 2
               </span>
             )}
             <div className="flex-1">
-              <p className="text-sm font-medium">Adicionar a primeira conta</p>
+              <p className="text-sm font-medium">
+                <span className="sr-only">Passo 2 de 3, {descricaoEstadoPasso(2, passo)}: </span>
+                Adicionar a primeira conta
+              </p>
               <p className="text-xs text-muted-foreground">
                 A conta bancária, a prazo ou de caixa do condomínio.
               </p>
@@ -101,17 +134,24 @@ export function AssistenteConfiguracaoFinanceira({
                 onCriada={() => setPasso(3)}
               />
             )}
-          </div>
+          </li>
 
-          <div
+          <li
+            aria-current={passo === 3 ? 'step' : undefined}
             className={`flex flex-col items-start gap-3 rounded-md border border-border p-3 ${passo < 3 ? 'opacity-50' : ''}`}
           >
             <div className="flex w-full items-center gap-3">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground text-xs font-medium">
+              <span
+                aria-hidden="true"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-foreground text-xs font-medium"
+              >
                 3
               </span>
               <div className="flex-1">
-                <p className="text-sm font-medium">Associar movimentos já existentes</p>
+                <p className="text-sm font-medium">
+                  <span className="sr-only">Passo 3 de 3, {descricaoEstadoPasso(3, passo)}: </span>
+                  Associar movimentos já existentes
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Movimentos lançados antes desta configuração, para ficarem ligados ao exercício.
                 </p>
@@ -146,8 +186,8 @@ export function AssistenteConfiguracaoFinanceira({
                 </div>
               </div>
             )}
-          </div>
-        </div>
+          </li>
+        </ol>
       </CardContent>
     </Card>
   )

@@ -191,8 +191,17 @@ export function ExerciciosTab({
                     >
                       {formatEuro(c.saldo)}
                       {c.movimentosSemDataLiquidacao > 0 && (
-                        <span className="ml-1 text-xs text-amber-700" title="Há movimentos pagos sem data de liquidação">
-                          ⚠
+                        <span
+                          className="ml-1 text-xs text-amber-700"
+                          title="Há movimentos pagos sem data de liquidação"
+                        >
+                          <span aria-hidden="true">⚠</span>
+                          <span className="sr-only">
+                            {' '}
+                            {c.movimentosSemDataLiquidacao === 1
+                              ? '1 movimento pago sem data de liquidação'
+                              : `${c.movimentosSemDataLiquidacao} movimentos pagos sem data de liquidação`}
+                          </span>
                         </span>
                       )}
                     </TableCell>
