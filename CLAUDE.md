@@ -16,7 +16,9 @@ Não repitas nada disto de memória — os ficheiros abaixo são a fonte de verd
 - `docs/audit/PRE_CLIENTE_EXTERNO.md` — lista consolidada do que tem de estar concluído antes do primeiro cliente externo (não bloqueia o piloto atual).
 - `docs/CHECKLIST_TESTE_MANUAL.md` — checklist para o utilizador percorrer a app com dados reais, não substitui os testes automáticos.
 
-Quando terminares uma tarefa que resolve ou contradiz algo descrito nestes ficheiros, atualiza-os na mesma sessão — já aconteceu ficarem desatualizados e contradizerem o código real.
+**Não usar como fonte de estado:** `AUDIT.md` é a auditoria inicial de 2026-07-06, **congelada como registo histórico em 2026-07-24**. Descreve um estado do projeto que já não existe (diz que não há multi-tenancy, assembleias, RGPD, auditoria, testes nem git — tudo isso existe hoje). Ler só para contexto histórico.
+
+Quando terminares uma tarefa que resolve ou contradiz algo descrito nestes ficheiros, atualiza-os na mesma sessão — já aconteceu ficarem desatualizados e contradizerem o código real. Em 2026-07-24, uma passagem de coerência a 27 documentos encontrou três afirmações falsas propagadas por vários ficheiros (Fase A.1 pendente de produção, bucket de ficheiros público, contagem de testes) — uma delas bloqueava a assinatura de um DPA num problema já resolvido. Ao corrigir um facto, procurar as outras ocorrências dele (`grep`), não só o ficheiro onde deu por ele.
 
 ## Stack
 
