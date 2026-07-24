@@ -2,12 +2,15 @@ import {
   pgTable,
   text,
   timestamp,
+  date,
   boolean,
   serial,
   integer,
   numeric,
   index,
   uniqueIndex,
+  unique,
+  foreignKey,
 } from "drizzle-orm/pg-core"
 
 // --- Better Auth required tables -------------------------------------------
@@ -270,6 +273,19 @@ export const movimento = pgTable(
     fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
       onDelete: "set null",
     }),
+    // Ligação opcional ao exercício/conta financeira a que este movimento
+    // pertence (ver exercicioFinanceiro/contaFinanceira mais abaixo) —
+    // aditivo, não substitui `destino` (que continua a distinguir a
+    // FINALIDADE geral/reserva; `contaFinanceiraId` distingue ONDE o
+    // dinheiro está — as duas coisas são independentes, ver comentário em
+    // contaFinanceira). Lançamentos antigos nascem sem estes campos;
+    // preenchidos por ações de associação em massa, não pela migração.
+    // Sem `.references()` inline: a integridade referencial exige também
+    // que o `condominioId` bata certo (nunca associar a uma conta/
+    // exercício doutro condomínio) — ver as duas `foreignKey()` compostas
+    // abaixo, que substituem uma FK simples por uma FK em (id,condominioId).
+    exercicioId: integer("exercicioId"),
+    contaFinanceiraId: integer("contaFinanceiraId"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },
@@ -277,6 +293,18 @@ export const movimento = pgTable(
     index("movimento_condominio_idx").on(t.condominioId),
     index("movimento_orcamento_idx").on(t.orcamentoId),
     index("movimento_fornecedor_idx").on(t.fornecedorId),
+    index("movimento_exercicio_idx").on(t.exercicioId),
+    index("movimento_conta_financeira_idx").on(t.contaFinanceiraId),
+    foreignKey({
+      columns: [t.exercicioId, t.condominioId],
+      foreignColumns: [exercicioFinanceiro.id, exercicioFinanceiro.condominioId],
+      name: "movimento_exercicio_condominio_fk",
+    }).onDelete("set null"),
+    foreignKey({
+      columns: [t.contaFinanceiraId, t.condominioId],
+      foreignColumns: [contaFinanceira.id, contaFinanceira.condominioId],
+      name: "movimento_conta_financeira_condominio_fk",
+    }).onDelete("set null"),
   ],
 )
 
@@ -306,9 +334,22 @@ export const extratoBancario = pgTable(
     // bancárias não modeladas) — marcadas para não ficarem para sempre
     // como "por conciliar".
     ignorado: boolean("ignorado").notNull().default(false),
+    // Conta financeira a que este extrato pertence — opcional (extratos já
+    // importados antes desta funcionalidade ficam sem conta, mostrados na
+    // UI como "Conta por indicar", nunca obrigados a edição em massa).
+    // Impede conciliar uma linha desta conta com um movimento de outra.
+    contaFinanceiraId: integer("contaFinanceiraId"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
-  (t) => [index("extrato_bancario_condominio_idx").on(t.condominioId)],
+  (t) => [
+    index("extrato_bancario_condominio_idx").on(t.condominioId),
+    index("extrato_bancario_conta_financeira_idx").on(t.contaFinanceiraId),
+    foreignKey({
+      columns: [t.contaFinanceiraId, t.condominioId],
+      foreignColumns: [contaFinanceira.id, contaFinanceira.condominioId],
+      name: "extrato_bancario_conta_financeira_condominio_fk",
+    }).onDelete("set null"),
+  ],
 )
 
 // Orçamento anual aprovado do condomínio. Por agora um valor global por
@@ -336,6 +377,139 @@ export const orcamento = pgTable(
   (t) => [
     index("orcamento_condominio_idx").on(t.condominioId),
     uniqueIndex("orcamento_condominio_ano_idx").on(t.condominioId, t.ano),
+  ],
+)
+
+// Exercício financeiro: período contabilístico fechável, com saldo
+// transportado por conta entre exercícios (ver saldoInicialConta abaixo).
+// Distinto de `orcamento.ano` (que é só o valor orçamentado). `designacao`
+// é o identificador legível (ex: "2026" ou "2025/2026") — `anoPrincipal`
+// existe só para ordenação/referência, NUNCA é a base de unicidade, porque
+// um exercício pode não coincidir com o ano civil.
+//
+// Sobreposição de datas entre exercícios do mesmo condomínio é impedida
+// por uma constraint `EXCLUDE USING gist` na base de dados (extensão
+// `btree_gist`), aplicada diretamente no SQL da migração — o Drizzle não
+// tem um construtor nativo para `EXCLUDE`, por isso não aparece aqui em
+// código; ver o ficheiro de migração correspondente e
+// docs/product/MBD_GEST_GAP_ANALYSIS.md. Qualquer migração futura que
+// recrie esta tabela do zero tem de reintroduzir essa constraint à mão.
+// `dataInicio`/`dataFim` são inclusivas (o último dia do exercício conta
+// como desse exercício).
+export const exercicioFinanceiro = pgTable(
+  "exercicio_financeiro",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    designacao: text("designacao").notNull(), // ex: "2026", "2025/2026"
+    anoPrincipal: integer("anoPrincipal").notNull(),
+    dataInicio: date("dataInicio", { mode: "date" }).notNull(),
+    dataFim: date("dataFim", { mode: "date" }).notNull(),
+    estado: text("estado").notNull().default("aberto"), // "aberto" | "fechado"
+    fechadoEm: timestamp("fechadoEm"),
+    fechadoPorUserId: text("fechadoPorUserId"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("exercicio_financeiro_condominio_idx").on(t.condominioId),
+    // Necessária para as FKs compostas de movimento/saldoInicialConta
+    // referenciarem (id, condominioId) em vez de só (id) — impede
+    // associar um exercício de outro condomínio (ver comentário em
+    // `movimento`).
+    unique("exercicio_financeiro_id_condominio_uq").on(t.id, t.condominioId),
+  ],
+)
+
+// Conta financeira do condomínio (à ordem, a prazo, caixa) — entidade
+// própria, distinta do "balde" contabilístico `movimento.destino` (que se
+// mantém inalterado nesta fase e continua a ser a fonte de verdade dos
+// relatórios existentes). Uma conta financeira é ONDE o dinheiro está;
+// `destino` é a FINALIDADE (gestão corrente vs. fundo de reserva) — não
+// se assume que exista uma correspondência 1:1 entre os dois: uma conta
+// pode, na prática, misturar valores dos dois destinos, embora não seja o
+// cenário preferencial.
+//
+// Assume-se que a conta pertence ao condomínio, nunca a um administrador
+// residente; "transitoria" é só para situações herdadas do histórico
+// anterior à adoção desta funcionalidade, nunca prática normal — ver
+// docs/product/MBD_GEST_GAP_ANALYSIS.md, secção 15, decisão 2.
+export const contaFinanceira = pgTable(
+  "conta_financeira",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    nome: text("nome").notNull(),
+    banco: text("banco"),
+    // Normalizado (maiúsculas, sem espaços) e validado na server action
+    // antes de gravar — nunca só na UI. Nunca devolvido a perfis sem
+    // consulta de gestão (ver lib/session.ts:temConsultaGestao) nem
+    // escrito por extenso no audit_log.
+    iban: text("iban"),
+    tipo: text("tipo").notNull(), // "ordem" | "prazo" | "caixa" | "transitoria"
+    moeda: text("moeda").notNull().default("EUR"),
+    estado: text("estado").notNull().default("ativa"), // "ativa" | "encerrada"
+    dataAbertura: date("dataAbertura", { mode: "date" }),
+    dataEncerramento: date("dataEncerramento", { mode: "date" }),
+    // Obrigatório (validado na server action, não na BD) quando
+    // tipo = "transitoria" — justificação da situação transitória.
+    notaTransitoria: text("notaTransitoria"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("conta_financeira_condominio_idx").on(t.condominioId),
+    unique("conta_financeira_id_condominio_uq").on(t.id, t.condominioId),
+  ],
+)
+
+// Saldo inicial de uma conta financeira num exercício. "manual" quando
+// introduzido pelo administrador (primeiro exercício de uma conta);
+// "transportado" quando calculado automaticamente ao criar o exercício
+// seguinte a um já fechado (saldo inicial anterior + movimentos LIQUIDADOS
+// ligados a essa conta nesse exercício — ver lib/contas-financeiras.ts
+// para a única função que faz este cálculo, nunca duplicada). O saldo
+// "atual" de uma conta nunca é um campo persistido — é sempre saldo
+// inicial + soma dos movimentos ligados, calculado em runtime.
+//
+// `condominioId` aqui é redundante com a relação transitiva via
+// contaFinanceiraId/exercicioId, mas é a forma mais direta de a própria
+// base de dados impedir (via as duas FKs compostas abaixo) que um saldo
+// inicial relacione uma conta e um exercício de condomínios diferentes.
+export const saldoInicialConta = pgTable(
+  "saldo_inicial_conta",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    contaFinanceiraId: integer("contaFinanceiraId").notNull(),
+    exercicioId: integer("exercicioId").notNull(),
+    valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
+    origem: text("origem").notNull(), // "manual" | "transportado"
+    definidoPorUserId: text("definidoPorUserId").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("saldo_inicial_conta_conta_exercicio_idx").on(
+      t.contaFinanceiraId,
+      t.exercicioId,
+    ),
+    foreignKey({
+      columns: [t.contaFinanceiraId, t.condominioId],
+      foreignColumns: [contaFinanceira.id, contaFinanceira.condominioId],
+      name: "saldo_inicial_conta_conta_condominio_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.exercicioId, t.condominioId],
+      foreignColumns: [exercicioFinanceiro.id, exercicioFinanceiro.condominioId],
+      name: "saldo_inicial_conta_exercicio_condominio_fk",
+    }).onDelete("cascade"),
   ],
 )
 
