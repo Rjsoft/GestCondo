@@ -183,6 +183,13 @@
       "when": 1784924377123,
       "tag": "0025_charming_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784928167532,
+      "tag": "0026_great_sabretooth",
+      "breakpoints": true
     }
   ]
 }

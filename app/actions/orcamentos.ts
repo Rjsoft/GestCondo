@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fracao, movimento, orcamento } from '@/lib/db/schema'
+import { fracao, movimento, orcamento, orcamentoRubrica } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularQuotasMensais } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
@@ -207,6 +207,43 @@ export async function getBalancoOrcamento(orcamentoId: number) {
   const desvio = despesasReais - previsto
   const desvioPercent = previsto > 0 ? (desvio / previsto) * 100 : null
 
+  // Cruza o executado por categoria (já calculado acima) com o orçamentado
+  // por rubrica (Fase A.2, G08) — inclui também categorias com despesa real
+  // mas sem rubrica correspondente, para não esconder nenhum valor lançado.
+  const rubricasRegistadas = await db
+    .select()
+    .from(orcamentoRubrica)
+    .where(eq(orcamentoRubrica.orcamentoId, orcamentoId))
+    .orderBy(desc(orcamentoRubrica.valorOrcamentado))
+
+  const categoriasComRubrica = new Set(rubricasRegistadas.map((r) => r.categoria))
+  const rubricas = [
+    ...rubricasRegistadas.map((r) => {
+      const valorOrcamentadoRubrica = Number(r.valorOrcamentado)
+      const valorReal = despesasPorCategoriaMap.get(r.categoria) ?? 0
+      const desvioRubrica = valorReal - valorOrcamentadoRubrica
+      return {
+        id: r.id,
+        categoria: r.categoria,
+        valorOrcamentado: valorOrcamentadoRubrica,
+        valorReal,
+        desvio: desvioRubrica,
+        desvioPercent: valorOrcamentadoRubrica > 0 ? (desvioRubrica / valorOrcamentadoRubrica) * 100 : null,
+      }
+    }),
+    ...despesasPorCategoria
+      .filter((d) => !categoriasComRubrica.has(d.categoria))
+      .map((d) => ({
+        id: null,
+        categoria: d.categoria,
+        valorOrcamentado: null,
+        valorReal: d.valor,
+        desvio: null,
+        desvioPercent: null,
+      })),
+  ]
+  const somaRubricas = rubricasRegistadas.reduce((s, r) => s + Number(r.valorOrcamentado), 0)
+
   return {
     orcamento: { id: orc.id, ano: orc.ano, valorAnual: previsto, notas: orc.notas },
     receitasReais,
@@ -215,6 +252,8 @@ export async function getBalancoOrcamento(orcamentoId: number) {
     despesasPorCategoria,
     desvio,
     desvioPercent,
+    rubricas,
+    somaRubricas,
   }
 }
 
@@ -229,6 +268,96 @@ export async function eliminarOrcamento(id: number) {
     acao: 'eliminar',
     entidade: 'orcamento',
     entidadeId: id,
+  })
+
+  revalidatePath('/financas')
+}
+
+export async function getOrcamentoRubricas(orcamentoId: number) {
+  const m = await requireAcessoFinanceiro()
+
+  const [orc] = await db
+    .select({ id: orcamento.id })
+    .from(orcamento)
+    .where(and(eq(orcamento.id, orcamentoId), eq(orcamento.condominioId, m.condominioId)))
+    .limit(1)
+  if (!orc) throw new Error('Orçamento não encontrado')
+
+  return db
+    .select()
+    .from(orcamentoRubrica)
+    .where(eq(orcamentoRubrica.orcamentoId, orcamentoId))
+    .orderBy(desc(orcamentoRubrica.valorOrcamentado))
+}
+
+/**
+ * A soma das rubricas ultrapassar o valor anual do orçamento não é
+ * bloqueado — pode haver margem deliberada (docs/product/
+ * MBD_GEST_GAP_ANALYSIS.md secção 7.4). `avisoExcedeOrcamento` informa a
+ * UI para mostrar um aviso, não um erro.
+ */
+export async function criarOrcamentoRubrica(formData: FormData) {
+  const admin = await requireAdmin()
+
+  const orcamentoId = Number(formData.get('orcamentoId'))
+  const categoria = String(formData.get('categoria') || '').trim()
+  const valorOrcamentado = String(formData.get('valorOrcamentado') || '').trim()
+
+  if (!categoria) throw new Error('Indique a categoria da rubrica')
+  if (!valorOrcamentado || Number(valorOrcamentado) <= 0) {
+    throw new Error('Indique um valor orçamentado válido')
+  }
+
+  const [orc] = await db
+    .select({ id: orcamento.id, valorAnual: orcamento.valorAnual })
+    .from(orcamento)
+    .where(and(eq(orcamento.id, orcamentoId), eq(orcamento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!orc) throw new Error('Orçamento não encontrado')
+
+  const existentes = await db
+    .select({ valorOrcamentado: orcamentoRubrica.valorOrcamentado })
+    .from(orcamentoRubrica)
+    .where(eq(orcamentoRubrica.orcamentoId, orcamentoId))
+  const somaAtual = existentes.reduce((s, r) => s + Number(r.valorOrcamentado), 0)
+  const avisoExcedeOrcamento = somaAtual + Number(valorOrcamentado) > Number(orc.valorAnual)
+
+  const [nova] = await db
+    .insert(orcamentoRubrica)
+    .values({ orcamentoId, categoria, valorOrcamentado })
+    .returning({ id: orcamentoRubrica.id })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'orcamento',
+    entidadeId: orcamentoId,
+    detalhes: `Rubrica criada: ${categoria} — ${valorOrcamentado} €`,
+  })
+
+  revalidatePath('/financas')
+  return { id: nova.id, avisoExcedeOrcamento }
+}
+
+export async function eliminarOrcamentoRubrica(id: number) {
+  const admin = await requireAdmin()
+
+  const [rubrica] = await db
+    .select({ id: orcamentoRubrica.id, categoria: orcamentoRubrica.categoria, orcamentoId: orcamentoRubrica.orcamentoId })
+    .from(orcamentoRubrica)
+    .innerJoin(orcamento, eq(orcamentoRubrica.orcamentoId, orcamento.id))
+    .where(and(eq(orcamentoRubrica.id, id), eq(orcamento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!rubrica) throw new Error('Rubrica não encontrada')
+
+  await db.delete(orcamentoRubrica).where(eq(orcamentoRubrica.id, id))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'orcamento',
+    entidadeId: rubrica.orcamentoId,
+    detalhes: `Rubrica eliminada: ${rubrica.categoria}`,
   })
 
   revalidatePath('/financas')

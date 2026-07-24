@@ -10,8 +10,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { GerarQuotasDialog } from '@/components/financas/gerar-quotas-dialog'
+import { GerirRubricasDialog } from '@/components/financas/gerir-rubricas-dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { MoreHorizontal, Trash2, Calculator } from 'lucide-react'
+import { MoreHorizontal, Trash2, Calculator, ListTree } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function OrcamentoActions({
@@ -34,6 +35,7 @@ export function OrcamentoActions({
 }) {
   const [pending, startTransition] = useTransition()
   const [gerarAberto, setGerarAberto] = useState(false)
+  const [rubricasAberto, setRubricasAberto] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const remover = () => {
@@ -60,6 +62,10 @@ export function OrcamentoActions({
             <Calculator className="h-4 w-4" />
             Gerar quotas mensais
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setRubricasAberto(true)}>
+            <ListTree className="h-4 w-4" />
+            Gerir rubricas
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
@@ -77,6 +83,13 @@ export function OrcamentoActions({
         valorAnual={valorAnual}
         valorAnualElevador={valorAnualElevador}
         fracoes={fracoes}
+      />
+      <GerirRubricasDialog
+        open={rubricasAberto}
+        onOpenChange={setRubricasAberto}
+        orcamentoId={id}
+        ano={ano}
+        valorAnual={valorAnual}
       />
       <ConfirmDialog
         open={confirmOpen}

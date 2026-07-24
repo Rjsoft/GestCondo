@@ -10,7 +10,7 @@
 import { and, eq, gte, isNull, lt } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from './index'
-import { condominio, movimento, orcamento } from './schema'
+import { condominio, movimento, orcamento, orcamentoRubrica } from './schema'
 
 class RollbackDeTeste extends Error {}
 
@@ -153,6 +153,110 @@ describe('balanço orçamento aprovado vs. real', () => {
         expect(despesasPorCategoriaMap.get('Elevador')).toBe(900)
         expect(despesasPorCategoriaMap.has('Obras')).toBe(false)
         expect(desvio).toBe(1400 - 1000)
+
+        throw new RollbackDeTeste('reverter fixture de teste, nunca persistir')
+      }),
+    ).rejects.toThrow(RollbackDeTeste)
+  })
+
+  it('cruza rubricas com a despesa real por categoria (Fase A.2, G08)', async () => {
+    await expect(
+      db.transaction(async (tx) => {
+        const [condo] = await tx
+          .insert(condominio)
+          .values({ nome: '[teste rubricas] Condomínio' })
+          .returning({ id: condominio.id })
+
+        const [orc] = await tx
+          .insert(orcamento)
+          .values({ condominioId: condo.id, userId: 'user-admin', ano: 2026, valorAnual: '1000.00' })
+          .returning({ id: orcamento.id })
+
+        // Duas rubricas definidas: Limpeza (dentro do orçado) e Elevador
+        // (acima do orçado — desvio positivo esperado).
+        await tx.insert(orcamentoRubrica).values([
+          { orcamentoId: orc.id, categoria: 'Limpeza', valorOrcamentado: '400.00' },
+          { orcamentoId: orc.id, categoria: 'Elevador', valorOrcamentado: '300.00' },
+        ])
+
+        await tx.insert(movimento).values([
+          {
+            condominioId: condo.id,
+            userId: 'user-admin',
+            tipo: 'despesa',
+            categoria: 'Limpeza',
+            descricao: 'Limpeza janeiro',
+            valor: '350.00',
+            data: new Date(2026, 0, 20),
+            destino: 'geral',
+          },
+          {
+            condominioId: condo.id,
+            userId: 'user-admin',
+            tipo: 'despesa',
+            categoria: 'Elevador',
+            descricao: 'Manutenção elevador',
+            valor: '500.00',
+            data: new Date(2026, 1, 1),
+            destino: 'geral',
+          },
+          // Categoria com despesa real mas sem rubrica correspondente — tem
+          // de aparecer no cruzamento na mesma, não pode ficar escondida.
+          {
+            condominioId: condo.id,
+            userId: 'user-admin',
+            tipo: 'despesa',
+            categoria: 'Seguros',
+            descricao: 'Prémio anual',
+            valor: '150.00',
+            data: new Date(2026, 2, 1),
+            destino: 'geral',
+          },
+        ])
+
+        // Reproduz exatamente o cruzamento de getBalancoOrcamento.
+        const movimentosAno = await tx
+          .select({ categoria: movimento.categoria, valor: movimento.valor })
+          .from(movimento)
+          .where(and(eq(movimento.condominioId, condo.id), eq(movimento.tipo, 'despesa')))
+        const despesasPorCategoriaMap = new Map<string, number>()
+        for (const mv of movimentosAno) {
+          despesasPorCategoriaMap.set(
+            mv.categoria,
+            (despesasPorCategoriaMap.get(mv.categoria) ?? 0) + Number(mv.valor),
+          )
+        }
+
+        const rubricasRegistadas = await tx
+          .select()
+          .from(orcamentoRubrica)
+          .where(eq(orcamentoRubrica.orcamentoId, orc.id))
+        const categoriasComRubrica = new Set(rubricasRegistadas.map((r) => r.categoria))
+
+        const cruzamento = rubricasRegistadas.map((r) => {
+          const valorOrcamentado = Number(r.valorOrcamentado)
+          const valorReal = despesasPorCategoriaMap.get(r.categoria) ?? 0
+          return { categoria: r.categoria, valorOrcamentado, valorReal, desvio: valorReal - valorOrcamentado }
+        })
+        const semRubrica = Array.from(despesasPorCategoriaMap.keys()).filter(
+          (categoria) => !categoriasComRubrica.has(categoria),
+        )
+        const somaRubricas = rubricasRegistadas.reduce((s, r) => s + Number(r.valorOrcamentado), 0)
+
+        expect(cruzamento).toContainEqual({
+          categoria: 'Limpeza',
+          valorOrcamentado: 400,
+          valorReal: 350,
+          desvio: -50,
+        })
+        expect(cruzamento).toContainEqual({
+          categoria: 'Elevador',
+          valorOrcamentado: 300,
+          valorReal: 500,
+          desvio: 200,
+        })
+        expect(semRubrica).toEqual(['Seguros'])
+        expect(somaRubricas).toBe(700)
 
         throw new RollbackDeTeste('reverter fixture de teste, nunca persistir')
       }),

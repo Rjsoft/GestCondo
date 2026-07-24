@@ -33,8 +33,16 @@ export default async function BalancoOrcamentoPage({
   }
 
   const condominio = await getCondominioAtual(membro.condominioId)
-  const { orcamento, receitasReais, despesasReais, saldoReal, despesasPorCategoria, desvio, desvioPercent } =
-    balanco
+  const {
+    orcamento,
+    receitasReais,
+    despesasReais,
+    saldoReal,
+    desvio,
+    desvioPercent,
+    rubricas,
+  } = balanco
+  const temRubricas = rubricas.some((r) => r.valorOrcamentado !== null)
 
   return (
     <div className="mx-auto max-w-4xl print:max-w-none">
@@ -100,29 +108,55 @@ export default async function BalancoOrcamentoPage({
 
           <div>
             <h2 className="mb-3 font-serif text-sm font-bold text-foreground">
-              Despesas reais por categoria
+              {temRubricas ? 'Rubricas — orçado vs. real' : 'Despesas reais por categoria'}
             </h2>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
+                  {temRubricas && <TableHead className="text-right">Orçamentado</TableHead>}
+                  <TableHead className="text-right">Real</TableHead>
+                  {temRubricas && <TableHead className="text-right">Desvio</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {despesasPorCategoria.length === 0 && (
+                {rubricas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={2} className="py-6 text-center text-muted-foreground">
+                    <TableCell colSpan={temRubricas ? 4 : 2} className="py-6 text-center text-muted-foreground">
                       Sem despesas lançadas em {orcamento.ano}.
                     </TableCell>
                   </TableRow>
                 )}
-                {despesasPorCategoria.map((d) => (
-                  <TableRow key={d.categoria}>
-                    <TableCell className="font-medium">{d.categoria}</TableCell>
-                    <TableCell className="text-right text-red-600">
-                      {formatEuro(d.valor)}
+                {rubricas.map((r) => (
+                  <TableRow key={r.categoria}>
+                    <TableCell className="font-medium">
+                      {r.categoria}
+                      {temRubricas && r.valorOrcamentado === null && (
+                        <span className="ml-2 text-xs text-muted-foreground">(sem rubrica)</span>
+                      )}
                     </TableCell>
+                    {temRubricas && (
+                      <TableCell className="text-right text-muted-foreground">
+                        {r.valorOrcamentado !== null ? formatEuro(r.valorOrcamentado) : '—'}
+                      </TableCell>
+                    )}
+                    <TableCell className="text-right text-red-600">{formatEuro(r.valorReal)}</TableCell>
+                    {temRubricas && (
+                      <TableCell
+                        className={`text-right ${
+                          r.desvio !== null && r.desvio > 0 ? 'text-red-600' : 'text-emerald-600'
+                        }`}
+                      >
+                        {r.desvio !== null ? (
+                          <>
+                            {r.desvio > 0 ? '+' : ''}
+                            {formatEuro(r.desvio)}
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -131,8 +165,9 @@ export default async function BalancoOrcamentoPage({
 
           <p className="text-center text-xs text-muted-foreground">
             Documento gerado automaticamente pelo GestCondo — não substitui
-            documentos contabilísticos oficiais. O orçamento aprovado é
-            comparado como um valor único; não discrimina ainda por rubrica.
+            documentos contabilísticos oficiais.
+            {!temRubricas &&
+              ' O orçamento aprovado é comparado como um valor único; não discrimina ainda por rubrica.'}
           </p>
         </CardContent>
       </Card>
