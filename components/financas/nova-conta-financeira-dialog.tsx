@@ -173,7 +173,7 @@ export function NovaContaFinanceiraDialog({
           </div>
 
           {tipo !== 'caixa' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="banco">Banco (opcional)</Label>
                 <Input id="banco" name="banco" placeholder="Ex: BCP" />
@@ -221,7 +221,7 @@ export function NovaContaFinanceiraDialog({
           )}
 
           {exercicioAtivo && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="saldoInicial">Saldo inicial (opcional)</Label>
                 <Input id="saldoInicial" name="saldoInicial" type="number" step="0.01" placeholder="0,00" />
@@ -242,7 +242,7 @@ export function NovaContaFinanceiraDialog({
             Opções avançadas
           </button>
           {avancadas && (
-            <div className="grid grid-cols-2 gap-3 rounded-md border border-border p-3">
+            <div className="grid grid-cols-1 gap-3 rounded-md border border-border p-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="moeda">Moeda</Label>
                 <Input id="moeda" name="moeda" defaultValue="EUR" />
