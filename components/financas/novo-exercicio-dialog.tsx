@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { criarExercicio } from '@/app/actions/exercicios'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,8 +14,19 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MSG_EXERCICIO } from '@/lib/financas'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
+
+type CampoExercicio = 'dataFim'
+
+// Só a mensagem inequivocamente atribuível a um único campo entra aqui —
+// sobreposição de exercícios e "preencha os campos obrigatórios" ficam
+// como erro geral (toast), por envolverem mais do que um campo (ver
+// docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md, L3).
+const CAMPO_POR_ERRO: Readonly<Record<string, CampoExercicio>> = {
+  [MSG_EXERCICIO.dataFimAntesDoInicio]: 'dataFim',
+}
 
 export function NovoExercicioDialog({
   trigger,
@@ -25,9 +36,19 @@ export function NovoExercicioDialog({
   onSucesso?: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [erros, setErros] = useState<Partial<Record<CampoExercicio, string>>>({})
   const [pending, startTransition] = useTransition()
 
+  const formId = useId()
+  const dataFimErroId = `${formId}-data-fim-erro`
+  const dataFimRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (erros.dataFim) dataFimRef.current?.focus()
+  }, [erros])
+
   const onSubmit = (formData: FormData) => {
+    setErros({})
     startTransition(async () => {
       try {
         await criarExercicio(formData)
@@ -35,7 +56,10 @@ export function NovoExercicioDialog({
         setOpen(false)
         onSucesso?.()
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Erro ao criar')
+        const mensagem = e instanceof Error ? e.message : 'Erro ao criar'
+        const campo = CAMPO_POR_ERRO[mensagem]
+        if (campo) setErros({ [campo]: mensagem })
+        else toast.error(mensagem)
       }
     })
   }
@@ -105,9 +129,18 @@ export function NovoExercicioDialog({
                 type="date"
                 required
                 defaultValue={`${anoAtual}-12-31`}
+                ref={dataFimRef}
+                aria-invalid={Boolean(erros.dataFim)}
+                aria-describedby={erros.dataFim ? dataFimErroId : undefined}
+                onChange={() => erros.dataFim && setErros({})}
               />
             </div>
           </div>
+          {erros.dataFim && (
+            <p id={dataFimErroId} role="alert" className="text-sm text-destructive">
+              {erros.dataFim}
+            </p>
+          )}
           <p className="-mt-2 text-xs text-muted-foreground">
             Não pode haver dois exercícios com datas sobrepostas para o mesmo condomínio.
           </p>

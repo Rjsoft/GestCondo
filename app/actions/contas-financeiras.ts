@@ -11,6 +11,7 @@ import {
   idsForaDeExercicioFechado,
   normalizarIban,
 } from '@/lib/contas-financeiras'
+import { MSG_CONTA } from '@/lib/financas'
 import { requireAcessoFinanceiro, requireAdmin, temConsultaGestao } from '@/lib/session'
 import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -46,14 +47,14 @@ function validarDadosConta({
   iban: string
   notaTransitoria: string
 }) {
-  if (!nome) throw new Error('Preencha o nome da conta')
-  if (!(TIPOS_CONTA as readonly string[]).includes(tipo)) throw new Error('Tipo de conta inválido')
-  if (tipo === 'caixa' && iban) throw new Error('Uma conta de caixa não tem IBAN')
+  if (!nome) throw new Error(MSG_CONTA.nomeObrigatorio)
+  if (!(TIPOS_CONTA as readonly string[]).includes(tipo)) throw new Error(MSG_CONTA.tipoInvalido)
+  if (tipo === 'caixa' && iban) throw new Error(MSG_CONTA.caixaSemIban)
   if (tipo === 'transitoria' && !notaTransitoria) {
-    throw new Error('Indique o motivo desta conta temporária ou de transição')
+    throw new Error(MSG_CONTA.notaTransitoriaObrigatoria)
   }
   if (iban && !ibanValido(iban)) {
-    throw new Error('O IBAN indicado não é válido — confirme se foi copiado corretamente')
+    throw new Error(MSG_CONTA.ibanInvalido)
   }
 }
 

@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { contaFinanceira, exercicioFinanceiro, extratoBancario, movimento, saldoInicialConta } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularSaldoConta, formatarLogOperacaoMassa, mensagemErroSobreposicaoExercicio } from '@/lib/contas-financeiras'
+import { MSG_EXERCICIO } from '@/lib/financas'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, gte, isNull, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -32,7 +33,7 @@ export async function criarExercicio(formData: FormData) {
   const dataInicio = new Date(dataInicioStr)
   const dataFim = new Date(dataFimStr)
   if (dataFim <= dataInicio) {
-    throw new Error('A data de fim tem de ser posterior à data de início')
+    throw new Error(MSG_EXERCICIO.dataFimAntesDoInicio)
   }
 
   let novoId: number

@@ -44,3 +44,19 @@ export const ESTADO_CONTA_LABEL: Record<string, string> = {
   ativa: 'Ativa',
   encerrada: 'Encerrada',
 }
+
+// Mensagens de validação partilhadas entre a server action que valida (e
+// lança o erro) e o diálogo cliente que o mostra junto do campo (L3,
+// docs/audit/ACCESSIBILITY_AUDIT.md) — uma só fonte de verdade, nunca
+// texto duplicado nos dois lados.
+export const MSG_CONTA = {
+  nomeObrigatorio: 'Preencha o nome da conta',
+  tipoInvalido: 'Tipo de conta inválido',
+  caixaSemIban: 'Uma conta de caixa não tem IBAN',
+  notaTransitoriaObrigatoria: 'Indique o motivo desta conta temporária ou de transição',
+  ibanInvalido: 'O IBAN indicado não é válido — confirme se foi copiado corretamente',
+} as const
+
+export const MSG_EXERCICIO = {
+  dataFimAntesDoInicio: 'A data de fim tem de ser posterior à data de início',
+} as const
