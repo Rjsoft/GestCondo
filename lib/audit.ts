@@ -26,6 +26,8 @@ export type EntidadeAuditoria =
   | 'extratoBancario'
   | 'condominio'
   | 'fornecedor'
+  | 'exercicioFinanceiro'
+  | 'contaFinanceira'
 
 /**
  * Escreve uma linha no registo de auditoria. Chamar depois de a operação na

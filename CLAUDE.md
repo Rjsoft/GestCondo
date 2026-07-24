@@ -53,6 +53,7 @@ Neste ambiente Windows, `pnpm` pode não estar no PATH do shell da sessão — u
 - Ações destrutivas usam `components/ui/confirm-dialog.tsx` antes de chamar a server action — não disparar eliminação direta no `onClick`.
 - Listagens que podem crescer sem limite (avisos, documentos, ocorrências, auditoria) usam paginação real via `searchParams` (`?page=`, `?q=`) + `components/ui/pagination-controls.tsx` + `components/ui/search-input.tsx`. Listagens tipicamente pequenas por condomínio (frações, condóminos) só têm pesquisa, filtrada em memória, sem paginação — não vale a pena o custo de uma query extra de `count()`.
 - Toda a alteração de dados regista em `audit_log` via `registarAuditoria()` (`lib/audit.ts`).
+- **Qualquer server action financeira que crie, altere, elimine (soft-delete) ou reconcilie um `movimento`** — ou que o faça em massa — tem de chamar `garantirExercicioAberto(condominioId, data)` (`lib/contas-financeiras.ts`) antes de escrever, com a data (ou datas, se afetar mais do que uma) do(s) movimento(s) envolvido(s). Um exercício financeiro fechado bloqueia essa escrita até ser reaberto (motivo obrigatório, auditado). Operações em massa sem uma única data de referência usam `idsForaDeExercicioFechado()` para filtrar os candidatos antes de escrever. Ver `app/actions/financas.ts`, `app/actions/orcamentos.ts`, `app/actions/extrato.ts`, `app/actions/exercicios.ts` e `app/actions/contas-financeiras.ts` para os pontos já cobertos — qualquer nova server action financeira tem de seguir o mesmo padrão.
 
 ## Gotchas conhecidos
 

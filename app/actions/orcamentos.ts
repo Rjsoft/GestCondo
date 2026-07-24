@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { fracao, movimento, orcamento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularQuotasMensais } from '@/lib/rateio'
+import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, desc, eq, gte, isNull, lt } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -106,6 +107,13 @@ export async function gerarQuotasOrcamento(orcamentoId: number) {
     orc.valorAnualElevador ? Number(orc.valorAnualElevador) : 0,
   )
   const totalPermilagem = fracoes.reduce((s, f) => s + Number(f.permilagem), 0)
+
+  // As 12 quotas cobrem o ano inteiro do orçamento — verifica os 12 meses
+  // antes de inserir qualquer coisa, para nunca gerar quotas parcialmente
+  // se um dos meses cair num exercício fechado.
+  for (let mes = 0; mes < 12; mes++) {
+    await garantirExercicioAberto(admin.condominioId, new Date(orc.ano, mes, 1))
+  }
 
   const linhas = quotasMensais.flatMap(({ fracaoId, valorMensal }) =>
     Array.from({ length: 12 }, (_, mes) => ({

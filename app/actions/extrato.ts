@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { extratoBancario, movimento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -171,6 +172,28 @@ export async function getMovimentosPorConciliar() {
 export async function conciliarLinha(linhaId: number, movimentoId: number) {
   const admin = await requireAdmin()
 
+  const [linha] = await db
+    .select()
+    .from(extratoBancario)
+    .where(and(eq(extratoBancario.id, linhaId), eq(extratoBancario.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!linha) throw new Error('Linha de extrato não encontrada')
+
+  const [mov] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, movimentoId), eq(movimento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!mov) throw new Error('Movimento não encontrado')
+
+  // Nunca conciliar uma linha de uma conta com um movimento de outra —
+  // só aplicável quando ambos já têm conta definida (dados anteriores a
+  // esta funcionalidade continuam a poder conciliar-se livremente).
+  if (linha.contaFinanceiraId && mov.contaFinanceiraId && linha.contaFinanceiraId !== mov.contaFinanceiraId) {
+    throw new Error('Esta linha e este movimento pertencem a contas financeiras diferentes')
+  }
+  await garantirExercicioAberto(admin.condominioId, mov.data)
+
   await db
     .update(extratoBancario)
     .set({ conciliadoMovimentoId: movimentoId })
@@ -181,12 +204,18 @@ export async function conciliarLinha(linhaId: number, movimentoId: number) {
       ),
     )
 
+  // Conta já confirmada como pertencente a admin.condominioId (leituras de
+  // `linha` e `mov` acima já filtram por isso) — só o ID entra no log,
+  // nunca IBAN/banco/nome, sem query adicional (T3, DOCUMENT_TRACEABILITY_AUDIT.md).
+  const contaFinanceiraId = linha.contaFinanceiraId ?? mov.contaFinanceiraId
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'extratoBancario',
     entidadeId: linhaId,
-    detalhes: `Conciliada com movimento #${movimentoId}`,
+    detalhes:
+      `Conciliada com movimento #${movimentoId}` +
+      (contaFinanceiraId ? ` — conta financeira ID ${contaFinanceiraId}` : ''),
   })
 
   revalidatePath('/financas')
@@ -194,6 +223,29 @@ export async function conciliarLinha(linhaId: number, movimentoId: number) {
 
 export async function desfazerConciliacao(linhaId: number) {
   const admin = await requireAdmin()
+
+  const [linha] = await db
+    .select()
+    .from(extratoBancario)
+    .where(and(eq(extratoBancario.id, linhaId), eq(extratoBancario.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!linha) throw new Error('Linha de extrato não encontrada')
+
+  let contaFinanceiraId = linha.contaFinanceiraId
+  if (linha.conciliadoMovimentoId) {
+    // Filtrar também por condominioId — nunca só pelo id sequencial do
+    // movimento (isolamento multi-tenant, mesmo padrão usado em toda a
+    // aplicação, ver CLAUDE.md).
+    const [mov] = await db
+      .select()
+      .from(movimento)
+      .where(and(eq(movimento.id, linha.conciliadoMovimentoId), eq(movimento.condominioId, admin.condominioId)))
+      .limit(1)
+    if (mov) {
+      await garantirExercicioAberto(admin.condominioId, mov.data)
+      contaFinanceiraId ??= mov.contaFinanceiraId
+    }
+  }
 
   await db
     .update(extratoBancario)
@@ -210,7 +262,7 @@ export async function desfazerConciliacao(linhaId: number) {
     acao: 'atualizar',
     entidade: 'extratoBancario',
     entidadeId: linhaId,
-    detalhes: 'Conciliação desfeita',
+    detalhes: 'Conciliação desfeita' + (contaFinanceiraId ? ` — conta financeira ID ${contaFinanceiraId}` : ''),
   })
 
   revalidatePath('/financas')

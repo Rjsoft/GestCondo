@@ -169,6 +169,13 @@
       "when": 1784806306636,
       "tag": "0023_fat_quentin_quire",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784876237529,
+      "tag": "0024_slim_human_fly",
+      "breakpoints": true
     }
   ]
 }

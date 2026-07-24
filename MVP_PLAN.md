@@ -29,8 +29,8 @@ Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não 
 - Autogestão de dados pelo condómino.
 
 **Esforço alto, mas incontornável para o público-alvo:**
-- Módulo de Assembleias/Atas completo.
-- Exportação PDF/Excel de relatórios financeiros.
+- ✅ Módulo de Assembleias/Atas completo — núcleo feito 2026-07-09, verificado em runtime 2026-07-21.
+- ✅ Exportação PDF/CSV de relatórios financeiros — feito 2026-07-21/23 (relatório de movimentos, balanço, mapa mensal, todos em PDF via impressão + CSV). **Nota (2026-07-23)**: este ficheiro não foi atualizado desde 2026-07-06, ao contrário de `FUNCTIONAL_GAPS.md`/`ROADMAP.md` — ver `docs/product/MBD_GEST_GAP_ANALYSIS.md` para o estado real e atual do módulo financeiro, incluindo lacunas ainda confirmadas (balanço patrimonial, execução orçamental por rubrica, documentos de fornecedor com pagamentos parciais).
 
 ## 3. Testes — estado atual
 
