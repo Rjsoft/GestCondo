@@ -64,10 +64,21 @@ export function NovoExercicioDialog({
     })
   }
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    onSubmit(new FormData(event.currentTarget))
+  }
+
   const anoAtual = new Date().getFullYear()
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (v) setErros({})
+      }}
+    >
       <DialogTrigger render={trigger ?? <Button size="sm" />}>
         {!trigger && (
           <>
@@ -85,7 +96,7 @@ export function NovoExercicioDialog({
             2026&quot;. Cada movimento e cada saldo fica associado a um exercício.
           </DialogDescription>
         </DialogHeader>
-        <form action={onSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="designacao">Designação</Label>
             <Input

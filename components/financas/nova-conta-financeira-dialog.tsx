@@ -74,8 +74,6 @@ export function NovaContaFinanceiraDialog({
         await criarContaFinanceira(formData)
         toast.success('Conta registada')
         setOpen(false)
-        setTipo('ordem')
-        setAvancadas(false)
         onCriada?.()
       } catch (e) {
         const mensagem = e instanceof Error ? e.message : 'Erro ao registar'
@@ -86,8 +84,26 @@ export function NovaContaFinanceiraDialog({
     })
   }
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    onSubmit(new FormData(event.currentTarget))
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        // Reinicia sempre que o diálogo abre — cobre tanto o primeiro uso
+        // como reabrir depois de um cancelamento ou de um erro anterior.
+        // Nunca corre no caminho de erro em si (esse mantém os valores).
+        if (v) {
+          setErros({})
+          setTipo('ordem')
+          setAvancadas(false)
+        }
+      }}
+    >
       <DialogTrigger render={trigger ?? <Button variant="outline" size="sm" />}>
         {!trigger && (
           <>
@@ -104,7 +120,7 @@ export function NovaContaFinanceiraDialog({
             pessoal de quem administra.
           </DialogDescription>
         </DialogHeader>
-        <form action={onSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="nome">Nome da conta</Label>
             <Input

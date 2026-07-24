@@ -68,6 +68,19 @@ export function EditarContaFinanceiraDialog({
     else if (erros.notaTransitoria) notaRef.current?.focus()
   }, [erros])
 
+  // Só sincroniza com `conta` na transição fechado→aberto, nunca enquanto
+  // já está aberto — se `conta` mudar a meio de uma edição (ex.
+  // revalidação em segundo plano), não deve substituir o que o utilizador
+  // está a escrever.
+  const estavaAbertoRef = useRef(false)
+  useEffect(() => {
+    if (open && !estavaAbertoRef.current) {
+      setTipo(conta.tipo)
+      setErros({})
+    }
+    estavaAbertoRef.current = open
+  }, [open, conta.tipo])
+
   const onSubmit = (formData: FormData) => {
     setErros({})
     formData.set('id', String(conta.id))
@@ -87,6 +100,11 @@ export function EditarContaFinanceiraDialog({
     })
   }
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    onSubmit(new FormData(event.currentTarget))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -94,7 +112,7 @@ export function EditarContaFinanceiraDialog({
           <DialogTitle>Editar conta</DialogTitle>
           <DialogDescription>Alterar os dados desta conta do condomínio.</DialogDescription>
         </DialogHeader>
-        <form action={onSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="nome-editar">Nome da conta</Label>
             <Input
