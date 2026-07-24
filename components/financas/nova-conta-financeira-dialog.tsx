@@ -112,7 +112,7 @@ export function NovaContaFinanceiraDialog({
           </>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar conta do condomínio</DialogTitle>
           <DialogDescription>
