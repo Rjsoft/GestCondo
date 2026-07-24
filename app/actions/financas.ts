@@ -5,6 +5,7 @@ import { fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais } from '@/lib/rateio'
+import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, getTableColumns, gte, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -348,6 +349,10 @@ export async function lancarJurosMora(taxaAnualPercent: number) {
     throw new Error('Os juros calculados são todos zero — nada a lançar')
   }
 
+  // Os juros são sempre lançados com data de hoje (ver defaultNow() em
+  // movimento.data, abaixo) — basta uma verificação, não uma por fração.
+  await garantirExercicioAberto(admin.condominioId, new Date())
+
   for (const f of aLancar) {
     const [novo] = await db
       .insert(movimento)
@@ -411,6 +416,8 @@ export async function criarMovimento(formData: FormData) {
   if (destino !== 'geral' && destino !== 'reserva') {
     throw new Error('Destino inválido')
   }
+  const dataMovimento = dataStr ? new Date(dataStr) : new Date()
+  await garantirExercicioAberto(admin.condominioId, dataMovimento)
 
   const [novo] = await db
     .insert(movimento)
@@ -429,7 +436,7 @@ export async function criarMovimento(formData: FormData) {
       meioPagamento: pago && meioPagamentoRaw ? meioPagamentoRaw : null,
       referenciaMb: pago && referenciaMbRaw ? referenciaMbRaw : null,
       dataLiquidacao: pago && dataLiquidacaoRaw ? new Date(dataLiquidacaoRaw) : null,
-      ...(dataStr ? { data: new Date(dataStr) } : {}),
+      data: dataMovimento,
     })
     .returning({ id: movimento.id })
 
@@ -486,13 +493,17 @@ export async function atualizarMovimento(formData: FormData) {
     throw new Error('Selecione a fração a que esta quota diz respeito')
   }
 
+  const novaData = new Date(dataStr)
+  await garantirExercicioAberto(admin.condominioId, atual.data)
+  await garantirExercicioAberto(admin.condominioId, novaData)
+
   await db
     .update(movimento)
     .set({
       categoria,
       descricao,
       valor,
-      data: new Date(dataStr),
+      data: novaData,
       destino,
       fracaoId: atual.tipo === 'receita' ? fracaoId : null,
       fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
@@ -512,6 +523,15 @@ export async function atualizarMovimento(formData: FormData) {
 
 export async function eliminarMovimento(id: number) {
   const admin = await requireAdmin()
+
+  const [atual] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!atual) throw new Error('Movimento não encontrado')
+  await garantirExercicioAberto(admin.condominioId, atual.data)
+
   // Soft-delete: registos financeiros têm obrigação legal de retenção —
   // nunca eliminar fisicamente (ver comentário em lib/db/schema.ts).
   await db
@@ -537,6 +557,15 @@ export async function eliminarMovimento(id: number) {
  */
 export async function alternarPago(id: number, pago: boolean) {
   const admin = await requireAdmin()
+
+  const [atual] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!atual) throw new Error('Movimento não encontrado')
+  await garantirExercicioAberto(admin.condominioId, atual.data)
+
   await db
     .update(movimento)
     .set({
@@ -566,6 +595,15 @@ export async function marcarComoPago(
   detalhe: { meioPagamento?: string; referenciaMb?: string; dataLiquidacao?: string },
 ) {
   const admin = await requireAdmin()
+
+  const [atual] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!atual) throw new Error('Movimento não encontrado')
+  await garantirExercicioAberto(admin.condominioId, atual.data)
+
   await db
     .update(movimento)
     .set({

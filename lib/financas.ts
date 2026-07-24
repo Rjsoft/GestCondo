@@ -25,3 +25,22 @@ export const TIPO_SEGURO_LABEL: Record<string, string> = {
   incendio: 'Incêndio',
   outro: 'Outro',
 }
+
+export const TIPOS_CONTA = ['ordem', 'prazo', 'caixa', 'transitoria'] as const
+
+export const TIPO_CONTA_LABEL: Record<string, string> = {
+  ordem: 'Conta à ordem',
+  prazo: 'Conta a prazo',
+  caixa: 'Caixa (numerário)',
+  transitoria: 'Conta transitória',
+}
+
+export const ESTADO_EXERCICIO_LABEL: Record<string, string> = {
+  aberto: 'Aberto',
+  fechado: 'Fechado',
+}
+
+export const ESTADO_CONTA_LABEL: Record<string, string> = {
+  ativa: 'Ativa',
+  encerrada: 'Encerrada',
+}

@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { extratoBancario, movimento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
+import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -171,6 +172,28 @@ export async function getMovimentosPorConciliar() {
 export async function conciliarLinha(linhaId: number, movimentoId: number) {
   const admin = await requireAdmin()
 
+  const [linha] = await db
+    .select()
+    .from(extratoBancario)
+    .where(and(eq(extratoBancario.id, linhaId), eq(extratoBancario.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!linha) throw new Error('Linha de extrato não encontrada')
+
+  const [mov] = await db
+    .select()
+    .from(movimento)
+    .where(and(eq(movimento.id, movimentoId), eq(movimento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!mov) throw new Error('Movimento não encontrado')
+
+  // Nunca conciliar uma linha de uma conta com um movimento de outra —
+  // só aplicável quando ambos já têm conta definida (dados anteriores a
+  // esta funcionalidade continuam a poder conciliar-se livremente).
+  if (linha.contaFinanceiraId && mov.contaFinanceiraId && linha.contaFinanceiraId !== mov.contaFinanceiraId) {
+    throw new Error('Esta linha e este movimento pertencem a contas financeiras diferentes')
+  }
+  await garantirExercicioAberto(admin.condominioId, mov.data)
+
   await db
     .update(extratoBancario)
     .set({ conciliadoMovimentoId: movimentoId })
@@ -194,6 +217,22 @@ export async function conciliarLinha(linhaId: number, movimentoId: number) {
 
 export async function desfazerConciliacao(linhaId: number) {
   const admin = await requireAdmin()
+
+  const [linha] = await db
+    .select()
+    .from(extratoBancario)
+    .where(and(eq(extratoBancario.id, linhaId), eq(extratoBancario.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!linha) throw new Error('Linha de extrato não encontrada')
+
+  if (linha.conciliadoMovimentoId) {
+    const [mov] = await db
+      .select()
+      .from(movimento)
+      .where(eq(movimento.id, linha.conciliadoMovimentoId))
+      .limit(1)
+    if (mov) await garantirExercicioAberto(admin.condominioId, mov.data)
+  }
 
   await db
     .update(extratoBancario)
