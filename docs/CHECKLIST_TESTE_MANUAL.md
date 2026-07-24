@@ -410,7 +410,7 @@ Executar preferencialmente com uma pessoa que não participou no desenvolvimento
 
 ### Validação futura em produção (18 — FA1-P01 a FA1-P18)
 
-**Todos os casos abaixo começam com Estado: Não executado — produção não autorizada.** Não incluir credenciais, URLs privadas, comandos com segredos nem valores reais de produção em nenhuma evidência registada.
+**Nota: cada um dos 18 casos abaixo tem o seu próprio campo de estado, todos por executar — produção não autorizada.** Não incluir credenciais, URLs privadas, comandos com segredos nem valores reais de produção em nenhuma evidência registada.
 
 **[FA1-P01] Autorização explícita do Rui**
 - Resultado esperado: Autorização registada por escrito antes de qualquer passo seguinte.
