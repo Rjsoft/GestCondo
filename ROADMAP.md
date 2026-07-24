@@ -6,7 +6,7 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 
 | Peça | Estado |
 |---|---|
-| Autenticação básica (email/password) | ✅ Pronto |
+| Autenticação (email/password + MFA) | ✅ Resolvido 2026-07-06/21 — email/password via better-auth, e **desde 2026-07-21** MFA/TOTP com códigos de recuperação, rate limiting explícito e verificação de password comprometida (`haveIBeenPwned`), testados em runtime. O MFA é de ativação opcional, **não imposto a administradores**, e o rate limiting usa storage em memória, não partilhado entre instâncias (ver Fase 3 item 5 e `TECHNICAL_DEBT.md`) |
 | Fluxo de aprovação de acesso | ✅ Pronto |
 | CRUD de finanças | ✅ Resolvido 2026-07-07 a 2026-07-24 — orçamento anual, dívida por fração/mapa de saldos, recibo imprimível, mapa mensal de quotas, rateio por permilagem com isenção de elevador, juros de mora, reconciliação bancária, exportação CSV e relatório em PDF; exercícios financeiros e contas bancárias/caixa em produção desde 2026-07-24 (ver Fase 2, item 8). Falta rubricas no orçamento (hoje é valor global) e exportação `.xlsx` real, se vier a ser necessária. |
 | CRUD de avisos | ✅ Pronto para o que se propõe (comunicação simples) |
