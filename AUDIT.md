@@ -1,5 +1,22 @@
 # Auditoria Completa — GestCondo
 
+> ## ⏸ Documento histórico — congelado em 2026-07-24
+>
+> **Este ficheiro é o registo da auditoria inicial de 2026-07-06. Não descreve o estado atual do projeto e não deve ser lido como tal.**
+>
+> Entre 2026-07-06 e 2026-07-24 recebeu algumas atualizações pontuais (marcas de "resolvido" em itens individuais), o que o tornou ambíguo: nem registo puro, nem estado atual. Fica agora congelado como registo, sem mais atualizações.
+>
+> **Em particular, tudo o que o resumo executivo (secção A) diz estar em falta — multi-tenancy, assembleias/atas, RGPD, auditoria, testes, controlo de versões — foi entretanto construído.** A nota de 3,5/10 refere-se a 2026-07-06 e não foi reavaliada.
+>
+> Para o estado atual, consultar:
+> - `ROADMAP.md` — maturidade por peça e fases
+> - `FUNCTIONAL_GAPS.md` — lacunas funcionais por módulo
+> - `TECHNICAL_DEBT.md` — dívida técnica
+> - `SECURITY_AUDIT.md` — achados de segurança
+> - `docs/audit/EXECUTIVE_SUMMARY.md` — auditoria jurídica/RGPD de 2026-07-22
+>
+> O valor deste documento é histórico: mostra o ponto de partida e permite medir a distância percorrida.
+
 **Data:** 2026-07-06
 **Âmbito:** todo o código-fonte do repositório (`app/`, `components/`, `lib/`, configuração de build/dependências). Sem acesso a infraestrutura de produção (não existe ainda).
 **Metodologia:** leitura integral do código-fonte (todas as páginas, componentes, server actions, schema de base de dados, configuração); execução de `pnpm install`, `tsc --noEmit`, `next build`, `pnpm audit`, `pnpm run lint`; arranque do servidor de desenvolvimento e verificação HTTP das rotas públicas e do redirecionamento de rotas protegidas.
@@ -24,6 +41,8 @@ Este documento é o índice e resumo executivo. O detalhe está nos seguintes fi
 ---
 
 ## A. Resumo executivo
+
+> **Avaliação de 2026-07-06.** Ver o aviso no topo do ficheiro: os défices descritos nesta secção foram entretanto corrigidos.
 
 ### Estado geral
 
