@@ -8,7 +8,7 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 |---|---|
 | Autenticação básica (email/password) | ✅ Pronto |
 | Fluxo de aprovação de acesso | ✅ Pronto |
-| CRUD de finanças (lançamentos simples) | 🟡 Parcial — falta orçamento, dívida por fração, recibos |
+| CRUD de finanças | ✅ Resolvido 2026-07-07 a 2026-07-24 — orçamento anual, dívida por fração/mapa de saldos, recibo imprimível, mapa mensal de quotas, rateio por permilagem com isenção de elevador, juros de mora, reconciliação bancária, exportação CSV e relatório em PDF; exercícios financeiros e contas bancárias/caixa em produção desde 2026-07-24 (ver Fase 2, item 8). Falta rubricas no orçamento (hoje é valor global) e exportação `.xlsx` real, se vier a ser necessária. |
 | CRUD de avisos | ✅ Pronto para o que se propõe (comunicação simples) |
 | CRUD de ocorrências | 🟡 Parcial — falta anexos/fotos, fornecedores, aprovação de despesas |
 | CRUD de frações | 🟡 Parcial — falta multi-condomínio, proprietário relacional, histórico |
