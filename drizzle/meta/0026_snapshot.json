@@ -1,6 +1,6 @@
 {
-  "id": "3cc535bc-a747-4c66-9e53-3890ed09db83",
-  "prevId": "0e2c6d2f-5b6c-4287-8efa-41179dd3fd27",
+  "id": "21458615-0151-4f93-85d9-de4dddf84a0b",
+  "prevId": "3cc535bc-a747-4c66-9e53-3890ed09db83",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2413,6 +2413,80 @@
           "tableTo": "condominio",
           "columnsFrom": [
             "condominioId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.orcamento_rubrica": {
+      "name": "orcamento_rubrica",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "orcamentoId": {
+          "name": "orcamentoId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoria": {
+          "name": "categoria",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valorOrcamentado": {
+          "name": "valorOrcamentado",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "orcamento_rubrica_orcamento_idx": {
+          "name": "orcamento_rubrica_orcamento_idx",
+          "columns": [
+            {
+              "expression": "orcamentoId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "orcamento_rubrica_orcamentoId_orcamento_id_fk": {
+          "name": "orcamento_rubrica_orcamentoId_orcamento_id_fk",
+          "tableFrom": "orcamento_rubrica",
+          "tableTo": "orcamento",
+          "columnsFrom": [
+            "orcamentoId"
           ],
           "columnsTo": [
             "id"

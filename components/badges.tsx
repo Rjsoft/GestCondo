@@ -90,6 +90,29 @@ export function AssembleiaStatusBadge({ estado }: { estado: string }) {
   )
 }
 
+export function EstadoDocumentoFornecedorBadge({ estado }: { estado: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    por_liquidar: {
+      label: 'Por liquidar',
+      className: 'bg-amber-100 text-amber-800 border-amber-200',
+    },
+    parcial: {
+      label: 'Parcial',
+      className: 'bg-blue-100 text-blue-800 border-blue-200',
+    },
+    liquidado: {
+      label: 'Liquidado',
+      className: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    },
+  }
+  const cfg = map[estado] ?? map.por_liquidar
+  return (
+    <Badge variant="outline" className={cn('border', cfg.className)}>
+      {cfg.label}
+    </Badge>
+  )
+}
+
 export function TipoMovimentoBadge({ tipo }: { tipo: string }) {
   const isReceita = tipo === 'receita'
   return (

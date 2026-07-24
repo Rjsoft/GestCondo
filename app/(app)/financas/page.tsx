@@ -19,6 +19,7 @@ import {
 } from '@/app/actions/extrato'
 import { getExercicios } from '@/app/actions/exercicios'
 import { getSaldosContas } from '@/app/actions/contas-financeiras'
+import { getDocumentosFornecedor } from '@/app/actions/documentos-fornecedor'
 import { PageHeader } from '@/components/page-header'
 import { FinancasTabs } from '@/components/financas/financas-tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -53,6 +54,7 @@ export default async function FinancasPage({
     movimentosPorConciliar,
     linhasConciliadas,
     exercicios,
+    documentosFornecedor,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -68,6 +70,7 @@ export default async function FinancasPage({
     getMovimentosPorConciliar(),
     getLinhasConciliadas(),
     getExercicios(),
+    getDocumentosFornecedor(),
   ])
 
   // Exercício por omissão para mostrar saldos: o aberto mais recente (o
@@ -173,6 +176,7 @@ export default async function FinancasPage({
         exercicios={exercicios}
         contasComSaldo={contasComSaldo}
         exercicioEmVistaId={exercicioEmVistaId}
+        documentosFornecedor={documentosFornecedor}
         isAdmin={isAdmin}
       />
     </div>
