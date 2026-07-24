@@ -33,12 +33,12 @@ Data: 2026-07-09, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 
 | | |
 |---|---|
-| Finalidade | Gestão de quotas e despesas do condomínio, dívida por fração, orçamento anual, seguro obrigatório, fundo comum de reserva. |
+| Finalidade | Gestão de quotas e despesas do condomínio, dívida por fração, orçamento anual, seguro obrigatório, fundo comum de reserva. **Desde 2026-07-24 (Fase A.1, desenvolvimento apenas)**: exercícios financeiros e contas bancárias/caixa do condomínio como entidades próprias (`exercicio_financeiro`, `conta_financeira`, `saldo_inicial_conta`). |
 | Base legal | Cumprimento de obrigação legal (Código Civil arts. 1430º+, DL n.º 268/94 para o fundo de reserva) e execução de contrato. |
-| Categorias de dados | Valores monetários associados a uma fração/proprietário, estado de pagamento, dados da apólice de seguro. |
-| Titulares | Proprietários/condóminos. |
-| Destinatários | Administradores, gestores, auditores e o próprio condómino titular da fração (`PERFIS_ACESSO_FINANCEIRO`) — nunca inquilinos/fornecedores. |
-| Prazo de conservação | Retenção legal contabilística/fiscal — eliminação lógica apenas (soft-delete, `movimento.deletedAt`), nunca `DELETE` físico, precisamente por esta obrigação. |
+| Categorias de dados | Dados de identificação da fração e do condómino, quotas, receitas, despesas, movimentos, saldos, exercícios financeiros, contas financeiras e respetiva informação bancária. O IBAN está normalmente associado ao condomínio enquanto pessoa coletiva, mas pode constituir dado pessoal quando pertence ou permite identificar uma pessoa singular, designadamente numa conta pessoal utilizada excecionalmente para a gestão do condomínio. |
+| Titulares | Proprietários/condóminos; relativamente ao IBAN, normalmente o condomínio enquanto pessoa coletiva. Em situações excecionais, nomeadamente quando seja utilizada uma conta pessoal de um administrador residente, o IBAN pode constituir dado pessoal de uma pessoa singular. Ver `GDPR_CHECKLIST.md`, secção 1. |
+| Destinatários | Administradores, gestores, auditores e o próprio condómino titular da fração (`PERFIS_ACESSO_FINANCEIRO`) — nunca inquilinos/fornecedores. IBAN/nota interna da conta só visíveis a quem tem `temConsultaGestao()` (admin/gestor/auditor) — os restantes perfis com acesso financeiro veem a conta mas não o IBAN. |
+| Prazo de conservação | Retenção legal contabilística e fiscal — nos movimentos, a aplicação utiliza eliminação lógica através de `movimento.deletedAt`, sem eliminação física pela aplicação. `exercicio_financeiro`, `conta_financeira` e `saldo_inicial_conta` não dispõem, nesta fase, de operação funcional de eliminação. Este é o estado técnico atual e não constitui, por si só, uma política formal de retenção. Os prazos e critérios de conservação permanecem sujeitos à validação jurídica e contabilística indicada em `docs/legal/DATA_RETENTION_MATRIX.md`. |
 
 ## 4. Assembleias (convocatórias, presenças, votação, atas)
 

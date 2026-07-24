@@ -37,6 +37,10 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 
 ### 9.1 Cobertura do `audit_log` — operação a operação
 
+**Nota sobre o estado da Fase A.1**: todas as linhas marcadas "Fase A.1" abaixo correspondem ao mesmo estado — **implementada e validada em desenvolvimento em 2026-07-24, pendente de promoção e validação em produção** — não repetido em cada linha por economia de espaço, mas aplicável a todas sem exceção. Nenhuma linha desta tabela afirma ou implica validação em produção.
+
+**Nota metodológica**: a conservação do estado atual numa tabela (ex. `exercicio_financeiro.estado`, `conta_financeira.iban`) não constitui, por si só, rastreabilidade da alteração. Uma operação crítica só é considerada plenamente rastreável quando o registo de auditoria permite identificar, na medida aplicável: quem executou, quando, o que foi alterado, a entidade afetada, o estado anterior, o estado novo, o motivo e o âmbito (quando em massa). É por isto que operações que só alteram uma tabela sem gravar essa informação em `audit_log` estão marcadas "⚠️ Parcial" abaixo, mesmo quando a tabela em si reflete corretamente o estado final.
+
 | Operação pedida pelo prompt | Auditada hoje? |
 |---|---|
 | Login | ✅ **Resolvido 2026-07-22** — hook `after` do better-auth (`lib/auth.ts`) em `/sign-in/email`, regista em `audit_log` para cada `membro` da conta |
@@ -54,7 +58,23 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 | Pagamento | ✅ `marcarComoPago`/`alternarPago` |
 | Recibo | ❌ Gerar/imprimir um recibo não fica registado (é uma vista, não uma ação de escrita) |
 | Estorno/anulação | 🟡 Não existe um "estorno" formal — eliminação (soft-delete) é o mecanismo equivalente, e essa é auditada |
-| Alteração de IBAN | N/A — **não existe nenhum campo IBAN em todo o schema** (confirmado por pesquisa direta no código) |
+| Criação de exercício financeiro | ✅ Fase A.1 — `criarExercicio()` regista designação e período |
+| Edição de exercício financeiro | N/A — não existe operação de edição nesta fase; existem criação, fecho e reabertura |
+| Fecho de exercício | ✅ Fase A.1 — `fecharExercicio()` regista o exercício, número de movimentos, totais de receitas e despesas e avisos confirmados |
+| Reabertura de exercício | ✅ Fase A.1 — `reabrirExercicio()` exige e regista motivo obrigatório |
+| Transporte de saldos | ⚠️ Fase A.1, parcial — `confirmarTransporteSaldos()` regista exercício de origem e número de contas; **registo agregado, não identifica individualmente as contas abrangidas** |
+| Associação em massa a exercício | ⚠️ Fase A.1, parcial — regista o número de movimentos associados e o exercício; **não regista a lista de movimentos afetados** |
+| Criação de conta financeira | ✅ Fase A.1 — regista nome, tipo e saldo inicial quando aplicável, sem incluir o IBAN completo |
+| Edição de conta financeira | ⚠️ Fase A.1, parcial — `atualizarContaFinanceira()` regista nome e tipo, mas **não identifica quais campos foram alterados**; em particular, não permite saber pelo `audit_log` se houve alteração de IBAN (ver lacuna T1, secção 9.1b) |
+| Encerramento de conta financeira | ✅ Fase A.1 — regista que a conta foi encerrada com saldo zero |
+| Definição e correção de saldo inicial | ✅ Fase A.1 — na correção, regista valor anterior e novo; na primeira definição, regista o valor definido |
+| Associação em massa a conta | ⚠️ Fase A.1, parcial — regista quantidade e destino, mas **não a lista de movimentos afetados** |
+| Alteração individual de exercício de um movimento | N/A — a operação não existe nesta fase; só é possível associar em massa movimentos ainda sem exercício |
+| Alteração individual de conta de um movimento | N/A — a operação não existe nesta fase; só é possível associar em massa movimentos ainda sem conta |
+| Conciliação bancária | ⚠️ Fase A.1, parcial — `conciliarLinha()` regista o identificador do movimento e valida a compatibilidade da conta quando ambas estão definidas; **não inclui no texto a conta financeira envolvida** (ver lacuna T3) |
+| Desconciliação bancária | ⚠️ Fase A.1, parcial — a operação é auditada, mas o texto não inclui a conta financeira envolvida |
+| Proteção do valor completo do IBAN no `audit_log` | ✅ Fase A.1 — as chamadas atuais de `criarContaFinanceira`/`atualizarContaFinanceira` não incluem o IBAN completo nos detalhes de auditoria, mensagens de erro ou logs. A implementação atual de `registarAuditoria()` recebe texto livre — esta proteção depende da disciplina das chamadas existentes e deve continuar coberta por revisão e testes; **não se afirma impossibilidade estrutural** |
+| Isolamento entre condomínios (Fase A.1) | ✅ Fase A.1 — `condominioId` é registado a partir do ator (`registarAuditoria`, nunca um valor vindo do cliente); as novas relações usam FK composta `(id, condominioId)`, confirmada por testes de integração |
 | Upload | ✅ (criação de documento/ocorrência/seguro com anexo) |
 | Download | ❌ Não — descarregar um documento já carregado não gera registo |
 | Eliminação | ✅ |
@@ -63,6 +83,17 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 | Ata (aprovar) | ✅ `'Ata aprovada — assembleia encerrada e imutável'` |
 | Alterações jurídicas | N/A — sem funcionalidade de gestão de documentos jurídicos formais ainda |
 | Acessos de suporte | N/A — não existe a funcionalidade (confirmado na Fase B, `CONTROLLER_PROCESSOR_MATRIX.md` Cenário 5) |
+
+### 9.1b Lacunas de rastreabilidade da Fase A.1 (parciais, não bloqueiam esta revisão documental)
+
+| # | Lacuna | Gravidade | Impacto | Ficheiro/função | Recomendação futura | Exige código? | Prioridade |
+|---|---|---|---|---|---|---|---|
+| T1 | Edição de conta não indica quais campos mudaram | Média | Não é possível determinar pelo `audit_log` se uma edição alterou nome, tipo, banco, IBAN, datas ou nota transitória. Impacto direto: não se sabe pelo log que o IBAN mudou, só que a conta foi editada | `atualizarContaFinanceira` (`app/actions/contas-financeiras.ts`) | Registar uma lista segura de campos alterados; para o IBAN, registar só `ibanAlterado: sim` ou, no máximo, os últimos 4 caracteres mascarados — nunca o valor completo | Sim | P2 |
+| T2 | Operações em massa só com total agregado | Média | O log indica quantos registos foram afetados, mas não quais — cruzar "que movimento específico" exige consultar o estado atual da tabela, não o histórico | `confirmarTransporteSaldos`, `confirmarAssociacaoExercicio`, `confirmarAssociacaoConta` | Guardar um identificador da operação em massa e uma lista seguro de IDs, ou uma tabela própria de detalhe — evitando listas excessivamente grandes ou dados pessoais no campo `detalhes` | Sim | P2 |
+| T3 | Conta financeira ausente do texto de conciliação | Baixa | Exige consulta cruzada ao movimento/extrato para saber a que conta uma conciliação pertence | `conciliarLinha`/`desfazerConciliacao` (`app/actions/extrato.ts`) | Registar `contaFinanceiraId` ou uma designação segura, sem IBAN | Sim | P3 |
+| T4 | Reclassificação individual de movimento não implementada | Baixa (limitação funcional, não falha de auditoria) | Um movimento já classificado não pode ser corrigido individualmente através da interface | N/A — operação inexistente | Manter documentado para decisão futura | Só se a funcionalidade vier a ser aprovada | — |
+
+Nenhuma destas 4 lacunas bloqueia o encerramento desta revisão documental da Fase A.1; T1 em particular (rastreabilidade da alteração de IBAN) **deve ser resolvida antes de considerar a rastreabilidade financeira completa**, antes de qualquer promoção a produção.
 
 ### 9.2 Nota sobre "consulta de dados sensíveis"
 
@@ -75,7 +106,7 @@ A decisão de **não auditar leituras**, só escritas, é uma decisão de desenh
 | Informação registada | Ator (id, nome), ação, entidade, id da entidade, timestamp, resumo textual opcional — nunca duplica dados pessoais sensíveis de outras tabelas |
 | Prazo de retenção | ❌ **Sem prazo definido nem expurgo automático** (já identificado em `GDPR_CHECKLIST.md` e em `docs/legal/DATA_RETENTION_MATRIX.md`) |
 | Quem pode consultar | ✅ admin, gestor, auditor (`requireConsultaGestao`), por condomínio (`condominioId`) |
-| Proteção contra alteração | ✅ Nunca é alterado nem apagado pela aplicação — não existe nenhuma função `atualizarAuditLog`/`eliminarAuditLog` |
+| Proteção contra alteração | O `audit_log` é imutável no funcionamento normal da aplicação e não tem expurgo automático — não existe nenhuma função `atualizarAuditLog`/`eliminarAuditLog`. Esta imutabilidade protege a integridade do histórico durante o período de conservação, mas **não define, por si só, retenção ilimitada**: o prazo, eventual arquivo, anonimização e eliminação controlada permanecem sujeitos a política formal e validação (ver `docs/legal/DATA_RETENTION_MATRIX.md`, ações prioritárias 5 e 6) |
 | Anonimização | N/A — não aplicável enquanto não houver expurgo |
 | Alertas | ❌ Sem alertas automáticos (ex. muitas eliminações seguidas, muitas falhas de login) |
 | Relatórios de auditoria | ✅ Página `/auditoria`, sem exportação própria (herda a limitação geral de "exportação não auditada", ver 9.1) |
