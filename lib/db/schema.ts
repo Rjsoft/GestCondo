@@ -380,6 +380,30 @@ export const orcamento = pgTable(
   ],
 )
 
+// Rubrica orçamental (Fase A.2, peça 2 — G08): discrimina `orcamento.valorAnual`
+// por categoria. `getBalancoOrcamento` (app/actions/orcamentos.ts) já calcula
+// a despesa real por categoria; esta tabela só acrescenta o lado orçamentado.
+// Sem `condominioId` próprio nem FK composta — ao contrário de
+// `pagamentoDocumentoFornecedor`, uma rubrica só se relaciona com o seu
+// próprio orçamento (uma única entidade pai), por isso o isolamento entre
+// condomínios fica garantido validando `orcamentoId` contra o `condominioId`
+// do admin na própria server action, sem precisar de reforço ao nível da BD.
+// Orçamentos antigos sem rubricas continuam a mostrar só o total — não há
+// migração automática de dados existentes.
+export const orcamentoRubrica = pgTable(
+  "orcamento_rubrica",
+  {
+    id: serial("id").primaryKey(),
+    orcamentoId: integer("orcamentoId")
+      .notNull()
+      .references(() => orcamento.id, { onDelete: "cascade" }),
+    categoria: text("categoria").notNull(), // mesma taxonomia de movimento.categoria
+    valorOrcamentado: numeric("valorOrcamentado", { precision: 12, scale: 2 }).notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("orcamento_rubrica_orcamento_idx").on(t.orcamentoId)],
+)
+
 // Exercício financeiro: período contabilístico fechável, com saldo
 // transportado por conta entre exercícios (ver saldoInicialConta abaixo).
 // Distinto de `orcamento.ano` (que é só o valor orçamentado). `designacao`
