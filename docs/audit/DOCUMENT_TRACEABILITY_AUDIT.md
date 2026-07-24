@@ -95,6 +95,8 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 
 T1 e T2 foram resolvidas em desenvolvimento (commit `c25efc3`); T3 foi resolvida em desenvolvimento (commit `8ac97f6`) — ver detalhe nas linhas acima. Typecheck, lint, 83/83 testes unitários e 31/31 testes de integração aprovados, mais smoke tests manuais em browser (produção não utilizada, nenhuma migração executada). As três permanecem pendentes de validação após uma eventual promoção a produção. T4 continua em aberto, sem alterações, como limitação funcional (não é falha de auditoria, não bloqueia a Fase A.1, depende de decisão funcional futura). Nenhuma destas 4 lacunas bloqueia o encerramento desta revisão documental da Fase A.1.
 
+**Validação adicional em desenvolvimento — 2026-07-24**: a execução formal da checklist confirmou, nos cenários executáveis, os comportamentos associados a T1, T2 e T3. O `audit_log` foi preservado durante toda a execução e não foi observado qualquer IBAN completo. T4 permanece aberta como limitação funcional. F32 ficou bloqueado porque a validação de contas financeiras diferentes não é acionável pela UI atual.
+
 ### 9.2 Nota sobre "consulta de dados sensíveis"
 
 A decisão de **não auditar leituras**, só escritas, é uma decisão de desenho razoável (auditar cada consulta geraria um volume enorme de registos de baixo valor) — mas o prompt pede explicitamente para verificar isto, por isso fica documentado como decisão consciente, não como omissão.

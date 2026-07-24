@@ -48,9 +48,9 @@ Revisão de usabilidade/acessibilidade pedida especificamente para esta funciona
 | Aspeto | Código | Runtime | Tecnologia de apoio | Estado |
 |---|---|---|---|---|
 | Labels e campos (`Label htmlFor` + `Input id`) | Confirmado em código, nos campos revistos | Não testado especificamente | Não testado | Parcial — a associação label/campo não implica, por si só, que mensagens de erro do servidor fiquem associadas ao campo (ver L3) |
-| Títulos e descrições dos diálogos (`DialogTitle`/`DialogDescription`) | Confirmado em código, nos 10 diálogos | Foco inicial, `Escape` e devolução de foco: confirmados só no diálogo "Criar exercício financeiro" | Leitura/anúncio por leitor de ecrã: não testados | Parcial |
-| Restantes 9 diálogos | Confirmado em código (mesmo componente-base) | **Não testado individualmente** — comportamento esperado por herdarem o mesmo `Dialog` do `@base-ui/react`, não confirmado um a um | Não testado | Não testado |
-| Botão de ações com ícone (`ContaFinanceiraActions`) | Confirmado em código — nome acessível via `<span className="sr-only">Ações</span>` | Não testado | Não testado | Parcial |
+| Títulos e descrições dos diálogos (`DialogTitle`/`DialogDescription`) | Confirmado em código, nos 10 diálogos | Confirmados em desenvolvimento (2026-07-24) em 2 diálogos ("Criar exercício financeiro", "Nova conta"): abertura, foco inicial automático, ordem de tabulação sem saltos, contenção de foco numa volta completa, fecho por `Escape` e devolução do foco ao botão que abriu | Leitura/anúncio por leitor de ecrã: não testados | Parcial |
+| Restantes 8 diálogos | Confirmado em código (mesmo componente-base) | **Não testado individualmente** — comportamento esperado por herdarem o mesmo `Dialog` do `@base-ui/react`, não confirmado um a um | Não testado | Não testado |
+| Botão de ações com ícone (`ContaFinanceiraActions`) | Confirmado em código — nome acessível via `<span className="sr-only">Ações</span>` | Nome acessível "Ações" confirmado na árvore de acessibilidade em desenvolvimento (2026-07-24); validação com leitor de ecrã real ainda pendente | Não testado | Parcial |
 | Estados "Aberto/Fechado", "Ativa/Encerrada" | Confirmado em código — texto visível, não só cor | Não testado | Não testado | Confirmado em código |
 | Saldo negativo | Confirmado em código — `formatEuro` inclui sinal textual "−" | Não testado | Não testado | Confirmado em código |
 | Contraste dos novos componentes | Reutilizam as mesmas classes Tailwind já validadas em A2 | Não recalculado individualmente para os componentes novos | Não aplicável | Parcial — **não afirmar contraste validado especificamente para estes componentes** |
@@ -162,7 +162,7 @@ Regras desta matriz: "Runtime geral" pode indicar teste só com rato; "Teclado" 
 | Separador "Exercícios e contas" | Confirmado | Confirmado (rato) | Não testado | Não testado | Parcial |
 | Assistente de configuração inicial | Confirmado | Confirmado (rato) | Não testado | Não testado | Parcial |
 | Criação de exercício | Confirmado | Confirmado (rato) | Abertura/fecho do diálogo testados | Não testado | Parcial |
-| Criação de conta financeira | Confirmado | Confirmado (rato) | Não testado | Não testado | Parcial |
+| Criação de conta financeira | Confirmado | Confirmado (2026-07-24: rato e teclado; erro inline de IBAN inválido com foco no campo e valores preservados; conta de caixa sem banco/IBAN; conta transitória com bloqueio nativo até preencher o motivo) | Confirmado (2026-07-24: abertura, ordem de tabulação completa, contenção de foco em volta completa, `Escape`, devolução do foco) | Não testado | Parcial — validado em desenvolvimento com rato e teclado; viewport móvel real e zoom 200% ainda não confirmados; leitor de ecrã pendente |
 | Edição de conta financeira | Confirmado | Não testado | Não testado | Não testado | Parcial |
 | Definição/correção de saldo inicial | Confirmado | Não testado | Não testado | Não testado | Parcial |
 | Associação de movimentos a exercício | Confirmado | Confirmado (rato) | Não testado | Não testado | Parcial |
@@ -207,6 +207,8 @@ A Fase A.1 segue as convenções de acessibilidade já adotadas no projeto e apr
 **Atualização (commit `a1e8c0e`)**: L1 e L2 foram corrigidas e validadas manualmente em desenvolvimento — typecheck, lint, 83/83 testes unitários e 23/23 testes de integração aprovados, além de smoke test manual em browser (produção não utilizada, nenhuma migração executada). L3 e L4 permanecem abertas, sem alteração. A Fase A.1 continua sem validação completa com leitor de ecrã, zoom, reflow e dispositivos físicos, pelo que não deve ser declarada plenamente acessível.
 
 **Atualização (commits `6f96358`, `43f6504`, `8114ad4`, `66a4182`)**: L3 foi corrigida e validada manualmente em desenvolvimento — erros de campo passam a aparecer junto ao controlo (`aria-invalid`/`aria-describedby`/`role="alert"`/foco automático), com os valores introduzidos preservados após erro. A grelha responsiva e o limite de altura/scroll dos diálogos financeiros também foram corrigidos, mas sem validação visual em viewport móvel real nem a zoom elevado (limitação da ferramenta de automação usada nesta sessão, registada com honestidade). Typecheck, lint, 83/83 testes unitários e 31/31 testes de integração aprovados; produção não utilizada, nenhuma migração executada. **L1, L2 e L3 estão corrigidas em desenvolvimento; L4 permanece aberta — a validação formal com NVDA, navegação exclusiva por teclado, zoom, reflow e dispositivos físicos continua pendente. A acessibilidade da Fase A.1 não deve ser declarada concluída.**
+
+**Atualização (2026-07-24 — execução formal da checklist)**: a execução formal da checklist em desenvolvimento confirmou 10 de 20 casos de acessibilidade. Os restantes 10 ficaram bloqueados: 4 por ausência de NVDA, 5 por indisponibilidade de viewport/zoom funcional e 1 por ausência de ferramenta de medição de contraste. Não foram identificadas falhas confirmadas nos casos executados. **L4 permanece aberta.**
 
 ### 4a.8 Critérios para considerar a acessibilidade da Fase A.1 validada
 
