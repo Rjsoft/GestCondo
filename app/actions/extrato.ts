@@ -204,12 +204,18 @@ export async function conciliarLinha(linhaId: number, movimentoId: number) {
       ),
     )
 
+  // Conta já confirmada como pertencente a admin.condominioId (leituras de
+  // `linha` e `mov` acima já filtram por isso) — só o ID entra no log,
+  // nunca IBAN/banco/nome, sem query adicional (T3, DOCUMENT_TRACEABILITY_AUDIT.md).
+  const contaFinanceiraId = linha.contaFinanceiraId ?? mov.contaFinanceiraId
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'extratoBancario',
     entidadeId: linhaId,
-    detalhes: `Conciliada com movimento #${movimentoId}`,
+    detalhes:
+      `Conciliada com movimento #${movimentoId}` +
+      (contaFinanceiraId ? ` — conta financeira ID ${contaFinanceiraId}` : ''),
   })
 
   revalidatePath('/financas')
@@ -225,13 +231,20 @@ export async function desfazerConciliacao(linhaId: number) {
     .limit(1)
   if (!linha) throw new Error('Linha de extrato não encontrada')
 
+  let contaFinanceiraId = linha.contaFinanceiraId
   if (linha.conciliadoMovimentoId) {
+    // Filtrar também por condominioId — nunca só pelo id sequencial do
+    // movimento (isolamento multi-tenant, mesmo padrão usado em toda a
+    // aplicação, ver CLAUDE.md).
     const [mov] = await db
       .select()
       .from(movimento)
-      .where(eq(movimento.id, linha.conciliadoMovimentoId))
+      .where(and(eq(movimento.id, linha.conciliadoMovimentoId), eq(movimento.condominioId, admin.condominioId)))
       .limit(1)
-    if (mov) await garantirExercicioAberto(admin.condominioId, mov.data)
+    if (mov) {
+      await garantirExercicioAberto(admin.condominioId, mov.data)
+      contaFinanceiraId ??= mov.contaFinanceiraId
+    }
   }
 
   await db
@@ -249,7 +262,7 @@ export async function desfazerConciliacao(linhaId: number) {
     acao: 'atualizar',
     entidade: 'extratoBancario',
     entidadeId: linhaId,
-    detalhes: 'Conciliação desfeita',
+    detalhes: 'Conciliação desfeita' + (contaFinanceiraId ? ` — conta financeira ID ${contaFinanceiraId}` : ''),
   })
 
   revalidatePath('/financas')
