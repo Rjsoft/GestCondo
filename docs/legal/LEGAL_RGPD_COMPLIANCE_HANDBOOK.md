@@ -32,7 +32,7 @@ Ver `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md`. Acesso, retificação, portab
 
 ## 8. Segurança
 
-Ver `SECURITY_AUDIT.md` (S1–S18). Sem SQL injection/XSS/CSRF encontrados. Isolamento multi-tenant verificado por teste de integração real. Gaps abertos: bucket de ficheiros público, `storage` do rate limiting não partilhado entre instâncias.
+Ver `SECURITY_AUDIT.md` (S1–S18). Sem SQL injection/XSS/CSRF encontrados. Isolamento multi-tenant verificado por teste de integração real. O bucket de ficheiros público foi resolvido em 2026-07-22 (store privado + rota autenticada). Gap aberto que permanece: `storage` do rate limiting não partilhado entre instâncias.
 
 ## 9. Auditoria
 

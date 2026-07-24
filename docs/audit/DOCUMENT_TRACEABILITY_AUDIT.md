@@ -18,7 +18,7 @@ Data: 2026-07-22. Consolida as secções 8 (Documentos e Prova) e 9 (Auditoria e
 | Deliberações (`assembleia_ponto.resultado`) | ✅ | N/A (numerado por `ordem` dentro da assembleia) | ✅ (`createdAt` do ponto) | ✅ | ✅ | ✅ Imutável com a assembleia | ✅ | ✅ |
 | Declarações/certidões de dívida | ❌ Funcionalidade inexistente (ver `LEGAL-01`, Fase D) | — | — | — | — | — | — | — |
 | Comunicações (avisos) | ✅ `aviso.id` | ❌ | ✅ | ✅ | ✅ | ❌ Sem versão — editar um aviso sobrescreve o texto anterior sem histórico | ❌ | ❌ `DELETE` físico (não soft-delete) |
-| Documentos carregados | ✅ `documento.id` | ❌ | ✅ | ✅ | ✅ | ❌ Substituir um documento perde a versão anterior (já em `FUNCTIONAL_GAPS.md`) | 🟡 Ficheiro em Vercel Blob, bucket público (ver `SECURITY_AUDIT.md`) | ❌ `DELETE` físico |
+| Documentos carregados | ✅ `documento.id` | ❌ | ✅ | ✅ | ✅ | ❌ Substituir um documento perde a versão anterior (já em `FUNCTIONAL_GAPS.md`) | ✅ Ficheiro em Vercel Blob, store privado desde 2026-07-22, servido por rota autenticada (ver `SECURITY_AUDIT.md`) | ❌ `DELETE` físico |
 
 ### 8.2 Regra "não apagar documentos financeiros/jurídicos" — verificação
 
@@ -37,7 +37,7 @@ A regra do prompt ("a aplicação não deve apagar documentos financeiros ou jur
 
 ### 9.1 Cobertura do `audit_log` — operação a operação
 
-**Nota sobre o estado da Fase A.1**: todas as linhas marcadas "Fase A.1" abaixo correspondem ao mesmo estado — **implementada e validada em desenvolvimento em 2026-07-24, pendente de promoção e validação em produção** — não repetido em cada linha por economia de espaço, mas aplicável a todas sem exceção. Nenhuma linha desta tabela afirma ou implica validação em produção.
+**Nota sobre o estado da Fase A.1**: todas as linhas marcadas "Fase A.1" abaixo correspondem ao mesmo estado — **em produção desde 2026-07-24** — não repetido em cada linha por economia de espaço. A promoção foi verificada ao nível do carregamento das páginas e da ausência de regressões; nenhuma linha desta tabela afirma validação funcional exaustiva em produção, que continua limitada ao perfil Admin.
 
 **Nota metodológica**: a conservação do estado atual numa tabela (ex. `exercicio_financeiro.estado`, `conta_financeira.iban`) não constitui, por si só, rastreabilidade da alteração. Uma operação crítica só é considerada plenamente rastreável quando o registo de auditoria permite identificar, na medida aplicável: quem executou, quando, o que foi alterado, a entidade afetada, o estado anterior, o estado novo, o motivo e o âmbito (quando em massa). É por isto que operações que só alteram uma tabela sem gravar essa informação em `audit_log` estão marcadas "⚠️ Parcial" abaixo, mesmo quando a tabela em si reflete corretamente o estado final.
 

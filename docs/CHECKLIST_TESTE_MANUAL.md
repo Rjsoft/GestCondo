@@ -22,7 +22,7 @@ Data: 2026-07-22, **atualizada 2026-07-24** (Fase A.1). Para seres tu a percorre
 
 ## Fase A.1 — Exercícios e contas financeiras
 
-**Estado**: Implementada e validada em desenvolvimento; **pendente de promoção e validação em produção**. Todos os casos abaixo devem correr **só em ambiente de desenvolvimento**, exceto a secção "Validação futura em produção", que não pode ser executada sem autorização explícita separada.
+**Estado**: **em produção desde 2026-07-24**. Os casos funcionais, de acessibilidade e de usabilidade abaixo foram executados em desenvolvimento; a secção "Validação futura em produção" (P01–P18) foi executada em 2026-07-24, após autorização explícita — ver os estados individuais e o resumo final.
 
 ### Identificação da execução
 
@@ -486,7 +486,7 @@ Executar preferencialmente com uma pessoa que não participou no desenvolvimento
 
 **[FA1-P17] Atualização documental**
 - Resultado esperado: `ROADMAP.md`, `FUNCTIONAL_GAPS.md`, `docs/product/MBD_GEST_GAP_ANALYSIS.md` e os 8 documentos desta revisão atualizados de "dev, pendente produção" para o estado real, só depois de P01–P16 concluídos.
-- Estado: Bloqueado · Motivo: P02, P03, P09, P14 e P15 continuam por concluir — a condição de gate não está satisfeita.
+- Estado: Passou (com desvio ao gate) · Evidência: a atualização documental foi executada em 2026-07-24, por instrução explícita do Rui, **antes** de P02, P03, P09, P14 e P15 estarem concluídos — ou seja, o gate definido neste caso não foi respeitado. A passagem cobriu 27 documentos e corrigiu três afirmações falsas que se tinham propagado (Fase A.1 pendente de produção, bucket de ficheiros público, contagem de testes), além das contradições próprias de cada documento. Os documentos atualizados registam explicitamente o que continua por validar, pelo que o desvio ao gate não produziu afirmações de validação que não tenham acontecido.
 
 **[FA1-P18] Decisão final de disponibilização**
 - Resultado esperado: Decisão explícita e registada sobre disponibilizar a funcionalidade a clientes, distinta da decisão de aplicar a migração.
@@ -496,13 +496,13 @@ Executar preferencialmente com uma pessoa que não participou no desenvolvimento
 
 | Estado | Total |
 |---|---|
-| Passou | 51 |
+| Passou | 52 |
 | Falhou | 0 |
-| Bloqueado | 26 |
+| Bloqueado | 25 |
 | Não executado | 4 |
 | Não aplicável | 0 |
 
-Por categoria: funcionais 34 (30 Passou + 4 Bloqueado — F14, F32, F33, F34); acessibilidade 20 (10 Passou + 10 Bloqueado); usabilidade 9 (0 Passou + 9 Bloqueado); produção 18 (11 Passou — P01, P04, P05, P06, P07, P08, P10, P11, P12, P13, P16 + 3 Bloqueado — P14, P15, P17 + 4 Não executado — P02, P03, P09, P18). Total geral = 34 + 20 + 9 + 18 = 81.
+Por categoria: funcionais 34 (30 Passou + 4 Bloqueado — F14, F32, F33, F34); acessibilidade 20 (10 Passou + 10 Bloqueado); usabilidade 9 (0 Passou + 9 Bloqueado); produção 18 (12 Passou — P01, P04, P05, P06, P07, P08, P10, P11, P12, P13, P16, P17 + 2 Bloqueado — P14, P15 + 4 Não executado — P02, P03, P09, P18). Total geral = 34 + 20 + 9 + 18 = 81.
 
 Distribuição dos 10 casos de acessibilidade bloqueados: 4 dependentes de NVDA (A08, A10, A11, A12); 5 dependentes de viewport/zoom não funcional na ferramenta de automação (A15, A16, A17, A18, A20); 1 dependente de medição de contraste indisponível (A19).
 

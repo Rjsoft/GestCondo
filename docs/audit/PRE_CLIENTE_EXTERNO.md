@@ -35,7 +35,7 @@ Estes 7 itens são **bloqueadores para o primeiro cliente externo**, independent
 
 ## Fase A.1 — Exercícios e contas financeiras
 
-**Estado**: implementada, testada e validada em desenvolvimento em 2026-07-24, **pendente de promoção e validação em produção**. A fase não introduziu novos bloqueadores gerais aos sete itens legais, contratuais e operacionais acima, nem novo subcontratante (os dados continuam só na Neon, já coberta pelo item 6). Contudo, a funcionalidade não pode ser disponibilizada em produção antes da autorização explícita e dos passos técnicos abaixo — e a ausência da Fase A.1 em produção não impede o funcionamento técnico das restantes funcionalidades já existentes, mas o onboarding comercial de um cliente externo continua bloqueado pelos itens 1–7, independentemente do estado desta fase.
+**Estado**: **em produção desde 2026-07-24** (migração aplicada, código publicado, verificado sem regressões). A fase não introduziu novos bloqueadores gerais aos sete itens legais, contratuais e operacionais acima, nem novo subcontratante (os dados continuam só na Neon, já coberta pelo item 6). O onboarding comercial de um cliente externo continua bloqueado pelos itens 1–7, independentemente do estado desta fase.
 
 ### Pré-condições para promover a Fase A.1 a produção (bloqueadores da migração, não do desenvolvimento)
 

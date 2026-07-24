@@ -76,7 +76,7 @@ Ver `RAT.md` (Registo de Atividades de Tratamento) na íntegra. Resumo das 6 fin
 
 ## Anexo II — Medidas técnicas e organizativas de segurança
 
-Isolamento multi-tenant por `condominioId` (verificado por teste de integração real); autenticação com password + MFA/TOTP opcional; rate limiting; cifra em trânsito (TLS); `audit_log` para as principais escritas; soft-delete em dados financeiros. Ver `SECURITY_AUDIT.md` para o detalhe completo, incluindo gaps conhecidos (bucket de ficheiros público — a corrigir antes de assinatura real deste DPA, ver `docs/audit/REMEDIATION_PLAN.md`).
+Isolamento multi-tenant por `condominioId` (verificado por teste de integração real); autenticação com password + MFA/TOTP opcional; rate limiting; cifra em trânsito (TLS); `audit_log` para as principais escritas; soft-delete em dados financeiros. Ficheiros em store privado, servidos só por rota autenticada com validação de sessão e `condominioId` (desde 2026-07-22). Ver `SECURITY_AUDIT.md` para o detalhe completo, incluindo o gap conhecido que permanece (`storage` do rate limiting não partilhado entre instâncias, S5).
 
 ## Anexo III — Subcontratantes posteriores autorizados
 
@@ -95,5 +95,6 @@ Detalhe completo em `docs/legal/DATA_SUBPROCESSORS_REGISTER.md`.
 
 Este modelo cobre o essencial exigido pelo art. 28º RGPD, mas **antes de qualquer assinatura real**:
 1. Preencher todos os campos entre colchetes com os dados reais das partes.
-2. Corrigir o achado do bucket de ficheiros público (Anexo II depende disto ser verdade).
-3. Obter revisão de um advogado — este documento é tecnicamente informado, não juridicamente validado.
+2. Obter revisão de um advogado — este documento é tecnicamente informado, não juridicamente validado.
+
+O achado do bucket de ficheiros público, de que o Anexo II dependia, foi **resolvido em 2026-07-22** e deixou de ser um pré-requisito para a assinatura.

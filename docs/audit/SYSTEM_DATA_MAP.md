@@ -50,7 +50,7 @@ Administrador/gestor (`perfil: admin/gestor`), condómino proprietário, inquili
 |---|---|---|---|
 | Neon (PostgreSQL) | Base de dados principal | Todos os dados da aplicação | Branch `production`, região a confirmar (`eu-west-2` observado na connection string usada nesta sessão). |
 | Resend | Email transacional (verificação, reset, eliminação de conta, convocatórias, avisos) | Nome, email, conteúdo do email | A confirmar região de processamento. |
-| Vercel Blob | Armazenamento de ficheiros (documentos, fotos de ocorrências, apólices) | Ficheiros carregados, potencialmente com dados pessoais de terceiros | Bucket **público** (nota operacional conhecida — ver `FUNCTIONAL_GAPS.md` secção 6). |
+| Vercel Blob | Armazenamento de ficheiros (documentos, fotos de ocorrências, apólices) | Ficheiros carregados, potencialmente com dados pessoais de terceiros | Store **privado** dedicado desde 2026-07-22 (`access: 'private'`), servido só via `app/api/ficheiros/route.ts` com validação de sessão e `condominioId` — ver `FUNCTIONAL_GAPS.md` secção 6 e `SECURITY_AUDIT.md`. |
 | Vercel Analytics (`@vercel/analytics`) | Métricas de utilização, só em produção | Página visitada, referrer, país aproximado (via IP, não armazenado em claro segundo a Vercel) | **Não mencionado na Política de Privacidade nem no `RAT.md`** — gap identificado nesta auditoria. |
 | Have I Been Pwned (via plugin `haveIBeenPwned` do better-auth) | Verificar password comprometida no registo/alteração | Só um prefixo de hash SHA-1 da password (k-anonimato) — nunca a password em claro nem dado identificável | API pública externa (Cloudflare), fora da UE possivelmente — a confirmar. |
 

@@ -59,7 +59,7 @@ Data: 2026-07-09, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 | Base legal | Execução de contrato / cumprimento de obrigação legal. |
 | Categorias de dados | Ficheiros que podem conter dados pessoais de condóminos ou terceiros (ex. uma foto de uma avaria pode captar pessoas identificáveis). |
 | Titulares | Quem faz upload e, potencialmente, terceiros captados no conteúdo do ficheiro. |
-| Destinatários | Vercel Blob (armazenamento, bucket público — ver nota de controlo de acesso em `FUNCTIONAL_GAPS.md` secção 6); dentro da app, apenas quem já tem acesso à página onde o ficheiro é referenciado. |
+| Destinatários | Vercel Blob (armazenamento em store **privado** desde 2026-07-22, servido só por rota autenticada que valida sessão e `condominioId` — ver `FUNCTIONAL_GAPS.md` secção 6); dentro da app, apenas quem já tem acesso à página onde o ficheiro é referenciado. |
 | Prazo de conservação | Enquanto o registo (documento/ocorrência/seguro) que referencia o ficheiro existir; o ficheiro é apagado do Blob quando esse registo é eliminado (`lib/storage.ts:apagarFicheiro`). |
 
 ## 6. Auditoria interna

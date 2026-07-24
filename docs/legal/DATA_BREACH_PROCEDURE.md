@@ -4,7 +4,7 @@ Data: 2026-07-22. Base: RGPD arts. 33º e 34º, Orientações n.º 9/2022 do Com
 
 ## 1. O que conta como violação
 
-Qualquer violação de segurança que resulte, de modo acidental ou ilícito, na destruição, perda, alteração, divulgação ou acesso não autorizados a dados pessoais transmitidos, conservados ou tratados de outro modo (art. 4º/12). No contexto do GestCondo, exemplos concretos: acesso de um condomínio aos dados de outro (falha de isolamento multi-tenant), exposição do bucket de ficheiros (já público hoje, ver `DATA_SUBPROCESSORS_REGISTER.md`), fuga de credenciais (`BETTER_AUTH_SECRET`, `DATABASE_URL`), ou um incidente do lado de um subcontratante (Neon, Resend, Vercel).
+Qualquer violação de segurança que resulte, de modo acidental ou ilícito, na destruição, perda, alteração, divulgação ou acesso não autorizados a dados pessoais transmitidos, conservados ou tratados de outro modo (art. 4º/12). No contexto do GestCondo, exemplos concretos: acesso de um condomínio aos dados de outro (falha de isolamento multi-tenant), exposição do store de ficheiros (privado desde 2026-07-22, servido por rota autenticada — ver `DATA_SUBPROCESSORS_REGISTER.md`), fuga de credenciais (`BETTER_AUTH_SECRET`, `DATABASE_URL`), ou um incidente do lado de um subcontratante (Neon, Resend, Vercel).
 
 ## 2. Fases do procedimento
 

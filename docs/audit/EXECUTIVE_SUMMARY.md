@@ -17,7 +17,7 @@ O GestCondo chega a esta auditoria numa maturidade bem acima do habitual para um
 1. **(Resolvido durante a auditoria)** Email transacional não estava configurado em produção — verificação de conta, reset de password e convocatórias não chegavam a ninguém. Corrigido e verificado end-to-end.
 2. **(Resolvido durante a auditoria, como modelo)** DPA — `docs/legal/DPA_TEMPLATE.md` criado; sem cliente administradora real ainda, por isso passa a P2 (reavaliar para P0 com o primeiro cliente).
 3. **(Resolvido durante a auditoria)** Declaração de encargos/dívida (art. 1424º-A) implementada — `/financas/declaracao-divida/[fracaoId]`.
-4. Bucket de ficheiros público (já conhecido, reconfirmado nesta auditoria como relevante também para RGPD, não só segurança).
+4. **(Resolvido durante a auditoria)** Bucket de ficheiros público — relevante também para RGPD, não só segurança. Corrigido em 2026-07-22 com um store privado dedicado e uma rota autenticada; confirmado que não havia ficheiros antigos por migrar.
 
 ## 4. Bloqueadores de produção
 
@@ -37,7 +37,7 @@ Nenhum bloqueador que impeça o funcionamento técnico. Bloqueador **comercial/l
 
 ## 8. Lacunas de segurança
 
-Sem vulnerabilidades OWASP clássicas. Gaps conhecidos reconfirmados: bucket de ficheiros público, `rate limit` storage não partilhado entre instâncias (`SECURITY_AUDIT.md`).
+Sem vulnerabilidades OWASP clássicas. O bucket de ficheiros público foi **resolvido em 2026-07-22**, ainda durante esta auditoria — store privado dedicado + rota autenticada (`SECURITY_AUDIT.md`, `docs/audit/REMEDIATION_PLAN.md`). Gap conhecido que permanece: `rate limit` storage não partilhado entre instâncias (`SECURITY_AUDIT.md` S5).
 
 ## 9. Documentação em falta
 

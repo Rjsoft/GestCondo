@@ -11,7 +11,7 @@ Um MVP "utilizável por um condomínio real" tem de satisfazer, cumulativamente:
 - **Nenhum dos dois consegue**: ver dados de outro condomínio (se/quando existir mais do que um na mesma instância), nem apagar um registo financeiro sem deixar rasto.
 - **A operadora da plataforma consegue**: recuperar a password de um utilizador sem aceder à base de dados manualmente, e provar (para efeitos legais/RGPD) quem fez uma alteração sensível.
 
-Nenhum destes critérios está 100% satisfeito hoje — ver `FUNCTIONAL_GAPS.md` para o detalhe módulo a módulo. Os itens P0/P1 listados aí são, por definição, o âmbito deste MVP.
+**Estado a 2026-07-24:** os quatro critérios estão satisfeitos. O administrador tem todos os fluxos listados; o condómino tem `/os-meus-dados` e acesso a saldos, avisos, documentos e ocorrências; o isolamento entre condomínios está verificado por teste de integração real e as eliminações financeiras são soft-delete; a recuperação de password e o `audit_log` existem e funcionam em produção. Ver `FUNCTIONAL_GAPS.md` para o detalhe módulo a módulo e para o que continua classificado P1 além do âmbito mínimo de MVP.
 
 ## 2. O que falta, concretamente, para fechar o MVP
 
@@ -22,19 +22,19 @@ Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não 
 - ✅ Modelo de papéis alargado com âmbito por condomínio — feito 2026-07-06.
 - ✅ `audit_log` + soft-delete (em `movimento`) — feito 2026-07-06.
 
-**Esforço médio, alto valor:**
-- Livro-razão de dívida por fração (a peça financeira que falta para responder "quanto deve o 2ºEsq?").
-- Upload de ficheiros com controlo de acesso.
-- ✅ Envio de email — reset de password + verificação de conta feito 2026-07-06 (falta `RESEND_API_KEY` real); notificações de avisos/ocorrências ainda por fazer.
-- Autogestão de dados pelo condómino.
+**Esforço médio, alto valor — todos concluídos:**
+- ✅ Livro-razão de dívida por fração — feito 2026-07-07 (separador "Dívidas por fração", `getMapaSaldos()`).
+- ✅ Upload de ficheiros com controlo de acesso — feito 2026-07-09, store privado + rota autenticada desde 2026-07-22.
+- ✅ Envio de email — reset de password + verificação de conta feito 2026-07-06; `RESEND_API_KEY` configurada e verificada em produção 2026-07-22; notificações de avisos/ocorrências feitas 2026-07-09.
+- ✅ Autogestão de dados pelo condómino — feito 2026-07-09 (`/os-meus-dados`).
 
 **Esforço alto, mas incontornável para o público-alvo:**
 - ✅ Módulo de Assembleias/Atas completo — núcleo feito 2026-07-09, verificado em runtime 2026-07-21.
-- ✅ Exportação PDF/CSV de relatórios financeiros — feito 2026-07-21/23 (relatório de movimentos, balanço, mapa mensal, todos em PDF via impressão + CSV). **Nota (2026-07-23)**: este ficheiro não foi atualizado desde 2026-07-06, ao contrário de `FUNCTIONAL_GAPS.md`/`ROADMAP.md` — ver `docs/product/MBD_GEST_GAP_ANALYSIS.md` para o estado real e atual do módulo financeiro, incluindo lacunas ainda confirmadas (balanço patrimonial, execução orçamental por rubrica, documentos de fornecedor com pagamentos parciais).
+- ✅ Exportação PDF/CSV de relatórios financeiros — feito 2026-07-21/23 (relatório de movimentos, balanço, mapa mensal, todos em PDF via impressão + CSV). **Nota (2026-07-23, revista 2026-07-24)**: este ficheiro esteve muito tempo sem revisão face a `FUNCTIONAL_GAPS.md`/`ROADMAP.md`; foi reconciliado na passagem de coerência documental de 2026-07-24. Para o estado detalhado e atual do módulo financeiro — incluindo lacunas ainda confirmadas (balanço patrimonial, execução orçamental por rubrica, documentos de fornecedor com pagamentos parciais) — a fonte é `docs/product/MBD_GEST_GAP_ANALYSIS.md`.
 
 ## 3. Testes — estado atual
 
-**Atualizado 2026-07-06:** `vitest` configurado, com 38 testes unitários cobrindo a matriz de permissões completa (`lib/perfis.test.ts`) e a formatação (`lib/format.test.ts`). Ao ligar a aplicação pela primeira vez a uma base de dados PostgreSQL real (Neon do utilizador) para verificação manual, foram encontrados dois bugs reais que nenhum teste unitário (sobre lógica pura) alguma vez apanharia: uma condição de corrida no bootstrap do primeiro condomínio, e uma asserção não-nula insegura que fazia as páginas rebentar quando a sessão expirava a meio do pedido (ver `SECURITY_AUDIT.md` S10) — a prova mais concreta possível de que os testes de integração descritos abaixo não são um exercício teórico. Na sequência disso, foi criado `lib/db/tenant-isolation.dbtest.ts` (corrido via `pnpm test:db`, fora do `pnpm test`/CI porque precisa de `DATABASE_URL` real) — um teste de integração dentro de uma transação sempre revertida (nunca persiste nada, mesmo contra a base de dados real do utilizador) que confirma o isolamento multi-tenant do item 4.4 abaixo. **Ainda por fazer:** os restantes itens de 4.2–4.4 (autorização das server actions via um pedido HTTP real, fluxo de aprovação, e2e no browser).
+**Atualizado 2026-07-06, contagem revista 2026-07-24:** `vitest` configurado, inicialmente com 38 testes unitários cobrindo a matriz de permissões completa (`lib/perfis.test.ts`) e a formatação (`lib/format.test.ts`) — **hoje são 83 testes em 8 ficheiros**. Ao ligar a aplicação pela primeira vez a uma base de dados PostgreSQL real (Neon do utilizador) para verificação manual, foram encontrados dois bugs reais que nenhum teste unitário (sobre lógica pura) alguma vez apanharia: uma condição de corrida no bootstrap do primeiro condomínio, e uma asserção não-nula insegura que fazia as páginas rebentar quando a sessão expirava a meio do pedido (ver `SECURITY_AUDIT.md` S10) — a prova mais concreta possível de que os testes de integração descritos abaixo não são um exercício teórico. Na sequência disso, foi criado `lib/db/tenant-isolation.dbtest.ts` (corrido via `pnpm test:db`, fora do `pnpm test`/CI porque precisa de `DATABASE_URL` real) — um teste de integração dentro de uma transação sempre revertida (nunca persiste nada, mesmo contra a base de dados real do utilizador) que confirma o isolamento multi-tenant do item 4.4 abaixo. **Ainda por fazer:** os restantes itens de 4.2–4.4 (autorização das server actions via um pedido HTTP real, fluxo de aprovação, e2e no browser).
 
 ## 4. Plano de testes proposto
 
