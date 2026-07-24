@@ -10,7 +10,7 @@
 // de lib/contas-financeiras.ts, porque essas funções usam a ligação
 // global `db`, não a transação `tx` deste teste — mesmo padrão já usado em
 // mapa-saldos.dbtest.ts).
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, gte, isNull, lte } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from './index'
 import { condominio, contaFinanceira, exercicioFinanceiro, movimento, saldoInicialConta } from './schema'
@@ -431,6 +431,225 @@ describe('cálculo de saldo de conta financeira', () => {
       const saldo = Number(inicial.valor) + soma
 
       expect(saldo).toBeCloseTo(0.01, 2)
+    })
+  })
+})
+
+describe('deteção de campos alterados em conta financeira (T1)', () => {
+  // Reproduz atualizarContaFinanceira (app/actions/contas-financeiras.ts):
+  // leitura prévia + comparação, sem UPDATE quando nada muda.
+  type CamposEditaveisConta = {
+    nome: string
+    banco: string | null
+    iban: string | null
+    tipo: string
+    moeda: string
+    notaTransitoria: string | null
+  }
+
+  it('não regista alteração nem faz UPDATE quando os valores enviados são iguais', async () => {
+    await comFixtureRevertida(async (tx) => {
+      const [condo] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T1] sem alteracao' })
+        .returning({ id: condominio.id })
+      const [conta] = await tx
+        .insert(contaFinanceira)
+        .values({ condominioId: condo.id, nome: 'Conta Ordem', banco: 'BCP', tipo: 'ordem', moeda: 'EUR' })
+        .returning({ id: contaFinanceira.id, updatedAt: contaFinanceira.updatedAt })
+
+      const [anterior] = await tx
+        .select({
+          nome: contaFinanceira.nome,
+          banco: contaFinanceira.banco,
+          iban: contaFinanceira.iban,
+          tipo: contaFinanceira.tipo,
+          moeda: contaFinanceira.moeda,
+          notaTransitoria: contaFinanceira.notaTransitoria,
+        })
+        .from(contaFinanceira)
+        .where(and(eq(contaFinanceira.id, conta.id), eq(contaFinanceira.condominioId, condo.id)))
+        .limit(1)
+
+      const novosValores: CamposEditaveisConta = {
+        nome: 'Conta Ordem',
+        banco: 'BCP',
+        iban: null,
+        tipo: 'ordem',
+        moeda: 'EUR',
+        notaTransitoria: null,
+      }
+      const alterados = (Object.keys(novosValores) as (keyof CamposEditaveisConta)[]).filter(
+        (campo) => anterior[campo] !== novosValores[campo],
+      )
+      expect(alterados).toHaveLength(0)
+
+      const [depois] = await tx
+        .select({ updatedAt: contaFinanceira.updatedAt })
+        .from(contaFinanceira)
+        .where(eq(contaFinanceira.id, conta.id))
+      expect(depois.updatedAt).toEqual(conta.updatedAt)
+    })
+  })
+
+  it('deteta só o IBAN como alterado quando só o IBAN muda', async () => {
+    await comFixtureRevertida(async (tx) => {
+      const [condo] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T1] iban alterado' })
+        .returning({ id: condominio.id })
+      const [conta] = await tx
+        .insert(contaFinanceira)
+        .values({ condominioId: condo.id, nome: 'Conta', tipo: 'ordem', iban: 'PT50000000000000000000000' })
+        .returning({ id: contaFinanceira.id })
+
+      const [anterior] = await tx
+        .select({
+          nome: contaFinanceira.nome,
+          banco: contaFinanceira.banco,
+          iban: contaFinanceira.iban,
+          tipo: contaFinanceira.tipo,
+          moeda: contaFinanceira.moeda,
+          notaTransitoria: contaFinanceira.notaTransitoria,
+        })
+        .from(contaFinanceira)
+        .where(eq(contaFinanceira.id, conta.id))
+        .limit(1)
+
+      const novosValores: CamposEditaveisConta = {
+        nome: anterior.nome,
+        banco: anterior.banco,
+        iban: 'PT50111111111111111111111',
+        tipo: anterior.tipo,
+        moeda: anterior.moeda,
+        notaTransitoria: anterior.notaTransitoria,
+      }
+      const alterados = (Object.keys(novosValores) as (keyof CamposEditaveisConta)[]).filter(
+        (campo) => anterior[campo] !== novosValores[campo],
+      )
+      expect(alterados).toEqual(['iban'])
+    })
+  })
+
+  it('deteta a remoção do IBAN como alteração', async () => {
+    await comFixtureRevertida(async (tx) => {
+      const [condo] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T1] iban removido' })
+        .returning({ id: condominio.id })
+      const [conta] = await tx
+        .insert(contaFinanceira)
+        .values({ condominioId: condo.id, nome: 'Conta', tipo: 'ordem', iban: 'PT50000000000000000000000' })
+        .returning({ id: contaFinanceira.id })
+
+      const [anterior] = await tx
+        .select({
+          nome: contaFinanceira.nome,
+          banco: contaFinanceira.banco,
+          iban: contaFinanceira.iban,
+          tipo: contaFinanceira.tipo,
+          moeda: contaFinanceira.moeda,
+          notaTransitoria: contaFinanceira.notaTransitoria,
+        })
+        .from(contaFinanceira)
+        .where(eq(contaFinanceira.id, conta.id))
+        .limit(1)
+
+      const novosValores: CamposEditaveisConta = { ...anterior, iban: null }
+      const alterados = (Object.keys(novosValores) as (keyof CamposEditaveisConta)[]).filter(
+        (campo) => anterior[campo] !== novosValores[campo],
+      )
+      expect(alterados).toEqual(['iban'])
+    })
+  })
+
+  it('não encontra a conta quando o condomínio não corresponde (isolamento multi-tenant)', async () => {
+    await comFixtureRevertida(async (tx) => {
+      const [condoA] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T1] condo A' })
+        .returning({ id: condominio.id })
+      const [condoB] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T1] condo B' })
+        .returning({ id: condominio.id })
+      const [contaDoA] = await tx
+        .insert(contaFinanceira)
+        .values({ condominioId: condoA.id, nome: 'Conta do A', tipo: 'ordem' })
+        .returning({ id: contaFinanceira.id })
+
+      const linhas = await tx
+        .select()
+        .from(contaFinanceira)
+        .where(and(eq(contaFinanceira.id, contaDoA.id), eq(contaFinanceira.condominioId, condoB.id)))
+      expect(linhas).toHaveLength(0) // reproduz o "Conta não encontrada" para o condomínio errado
+    })
+  })
+})
+
+describe('operações em massa só afetam o próprio condomínio (T2)', () => {
+  it('associação por intervalo de datas não afeta movimentos de outro condomínio', async () => {
+    await comFixtureRevertida(async (tx) => {
+      const [condoA] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T2] condo A' })
+        .returning({ id: condominio.id })
+      const [condoB] = await tx
+        .insert(condominio)
+        .values({ nome: '[teste T2] condo B' })
+        .returning({ id: condominio.id })
+      const [exercicioA] = await tx
+        .insert(exercicioFinanceiro)
+        .values({
+          condominioId: condoA.id,
+          designacao: '2026',
+          anoPrincipal: 2026,
+          dataInicio: new Date('2026-01-01'),
+          dataFim: new Date('2026-12-31'),
+        })
+        .returning({ id: exercicioFinanceiro.id })
+
+      await tx.insert(movimento).values([
+        {
+          condominioId: condoA.id,
+          userId: 'user-a',
+          tipo: 'despesa',
+          categoria: 'Teste',
+          descricao: 'Do condomínio A',
+          valor: '10.00',
+          data: new Date('2026-03-01'),
+        },
+        {
+          condominioId: condoB.id,
+          userId: 'user-b',
+          tipo: 'despesa',
+          categoria: 'Teste',
+          descricao: 'Do condomínio B (não deve ser afetado)',
+          valor: '20.00',
+          data: new Date('2026-03-01'),
+        },
+      ])
+
+      // Reproduz confirmarAssociacaoExercicio: filtra sempre por
+      // condominioId do ator, nunca por um valor vindo do cliente.
+      const afetados = await tx
+        .update(movimento)
+        .set({ exercicioId: exercicioA.id })
+        .where(
+          and(
+            eq(movimento.condominioId, condoA.id),
+            isNull(movimento.exercicioId),
+            isNull(movimento.deletedAt),
+            gte(movimento.data, new Date('2026-01-01')),
+            lte(movimento.data, new Date('2026-12-31')),
+          ),
+        )
+        .returning({ id: movimento.id })
+
+      expect(afetados).toHaveLength(1)
+
+      const [movimentoB] = await tx.select().from(movimento).where(eq(movimento.condominioId, condoB.id))
+      expect(movimentoB.exercicioId).toBeNull()
     })
   })
 })

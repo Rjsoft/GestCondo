@@ -1,9 +1,10 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
 import { contaFinanceira, exercicioFinanceiro, extratoBancario, movimento, saldoInicialConta } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
-import { calcularSaldoConta, mensagemErroSobreposicaoExercicio } from '@/lib/contas-financeiras'
+import { calcularSaldoConta, formatarLogOperacaoMassa, mensagemErroSobreposicaoExercicio } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, gte, isNull, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -146,7 +147,8 @@ export async function confirmarTransporteSaldos(exercicioId: number, contaFinanc
   const anterior = await getExercicioAnteriorContiguo(admin.condominioId, exercicioId)
   if (!anterior) throw new Error('Não há exercício anterior contíguo para transportar saldo')
 
-  let transportadas = 0
+  const operacaoId = randomUUID()
+  const idsContasTransportadas: number[] = []
   for (const contaFinanceiraId of contaFinanceiraIds) {
     const [conta] = await db
       .select()
@@ -171,19 +173,27 @@ export async function confirmarTransporteSaldos(exercicioId: number, contaFinanc
       origem: 'transportado',
       definidoPorUserId: admin.userId,
     })
-    transportadas++
+    idsContasTransportadas.push(contaFinanceiraId)
   }
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'exercicioFinanceiro',
-    entidadeId: exercicioId,
-    detalhes: `Saldo transportado de "${anterior.designacao}" para ${transportadas} conta(s)`,
-  })
+  if (idsContasTransportadas.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'exercicioFinanceiro',
+      entidadeId: exercicioId,
+      detalhes: formatarLogOperacaoMassa({
+        operacaoId,
+        tipo: 'transporte-saldos',
+        descricao: `Saldo transportado de "${anterior.designacao}" para ${idsContasTransportadas.length} conta(s)`,
+        nomeEntidades: 'IDs de contas',
+        ids: idsContasTransportadas,
+      }),
+    })
+  }
 
   revalidatePath('/financas')
-  return transportadas
+  return idsContasTransportadas.length
 }
 
 type SituacaoFecho = {
@@ -429,6 +439,7 @@ export async function confirmarAssociacaoExercicio(exercicioId: number) {
     )
   }
 
+  const operacaoId = randomUUID()
   const afetados = await db
     .update(movimento)
     .set({ exercicioId })
@@ -450,13 +461,21 @@ export async function confirmarAssociacaoExercicio(exercicioId: number) {
       and(eq(movimento.condominioId, admin.condominioId), isNull(movimento.exercicioId), isNull(movimento.deletedAt)),
     )
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'exercicioFinanceiro',
-    entidadeId: exercicioId,
-    detalhes: `${afetados.length} movimento(s) associado(s) automaticamente ao exercício "${ex.designacao}"`,
-  })
+  if (afetados.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'exercicioFinanceiro',
+      entidadeId: exercicioId,
+      detalhes: formatarLogOperacaoMassa({
+        operacaoId,
+        tipo: 'associacao-exercicio',
+        descricao: `${afetados.length} movimento(s) associado(s) automaticamente ao exercício "${ex.designacao}"`,
+        nomeEntidades: 'IDs de movimentos',
+        ids: afetados.map((m) => m.id),
+      }),
+    })
+  }
 
   revalidatePath('/financas')
   return { associados: afetados.length, porClassificar }

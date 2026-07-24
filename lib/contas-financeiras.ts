@@ -155,6 +155,34 @@ export async function idsForaDeExercicioFechado(
   return bloqueados
 }
 
+const MAX_IDS_AMOSTRA_LOG = 10
+
+/**
+ * Formata a entrada de `audit_log` de uma operação em massa (transporte de
+ * saldos, associação de movimentos a exercício/conta). `operacaoId`
+ * identifica de forma única e pesquisável cada execução — não agrupa
+ * várias linhas do log (cada operação já produz só uma), serve para
+ * correlação futura com uma eventual tabela de detalhe. Nunca inclui
+ * dados pessoais ou financeiros, só ids internos das entidades afetadas.
+ */
+export function formatarLogOperacaoMassa(params: {
+  operacaoId: string
+  tipo: string
+  descricao: string
+  nomeEntidades: string
+  ids: number[]
+}) {
+  const { operacaoId, tipo, descricao, nomeEntidades, ids } = params
+  const idsOrdenados = [...ids].sort((a, b) => a - b)
+  const amostra = idsOrdenados.slice(0, MAX_IDS_AMOSTRA_LOG)
+  const restantes = idsOrdenados.length - amostra.length
+  const listaIds =
+    amostra.length > 0
+      ? ` ${nomeEntidades} (amostra): ${amostra.join(', ')}${restantes > 0 ? ` (+${restantes} não listados)` : ''}.`
+      : ''
+  return `${descricao} [operação ${operacaoId}, tipo: ${tipo}]${listaIds}`
+}
+
 /**
  * Traduz o erro de sobreposição de exercícios (constraint `EXCLUDE` da
  * base de dados, código Postgres `23P01`) para uma mensagem simples, sem

@@ -1,14 +1,39 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
 import { contaFinanceira, exercicioFinanceiro, movimento, saldoInicialConta } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
-import { calcularSaldoConta, ibanValido, idsForaDeExercicioFechado, normalizarIban } from '@/lib/contas-financeiras'
+import {
+  calcularSaldoConta,
+  formatarLogOperacaoMassa,
+  ibanValido,
+  idsForaDeExercicioFechado,
+  normalizarIban,
+} from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin, temConsultaGestao } from '@/lib/session'
 import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const TIPOS_CONTA = ['ordem', 'prazo', 'caixa', 'transitoria'] as const
+
+type CamposEditaveisConta = {
+  nome: string
+  banco: string | null
+  iban: string | null
+  tipo: string
+  moeda: string
+  notaTransitoria: string | null
+}
+
+const CAMPO_CONTA_LABEL: Record<keyof CamposEditaveisConta, string> = {
+  nome: 'nome',
+  banco: 'banco',
+  iban: 'IBAN',
+  tipo: 'tipo',
+  moeda: 'moeda',
+  notaTransitoria: 'nota',
+}
 
 function validarDadosConta({
   nome,
@@ -139,26 +164,58 @@ export async function atualizarContaFinanceira(formData: FormData) {
 
   validarDadosConta({ nome, tipo, iban, notaTransitoria })
 
-  await db
-    .update(contaFinanceira)
-    .set({
-      nome,
-      banco: banco || null,
-      iban: iban || null,
-      tipo,
-      moeda,
-      notaTransitoria: notaTransitoria || null,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(contaFinanceira.id, id), eq(contaFinanceira.condominioId, admin.condominioId)))
+  const novosValores: CamposEditaveisConta = {
+    nome,
+    banco: banco || null,
+    iban: iban || null,
+    tipo,
+    moeda,
+    notaTransitoria: notaTransitoria || null,
+  }
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'contaFinanceira',
-    entidadeId: id,
-    detalhes: `${nome} (${tipo})`,
+  // Uma transação simples confina, mas não elimina totalmente, a janela
+  // entre leitura e escrita de duas edições concorrentes na mesma conta —
+  // aceitável aqui; não introduz bloqueio explícito nem controlo de versão.
+  const camposAlterados = await db.transaction(async (tx) => {
+    const [anterior] = await tx
+      .select({
+        nome: contaFinanceira.nome,
+        banco: contaFinanceira.banco,
+        iban: contaFinanceira.iban,
+        tipo: contaFinanceira.tipo,
+        moeda: contaFinanceira.moeda,
+        notaTransitoria: contaFinanceira.notaTransitoria,
+      })
+      .from(contaFinanceira)
+      .where(and(eq(contaFinanceira.id, id), eq(contaFinanceira.condominioId, admin.condominioId)))
+      .limit(1)
+    if (!anterior) throw new Error('Conta não encontrada')
+
+    const alterados = (Object.keys(novosValores) as (keyof CamposEditaveisConta)[]).filter(
+      (campo) => anterior[campo] !== novosValores[campo],
+    )
+    if (alterados.length === 0) return alterados
+
+    await tx
+      .update(contaFinanceira)
+      .set({ ...novosValores, updatedAt: new Date() })
+      .where(and(eq(contaFinanceira.id, id), eq(contaFinanceira.condominioId, admin.condominioId)))
+
+    return alterados
   })
+
+  if (camposAlterados.length > 0) {
+    const ibanAlterado = camposAlterados.includes('iban')
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'contaFinanceira',
+      entidadeId: id,
+      detalhes:
+        `Campos alterados: ${camposAlterados.map((c) => CAMPO_CONTA_LABEL[c]).join(', ')}` +
+        (ibanAlterado ? '. IBAN alterado; valor não registado.' : '.'),
+    })
+  }
 
   revalidatePath('/financas')
 }
@@ -406,6 +463,7 @@ export async function confirmarAssociacaoConta(contaFinanceiraId: number, destin
     return { associados: 0, porClassificar: 0 }
   }
 
+  const operacaoId = randomUUID()
   const afetados = await db
     .update(movimento)
     .set({ contaFinanceiraId })
@@ -423,13 +481,21 @@ export async function confirmarAssociacaoConta(contaFinanceiraId: number, destin
       ),
     )
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'contaFinanceira',
-    entidadeId: contaFinanceiraId,
-    detalhes: `${afetados.length} movimento(s) associado(s) automaticamente (destino: ${destino})`,
-  })
+  if (afetados.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'contaFinanceira',
+      entidadeId: contaFinanceiraId,
+      detalhes: formatarLogOperacaoMassa({
+        operacaoId,
+        tipo: 'associacao-conta',
+        descricao: `${afetados.length} movimento(s) associado(s) automaticamente (destino: ${destino})`,
+        nomeEntidades: 'IDs de movimentos',
+        ids: afetados.map((m) => m.id),
+      }),
+    })
+  }
 
   revalidatePath('/financas')
   return { associados: afetados.length, porClassificar }

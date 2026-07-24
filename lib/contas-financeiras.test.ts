@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatarLogOperacaoMassa,
   ibanValido,
   mascararIban,
   mensagemErroSobreposicaoExercicio,
@@ -50,5 +51,68 @@ describe('mensagemErroSobreposicaoExercicio', () => {
   it('devolve null para outros erros', () => {
     expect(mensagemErroSobreposicaoExercicio({ code: '23505' })).toBeNull()
     expect(mensagemErroSobreposicaoExercicio(new Error('outro erro'))).toBeNull()
+  })
+})
+
+describe('formatarLogOperacaoMassa', () => {
+  it('não inclui lista de IDs quando não há registos afetados', () => {
+    const texto = formatarLogOperacaoMassa({
+      operacaoId: 'op-1',
+      tipo: 'associacao-exercicio',
+      descricao: '0 movimento(s) associado(s)',
+      nomeEntidades: 'IDs de movimentos',
+      ids: [],
+    })
+    expect(texto).toBe('0 movimento(s) associado(s) [operação op-1, tipo: associacao-exercicio]')
+  })
+
+  it('ordena os IDs antes de os incluir na amostra', () => {
+    const texto = formatarLogOperacaoMassa({
+      operacaoId: 'op-2',
+      tipo: 'associacao-conta',
+      descricao: '3 movimento(s) associado(s)',
+      nomeEntidades: 'IDs de movimentos',
+      ids: [21, 3, 18],
+    })
+    expect(texto).toContain('IDs de movimentos (amostra): 3, 18, 21.')
+    expect(texto).not.toContain('não listados')
+  })
+
+  it('limita a amostra a 10 IDs e indica quantos ficaram de fora', () => {
+    const onze = Array.from({ length: 11 }, (_, i) => i + 1)
+    const texto = formatarLogOperacaoMassa({
+      operacaoId: 'op-3',
+      tipo: 'transporte-saldos',
+      descricao: 'Saldo transportado para 11 conta(s)',
+      nomeEntidades: 'IDs de contas',
+      ids: onze,
+    })
+    expect(texto).toContain('IDs de contas (amostra): 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 (+1 não listados).')
+  })
+
+  it('não trunca quando há exatamente 10 IDs', () => {
+    const dez = Array.from({ length: 10 }, (_, i) => i + 1)
+    const texto = formatarLogOperacaoMassa({
+      operacaoId: 'op-4',
+      tipo: 'associacao-exercicio',
+      descricao: '10 movimento(s) associado(s)',
+      nomeEntidades: 'IDs de movimentos',
+      ids: dez,
+    })
+    expect(texto).toContain('IDs de movimentos (amostra): 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.')
+    expect(texto).not.toContain('não listados')
+  })
+
+  it('inclui o operacaoId e o tipo no texto, sem alterar os dados originais', () => {
+    const ids = [5, 2]
+    const texto = formatarLogOperacaoMassa({
+      operacaoId: 'abc-123',
+      tipo: 'associacao-conta',
+      descricao: 'Descrição',
+      nomeEntidades: 'IDs de movimentos',
+      ids,
+    })
+    expect(texto).toContain('[operação abc-123, tipo: associacao-conta]')
+    expect(ids).toEqual([5, 2]) // não muta o array recebido
   })
 })
