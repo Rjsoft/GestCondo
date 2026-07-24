@@ -28,6 +28,7 @@ export type EntidadeAuditoria =
   | 'fornecedor'
   | 'exercicioFinanceiro'
   | 'contaFinanceira'
+  | 'documentoFornecedor'
 
 /**
  * Escreve uma linha no registo de auditoria. Chamar depois de a operação na

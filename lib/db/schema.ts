@@ -305,6 +305,12 @@ export const movimento = pgTable(
       foreignColumns: [contaFinanceira.id, contaFinanceira.condominioId],
       name: "movimento_conta_financeira_condominio_fk",
     }).onDelete("set null"),
+    // Necessária para pagamentoDocumentoFornecedor.movimentoId referenciar
+    // (id, condominioId) em vez de só (id) — Fase A.2, ver comentário lá.
+    // Sempre satisfeita automaticamente (id já é único sozinho), por isso
+    // adicioná-la a uma tabela com dados reais em produção não tem risco
+    // de rejeitar linhas existentes.
+    unique("movimento_id_condominio_uq").on(t.id, t.condominioId),
   ],
 )
 
@@ -510,6 +516,104 @@ export const saldoInicialConta = pgTable(
       foreignColumns: [exercicioFinanceiro.id, exercicioFinanceiro.condominioId],
       name: "saldo_inicial_conta_exercicio_condominio_fk",
     }).onDelete("cascade"),
+  ],
+)
+
+// Documento de fornecedor (fatura, recibo) — Fase A.2. Distinto de
+// `movimento`: tem ciclo de vida próprio (nº de lançamento interno, nº do
+// documento do próprio fornecedor, emissão/vencimento) e pode ser liquidado
+// em várias tranches via `pagamentoDocumentoFornecedor` abaixo, em vez do
+// `pago: boolean` binário de `movimento`. `valorPago`/`saldo` NUNCA são
+// persistidos aqui — são sempre calculados a partir da soma real dos
+// pagamentos (ver lib/documentos-fornecedor.ts), para nunca poderem
+// divergir da verdade.
+// `deletedAt`: mesma obrigação de retenção legal de `movimento` —
+// soft-delete, nunca DELETE físico.
+export const documentoFornecedor = pgTable(
+  "documento_fornecedor",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    // `set null` em vez de cascade: eliminar o fornecedor nunca pode apagar
+    // um documento financeiro já registado — mesma convenção de
+    // movimento.fornecedorId.
+    fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
+      onDelete: "set null",
+    }),
+    // Sequência própria, gerada automaticamente pelo GestCondo — distinta
+    // de `id` (interno/técnico) e de `numeroDocumento` (o nº da fatura do
+    // próprio fornecedor, texto livre porque o formato varia por
+    // fornecedor).
+    numeroLancamento: serial("numeroLancamento"),
+    numeroDocumento: text("numeroDocumento"),
+    categoria: text("categoria").notNull(), // mesma taxonomia de movimento.categoria
+    dataEmissao: timestamp("dataEmissao").notNull(),
+    dataVencimento: timestamp("dataVencimento"),
+    valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
+    // Anexo da fatura/recibo (Vercel Blob privado) — mesmo padrão de
+    // seguro.anexoUrl/anexoNomeFicheiro.
+    anexoUrl: text("anexoUrl"),
+    anexoNomeFicheiro: text("anexoNomeFicheiro"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    deletedAt: timestamp("deletedAt"),
+  },
+  (t) => [
+    index("documento_fornecedor_condominio_idx").on(t.condominioId),
+    index("documento_fornecedor_fornecedor_idx").on(t.fornecedorId),
+    // Necessária para pagamentoDocumentoFornecedor referenciar
+    // (id, condominioId) em vez de só (id) — ver comentário abaixo.
+    unique("documento_fornecedor_id_condominio_uq").on(t.id, t.condominioId),
+  ],
+)
+
+// Pagamento (parcial ou total) de um documento_fornecedor — Fase A.2. Podem
+// existir várias linhas para o mesmo documento; valorPago/saldo do
+// documento (lib/documentos-fornecedor.ts) somam estas linhas em runtime,
+// nunca um campo persistido no documento. `movimentoId` liga opcionalmente
+// ao lançamento real que efetivamente saiu da conta — `movimento` continua
+// a ser a fonte de verdade do saldo de caixa; este pagamento é o detalhe
+// do lado do fornecedor.
+//
+// `condominioId` aqui é redundante com a relação transitiva via
+// documentoFornecedorId, mas é a forma mais direta de a própria base de
+// dados impedir (via as duas FKs compostas abaixo) que um pagamento
+// relacione um documento e um movimento de condomínios diferentes — mesmo
+// princípio de saldoInicialConta.
+export const pagamentoDocumentoFornecedor = pgTable(
+  "pagamento_documento_fornecedor",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    documentoFornecedorId: integer("documentoFornecedorId").notNull(),
+    valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
+    dataPagamento: timestamp("dataPagamento").notNull(),
+    // Opcional: um pagamento pode ser registado antes de o lançamento
+    // financeiro correspondente existir em `movimento`.
+    movimentoId: integer("movimentoId"),
+    userId: text("userId").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("pagamento_documento_fornecedor_condominio_idx").on(t.condominioId),
+    index("pagamento_documento_fornecedor_documento_idx").on(
+      t.documentoFornecedorId,
+    ),
+    index("pagamento_documento_fornecedor_movimento_idx").on(t.movimentoId),
+    foreignKey({
+      columns: [t.documentoFornecedorId, t.condominioId],
+      foreignColumns: [documentoFornecedor.id, documentoFornecedor.condominioId],
+      name: "pagamento_documento_fornecedor_documento_condominio_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.movimentoId, t.condominioId],
+      foreignColumns: [movimento.id, movimento.condominioId],
+      name: "pagamento_documento_fornecedor_movimento_condominio_fk",
+    }).onDelete("set null"),
   ],
 )
 

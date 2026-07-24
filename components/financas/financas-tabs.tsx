@@ -15,7 +15,9 @@ import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
 import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
 import { ExerciciosTab, type ContaComSaldo, type ExercicioLinha } from '@/components/financas/exercicios-tab'
-import { TipoMovimentoBadge } from '@/components/badges'
+import { NovoDocumentoFornecedorDialog } from '@/components/financas/novo-documento-fornecedor-dialog'
+import { DocumentoFornecedorActions } from '@/components/financas/documento-fornecedor-actions'
+import { TipoMovimentoBadge, EstadoDocumentoFornecedorBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
@@ -95,6 +97,32 @@ type Seguro = {
   fracoes: { id: number; identificacao: string }[]
 }
 
+type PagamentoDocumentoFornecedor = {
+  id: number
+  valor: string
+  dataPagamento: Date
+  movimentoId: number | null
+}
+
+type DocumentoFornecedor = {
+  id: number
+  fornecedorId: number | null
+  fornecedorNome: string | null
+  numeroLancamento: number
+  numeroDocumento: string | null
+  categoria: string
+  dataEmissao: Date
+  dataVencimento: Date | null
+  valor: string
+  anexoUrl: string | null
+  anexoNomeFicheiro: string | null
+  valorPago: number
+  saldo: number
+  estado: 'por_liquidar' | 'parcial' | 'liquidado'
+  pagoEmExcesso: boolean
+  pagamentos: PagamentoDocumentoFornecedor[]
+}
+
 type LinhaExtrato = { id: number; data: Date; descricao: string; valor: string }
 
 type MovimentoConciliar = {
@@ -130,6 +158,7 @@ export function FinancasTabs({
   exercicios,
   contasComSaldo,
   exercicioEmVistaId,
+  documentosFornecedor,
   isAdmin,
 }: {
   movimentos: Movimento[]
@@ -156,6 +185,7 @@ export function FinancasTabs({
   exercicios: ExercicioLinha[]
   contasComSaldo: ContaComSaldo[]
   exercicioEmVistaId: number | null
+  documentosFornecedor: DocumentoFornecedor[]
   isAdmin: boolean
 }) {
   return (
@@ -168,6 +198,7 @@ export function FinancasTabs({
         <TabsTrigger value="seguro">Seguro</TabsTrigger>
         <TabsTrigger value="conciliacao">Conciliação bancária</TabsTrigger>
         <TabsTrigger value="exercicios">Exercícios e contas</TabsTrigger>
+        <TabsTrigger value="documentosFornecedor">Documentos de fornecedor</TabsTrigger>
       </TabsList>
 
       <TabsContent value="movimentos" className="mt-4">
@@ -559,6 +590,88 @@ export function FinancasTabs({
           exercicioEmVistaIdInicial={exercicioEmVistaId}
           isAdmin={isAdmin}
         />
+      </TabsContent>
+
+      <TabsContent value="documentosFornecedor" className="mt-4">
+        {isAdmin && (
+          <div className="mb-3 flex justify-end">
+            <NovoDocumentoFornecedorDialog fornecedores={fornecedores} />
+          </div>
+        )}
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fornecedor</TableHead>
+                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+                  <TableHead className="hidden md:table-cell">Nº documento</TableHead>
+                  <TableHead>Emissão</TableHead>
+                  <TableHead className="hidden lg:table-cell">Vencimento</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="hidden text-right sm:table-cell">Saldo</TableHead>
+                  <TableHead>Estado</TableHead>
+                  {isAdmin && <TableHead className="w-10" />}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {documentosFornecedor.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={isAdmin ? 9 : 8}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Ainda não existem documentos de fornecedor registados.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {documentosFornecedor.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">{d.fornecedorNome ?? '—'}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {d.categoria}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
+                      {d.numeroDocumento ?? '—'}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {formatData(d.dataEmissao)}
+                    </TableCell>
+                    <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                      {d.dataVencimento ? formatData(d.dataVencimento) : '—'}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatEuro(Number(d.valor))}
+                    </TableCell>
+                    <TableCell
+                      className={`hidden text-right sm:table-cell ${
+                        d.saldo > 0 ? 'text-amber-700' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {formatEuro(d.saldo)}
+                    </TableCell>
+                    <TableCell>
+                      <EstadoDocumentoFornecedorBadge estado={d.estado} />
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <DocumentoFornecedorActions
+                          id={d.id}
+                          categoria={d.categoria}
+                          valor={Number(d.valor)}
+                          valorPago={d.valorPago}
+                          saldo={d.saldo}
+                          pagamentos={d.pagamentos}
+                          anexoUrl={d.anexoUrl}
+                        />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   )
