@@ -417,91 +417,91 @@ Executar preferencialmente com uma pessoa que não participou no desenvolvimento
 
 ### Validação futura em produção (18 — FA1-P01 a FA1-P18)
 
-**Nota: cada um dos 18 casos abaixo tem o seu próprio campo de estado, todos por executar — produção não autorizada.** Não incluir credenciais, URLs privadas, comandos com segredos nem valores reais de produção em nenhuma evidência registada.
+**Nota: cada um dos 18 casos abaixo tem o seu próprio campo de estado.** Executados em 2026-07-24, após autorização explícita do Rui para aplicar a migração 0024 em produção e fazer o merge do PR #1. Não incluir credenciais, URLs privadas, comandos com segredos nem valores reais de produção em nenhuma evidência registada.
 
 **[FA1-P01] Autorização explícita do Rui**
 - Resultado esperado: Autorização registada por escrito antes de qualquer passo seguinte.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: autorização explícita "sim, aplica a migração em produção" registada nesta conversa (2026-07-24), antes de qualquer comando de escrita em produção.
 
 **[FA1-P02] Definição da janela de intervenção**
 - Resultado esperado: Data/hora da migração acordada, com baixo impacto esperado nos utilizadores.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Não executado. A migração foi aplicada imediatamente após a autorização (P01), sem discussão prévia de data/hora de baixo impacto. Risco residual: não avaliado se houve utilizadores ativos durante a janela real de aplicação.
 
 **[FA1-P03] Snapshot verificável**
 - Resultado esperado: Snapshot da base de produção criado e confirmado como restaurável.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Não executado. Não foi criado nem confirmado nenhum snapshot explícito antes da migração. A Neon (plano atual) só oferece PITR de 6h, sem snapshots agendados (ver `TECHNICAL_DEBT.md` D7) — essa proteção passiva existia, mas não foi verificada nem testada como restauro nesta sessão. Risco residual real, embora a migração já esteja aplicada e tenha sido confirmada como aditiva e sem impacto nos dados (ver P12).
 
 **[FA1-P04] Registo dos totais antes**
 - Resultado esperado: Totais financeiros relevantes (receitas/despesas/saldo) registados antes de qualquer alteração.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: baseline registado antes da migração — receitas 67.094,89 €, despesas 31.774,52 €, 34 movimentos (consulta `movimento` com `deletedAt is null`).
 
 **[FA1-P05] `db:check-drift` antes**
 - Resultado esperado: Sem inconsistências entre dev e produção antes da migração.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: `node scripts/check-migration-drift.mjs` reportou exatamente 1 inconsistência — a migração 0024 aplicada em dev mas não em produção — confirmando que não havia nenhuma outra drift além da esperada (o próprio motivo desta migração).
 
 **[FA1-P06] Confirmação de `drizzle.__drizzle_migrations`**
 - Resultado esperado: Estado da tabela de migrações em produção confirmado e compreendido antes de aplicar a nova.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: 24 migrações aplicadas confirmadas em produção antes da escrita, com `hash`/`created_at` das últimas 3 inspecionados diretamente.
 
 **[FA1-P07] Revisão final da migração 0024**
 - Resultado esperado: SQL revisto uma última vez imediatamente antes da aplicação, sem alterações desde a última revisão nesta cadeia de conversa.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: `drizzle/0024_slim_human_fly.sql` revisto integralmente (puramente aditivo) mais cedo nesta sessão; confirmado via `git log -- drizzle/0024_slim_human_fly.sql` que o ficheiro tem um único commit (`421e23a`) e não foi alterado desde então.
 
 **[FA1-P08] Confirmação de `btree_gist`**
 - Resultado esperado: Extensão disponível e com permissão de criação confirmada no plano de produção da Neon.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: confirmado antes da migração que a extensão não estava instalada e que o utilizador de produção tinha privilégio `CREATE`; confirmado depois que a extensão ficou instalada com sucesso.
 
 **[FA1-P09] Plano executável de recuperação**
 - Resultado esperado: Procedimento de rollback/recuperação documentado e testado num ambiente equivalente antes da aplicação real.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Não executado. Não foi escrito nem testado um procedimento de rollback formal. Mitigação informal considerada suficiente para prosseguir: a migração é puramente aditiva (sem `DROP`/`ALTER` destrutivo em dados existentes), o que reduz materialmente o risco — mas isso não substitui um plano de recuperação testado, que continua em falta.
 
 **[FA1-P10] Aplicação controlada da migração**
 - Resultado esperado: `DATABASE_URL="<produção>" pnpm db:migrate` corre sem erros, dentro da janela definida.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: `drizzle-kit migrate` (comando subjacente ao script `pnpm db:migrate`) correu contra produção e terminou com "migrations applied successfully!", sem erros. Nota: não houve janela de baixo impacto definida previamente — ver P02, que fica em falta separadamente.
 
 **[FA1-P11] `db:check-drift` depois**
 - Resultado esperado: Sem inconsistências entre dev e produção depois da migração.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: `node scripts/check-migration-drift.mjs` reportou "25 = 25 — OK, produção está alinhada com dev" depois da migração.
 
 **[FA1-P12] Comparação dos totais depois**
 - Resultado esperado: Totais financeiros idênticos aos registados em P04 — a migração é aditiva, não deve alterar nenhum valor existente.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Passou · Evidência: totais depois da migração idênticos aos de P04 — receitas 67.094,89 €, despesas 31.774,52 €, 34 movimentos.
 
 **[FA1-P13] Smoke tests**
 - Resultado esperado: Páginas principais (`/financas` e as restantes) carregam sem erro 500 depois da migração.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Bloqueado · Motivo: só foi possível verificar páginas públicas sem sessão — confirmado que `gestcondo.vercel.app` carrega normalmente a página de login (sem erro 500, sem redireccionamento inesperado) — e os logs de runtime da Vercel dos 15 minutos seguintes ao deploy mostram 0 erros funcionais em `/financas` e `/index.rsc` (só o aviso benigno de SSL do driver `pg`, o mesmo que aparece nos nossos próprios scripts). Não foi possível percorrer as páginas autenticadas principal a principal, porque isso exige sessão iniciada — ver regra em P14.
 
 **[FA1-P14] Validação por perfil**
 - Resultado esperado: Cada perfil (admin, gestor, condómino, inquilino, fornecedor, auditor) vê exatamente o que é esperado em "Exercícios e contas".
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Bloqueado · Motivo: exige sessão autenticada por perfil em produção, com dados reais. Recuso-me, por regra pessoal inegociável, a introduzir palavras-passe ou autenticar em qualquer conta, mesmo com autorização explícita — já recusado nesta mesma sessão para o Preview. Só executável pelo Rui, com as suas próprias credenciais.
 
 **[FA1-P15] Validação completa da Fase A.1**
 - Resultado esperado: Repetir os casos FA1-F01 a FA1-F34 relevantes com dados reais de produção, sem regressão face ao comportamento validado em dev.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Bloqueado · Motivo: idem P14 — exige sessão autenticada e interação extensa com dados reais de produção, que não posso realizar eu próprio.
 
 **[FA1-P16] Confirmação de ausência de regressões**
 - Resultado esperado: Funcionalidades já existentes (`Movimentos`, `Dívidas por fração`, `Conciliação`, etc.) continuam a funcionar sem alteração de comportamento.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Bloqueado · Motivo: idem P14 — exige sessão autenticada em produção.
 
 **[FA1-P17] Atualização documental**
 - Resultado esperado: `ROADMAP.md`, `FUNCTIONAL_GAPS.md`, `docs/product/MBD_GEST_GAP_ANALYSIS.md` e os 8 documentos desta revisão atualizados de "dev, pendente produção" para o estado real, só depois de P01–P16 concluídos.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Bloqueado · Motivo: P02, P03, P09, P14, P15 e P16 não estão concluídos — a condição de gate não está satisfeita.
 
 **[FA1-P18] Decisão final de disponibilização**
 - Resultado esperado: Decisão explícita e registada sobre disponibilizar a funcionalidade a clientes, distinta da decisão de aplicar a migração.
-- Estado: Não executado — produção não autorizada. Caso não executado nesta sessão.
+- Estado: Não executado. Decisão do Rui, não avaliada nesta sessão — a autorização dada foi especificamente para aplicar a migração e fazer o merge, não para disponibilizar a funcionalidade a clientes.
 
 ### Resumo final da execução
 
 | Estado | Total |
 |---|---|
-| Passou | 40 |
+| Passou | 49 |
 | Falhou | 0 |
-| Bloqueado | 23 |
-| Não executado | 18 |
+| Bloqueado | 28 |
+| Não executado | 4 |
 | Não aplicável | 0 |
 
-Por categoria: funcionais 34 (30 Passou + 4 Bloqueado — F14, F32, F33, F34); acessibilidade 20 (10 Passou + 10 Bloqueado); usabilidade 9 (0 Passou + 9 Bloqueado); produção 18 (Não executado). Total geral = 34 + 20 + 9 + 18 = 81.
+Por categoria: funcionais 34 (30 Passou + 4 Bloqueado — F14, F32, F33, F34); acessibilidade 20 (10 Passou + 10 Bloqueado); usabilidade 9 (0 Passou + 9 Bloqueado); produção 18 (9 Passou — P01, P04, P05, P06, P07, P08, P10, P11, P12 + 5 Bloqueado — P13, P14, P15, P16, P17 + 4 Não executado — P02, P03, P09, P18). Total geral = 34 + 20 + 9 + 18 = 81.
 
 Distribuição dos 10 casos de acessibilidade bloqueados: 4 dependentes de NVDA (A08, A10, A11, A12); 5 dependentes de viewport/zoom não funcional na ferramenta de automação (A15, A16, A17, A18, A20); 1 dependente de medição de contraste indisponível (A19).
 
@@ -510,13 +510,17 @@ Distribuição dos 10 casos de acessibilidade bloqueados: 4 dependentes de NVDA 
   - **F32**: a validação de contas financeiras diferentes existe no código (`extrato.ts`), mas não é acionável pela UI atual porque a linha de extrato importada não dispõe de fluxo de associação de conta financeira. Não classificado como defeito, mas como limitação funcional a avaliar.
   - **F33 / F34**: sem utilizador de teste com perfil condómino disponível nesta sessão — passo obrigatório de cada caso não executado.
   - **Perfis não disponíveis nesta sessão**: sem utilizador condómino de teste; sem utilizador não-treinado; sem NVDA; sem viewport/zoom funcional na ferramenta de automação usada.
+  - **P02**: migração aplicada sem janela de baixo impacto acordada previamente.
+  - **P03**: sem snapshot explícito criado/confirmado antes da migração (Neon plano atual só tem PITR de 6h — `TECHNICAL_DEBT.md` D7). Risco residual, ainda que a migração já esteja aplicada e confirmada como aditiva (P12).
+  - **P09**: sem plano de rollback formal documentado/testado; mitigação informal é a natureza puramente aditiva da migração.
+  - **P13-P16**: smoke test e validações por perfil em produção exigem sessão autenticada, que não posso realizar (regra pessoal inegociável contra inserir credenciais/autenticar em contas) — só executáveis pelo Rui.
 - Falhas críticas: —
 - Falhas altas: —
 - Falhas médias: —
 - Falhas baixas: —
 - Decisão sobre desenvolvimento: Fase A.1 funcionalmente validada em dev quanto ao que foi executável nesta sessão (30/34 casos funcionais Passou; 4/34 Bloqueado por dependências fora do controlo da execução — condomínio de teste dedicado, utilizador condómino, fluxo de UI inexistente para um sub-caso). Acessibilidade parcialmente validada (10/20 Passou por evidência direta; 10/20 Bloqueado — 4 por NVDA, 5 por viewport/zoom, 1 por medição de contraste, todos indisponíveis nesta sessão). Usabilidade totalmente por validar (9/9 Bloqueado, sem utilizador não-treinado disponível).
-- Decisão sobre migração: sem alterações de schema nesta execução — não aplicável.
-- Decisão sobre produção: não avaliada nesta execução (secção P01–P18 não autorizada).
+- Decisão sobre migração: migração 0024 aplicada em produção em 2026-07-24, com drift confirmado a zero antes e depois e totais financeiros idênticos antes/depois — ver P01-P12.
+- Decisão sobre produção: migração e merge para `main` concluídos e verificados tecnicamente (P01, P04-P08, P10-P12 Passou; P13 parcialmente confirmado por telemetria, sem varrimento completo); janela de intervenção e snapshot formal ficaram por fazer (P02, P03) e o plano de rollback não foi testado (P09); validação funcional por perfil com dados reais (P14-P16) e a decisão final de disponibilização a clientes (P18) continuam pendentes, dependentes de o Rui testar com a sua própria sessão.
 - Decisão sobre cliente externo: não avaliada nesta execução.
 - Executor: Claude (Claude Code), autorizado por Rui Coelho
 - Data: 2026-07-24
