@@ -145,14 +145,14 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 - Pré-condições: Movimentos antigos sem exercício, com data no período.
 - Passos: 1. "Associar movimentos antigos" na linha do exercício. 2. Ver a pré-visualização.
 - Resultado esperado: Mostra contagem, totais e amostra **antes** de qualquer alteração; só "Confirmar associação" altera dados.
-- Nota (T2, `DOCUMENT_TRACEABILITY_AUDIT.md`, P2): confirmar que `/auditoria` regista o número total de movimentos associados — limitação conhecida, **não resolvida**: o registo é agregado, não contém os IDs individuais dos movimentos afetados.
+- Nota (T2, `DOCUMENT_TRACEABILITY_AUDIT.md`, P2): **resolvida em desenvolvimento no commit `c25efc3`** — confirmar que `/auditoria` regista `operacaoId`, tipo de operação, total e uma amostra ordenada de IDs de movimentos (até 10, com indicação de truncagem).
 - Nota (T4): confirmar que esta é a única forma de associar exercício a um movimento — não existe reclassificação individual de um movimento já associado a outro exercício. Limitação funcional aceite nesta fase, **não é falha de auditoria**.
 - Estado: Não executado
 
 **[FA1-F16] Associar movimentos a conta com pré-visualização**
 - Passos: 1. "Associar movimentos" na linha da conta. 2. Escolher destino. 3. Ver pré-visualização antes de confirmar.
 - Resultado esperado: Mesmo comportamento de pré-visualização obrigatória do F15, por `destino`.
-- Nota (T2, P2): confirmar que `/auditoria` regista o número total de movimentos associados e o destino — limitação conhecida, **não resolvida**: sem lista de IDs individuais.
+- Nota (T2, P2): **resolvida em desenvolvimento no commit `c25efc3`** — confirmar que `/auditoria` regista `operacaoId`, tipo de operação, total, destino e uma amostra ordenada de IDs de movimentos (até 10, com indicação de truncagem).
 - Nota (T4): confirmar que não existe reclassificação individual de conta para um movimento já associado — só esta via em massa. Limitação funcional aceite, **não é falha de auditoria**.
 - Estado: Não executado
 
@@ -209,7 +209,7 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 - Pré-condições: Exercício anterior, contíguo e fechado.
 - Passos: 1. "Transportar saldo". 2. Rever pré-visualização. 3. Confirmar.
 - Resultado esperado: Saldo final de cada conta no exercício anterior passa a inicial do atual, origem "transportado".
-- Nota (T2, P2): confirmar que `/auditoria` regista o exercício de origem e o número de contas transportadas — limitação conhecida, **não resolvida**: sem lista de contas individuais no texto.
+- Nota (T2, P2): **resolvida em desenvolvimento no commit `c25efc3`** — confirmar que `/auditoria` regista `operacaoId`, tipo de operação, o exercício de origem, o total de contas transportadas e uma amostra ordenada de IDs de contas (até 10, com indicação de truncagem).
 - Estado: Não executado
 
 **[FA1-F27] Impedir duplicação do transporte**
@@ -257,7 +257,7 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 **[FA1-F34] Confirmar proteção do IBAN e auditoria das operações críticas**
 - Passos: 1. Consultar a lista de contas com perfil sem acesso de gestão (ex. condómino). 2. Verificar `/auditoria` após criar/editar/encerrar conta e fechar/reabrir exercício.
 - Resultado esperado: IBAN/nota transitória ocultos para quem não tem permissão; `/auditoria` regista cada operação crítica, nunca com o IBAN completo.
-- Nota (T1, `DOCUMENT_TRACEABILITY_AUDIT.md`, P2): ao editar uma conta (nome/tipo/banco/IBAN), confirmar que `/auditoria` permite perceber que ocorreu uma edição; confirmar que o IBAN completo nunca aparece. Registar como limitação conhecida, **não resolvida**: o registo atual pode não indicar exatamente quais campos foram alterados (ex. não distingue "mudou o IBAN" de "mudou só o nome").
+- Nota (T1, `DOCUMENT_TRACEABILITY_AUDIT.md`, P2): **resolvida em desenvolvimento no commit `c25efc3`** — ao editar uma conta (nome/tipo/banco/IBAN), confirmar que `/auditoria` regista a lista de campos alterados (ex. "Campos alterados: nome, IBAN") e, quando aplicável, `ibanAlterado`, sem nunca incluir o valor do IBAN; confirmar também que gravar sem alterações reais não gera novo registo de auditoria.
 - Estado: Não executado
 
 ### Testes de acessibilidade (20 — FA1-A01 a FA1-A20)
@@ -319,12 +319,14 @@ Uma execução só pode ser considerada reproduzível quando ambiente, versão, 
 
 **[FA1-A12] Anúncio do passo atual do assistente (L2)**
 - Passos: 1. Avançar entre os 3 passos com leitor de ecrã ativo.
-- Resultado esperado: Deveria anunciar "Passo X de 3" — ver lacuna L2, hoje só lê o número solto.
+- Resultado esperado: Deve anunciar "Passo X de 3" e o estado de cada passo (concluído/atual/ainda não disponível).
+- Nota (L2): correção implementada no commit `a1e8c0e`; continua por validar formalmente com NVDA e execução completa da checklist.
 - Estado: Não executado
 
 **[FA1-A13] Aviso de movimento sem data de liquidação (L1)**
 - Passos: 1. Navegar até ao ícone ⚠ junto ao saldo, só por teclado/leitor de ecrã.
-- Resultado esperado: Deveria ser anunciado/acessível por teclado — ver lacuna L1, hoje só em `title` (hover de rato).
+- Resultado esperado: Deve ser acessível e anunciado independentemente do `title`.
+- Nota (L1): correção implementada no commit `a1e8c0e`; validada manualmente em desenvolvimento, mas ainda não validada com leitor de ecrã.
 - Estado: Não executado
 
 **[FA1-A14] Estados não dependentes apenas da cor**

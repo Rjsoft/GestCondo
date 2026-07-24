@@ -63,24 +63,22 @@ Revisão de usabilidade/acessibilidade pedida especificamente para esta funciona
 
 ### 4a.2 Lacunas confirmadas (L1–L8)
 
-**L1 — Aviso essencial dependente de símbolo e `title`**
-- Componente: `components/financas/exercicios-tab.tsx:194-195`.
-- Evidência: `<span title="...">⚠</span>`.
-- Nota de rigor: o atributo `title` pode ser exposto de forma inconsistente por browsers e tecnologias de apoio e, em regra, não constitui uma alternativa suficientemente robusta para transmitir informação essencial — a indicação não deve depender apenas de hover.
-- Impacto: a informação de que existe um movimento liquidado sem data de liquidação pode não ser anunciada de forma fiável nem estar disponível de modo evidente para utilização por teclado.
-- Gravidade: Média. Prioridade: P2.
-- Estado: lacuna confirmada em código.
-- Bloqueia desenvolvimento: não. Bloqueia migração técnica: não. Bloqueia declaração de acessibilidade concluída para este fluxo: sim.
-- Correção futura recomendada (não aplicada nesta etapa documental): manter o ícone decorativo com `aria-hidden="true"`; acrescentar texto visível ou `sr-only` (ex. "Movimento liquidado sem data de liquidação"); associar via `aria-describedby` quando ligado a um valor/linha específico; o `title` pode permanecer como ajuda visual adicional, nunca como único meio.
+**L1 — Aviso essencial dependente de símbolo e `title`** — **Corrigida em desenvolvimento (commit `a1e8c0e`)**
+- Componente: `components/financas/exercicios-tab.tsx`.
+- Correção aplicada: o símbolo `⚠` passou a `aria-hidden="true"`; foi acrescentado texto `sr-only` com pluralização correta (singular "1 movimento pago sem data de liquidação", plural "N movimentos pagos sem data de liquidação"); o `title` foi mantido, mas apenas como reforço visual complementar — deixou de ser a única fonte de informação.
+- Validação: confirmada manualmente em desenvolvimento (smoke test em browser, texto `sr-only` lido diretamente na árvore de acessibilidade do DOM, singular e plural verificados). **Não validada ainda com leitor de ecrã real (NVDA)** — ver L4.
+- Testes automáticos: cobertos indiretamente pelo typecheck/lint/suite de testes (83/83 unitários, 23/23 integração) que passaram após a correção — não existe teste de componente dedicado (ver nota de infraestrutura em L4/CHECKLIST_TESTE_MANUAL.md).
+- Gravidade/Prioridade: mantém-se P2 enquanto a validação com leitor de ecrã (L4) não estiver concluída.
+- Estado: **Resolvida em desenvolvimento; validação com leitor de ecrã ainda pendente.**
+- Bloqueia desenvolvimento: não. Bloqueia migração técnica: não. Bloqueia declaração de acessibilidade concluída para este fluxo: continua a bloquear, mas agora só por depender de L4 (teste real com leitor de ecrã), não de um defeito de código conhecido.
 
-**L2 — Passo atual do assistente sem identificação programática suficiente**
+**L2 — Passo atual do assistente sem identificação programática suficiente** — **Corrigida em desenvolvimento (commit `a1e8c0e`)**
 - Componente: `components/financas/assistente-configuracao-financeira.tsx`.
-- Evidência: números e estados visíveis, sem `aria-current="step"` nem anúncio explícito "Passo X de 3".
-- Impacto: utilizadores de leitor de ecrã podem não receber de forma clara a posição atual e o total de passos.
-- Gravidade: Média. Prioridade: P2.
-- Estado: parcial.
-- Bloqueia desenvolvimento ou migração: não. Bloqueia declaração de acessibilidade completa do assistente: sim.
-- Correção futura recomendada: representar os passos numa lista ordenada; aplicar `aria-current="step"` ao passo ativo; disponibilizar "Passo X de 3" como texto visível ou `sr-only`; não depender só da cor para distinguir concluído/atual/pendente; garantir que a mudança de passo é anunciada adequadamente.
+- Correção aplicada: os passos passaram a estar numa lista semântica (`<ol>`/`<li>`), com `aria-current="step"` no passo ativo, texto `sr-only` "Passo X de 3" com o estado completo do passo ("concluído", "atual" ou "ainda não disponível" — nunca só cor), uma região `aria-live="polite"` a anunciar a mudança de passo, e os ícones/números decorativos marcados `aria-hidden="true"`.
+- Validação: confirmada manualmente em desenvolvimento (smoke test em browser, árvore de acessibilidade lida diretamente do DOM, confirmando a transição "atual" → "concluído" ao avançar de passo). **Não validada ainda com leitor de ecrã real (NVDA)** — ver L4.
+- Gravidade/Prioridade: mantém-se P2 enquanto a validação com leitor de ecrã (L4) não estiver concluída.
+- Estado: **Resolvida em desenvolvimento; validação com tecnologia de apoio ainda pendente.**
+- Bloqueia desenvolvimento ou migração: não. Bloqueia declaração de acessibilidade completa do assistente: continua a bloquear, mas agora só por depender de L4.
 
 **L3 — Erros de campo sem associação semântica ao controlo**
 - Evidência: erros apresentados sobretudo por `toast.error()`, sem erro inline nem `aria-describedby` nos casos revistos.
@@ -199,6 +197,8 @@ Classificação: linguagem simples — observada por leitura de código. Compree
 ### 4a.7 Estado documental
 
 A Fase A.1 segue as convenções de acessibilidade já adotadas no projeto e apresenta várias evidências positivas de código. Foi validada funcionalmente em desenvolvimento, sobretudo com rato, e apenas um diálogo teve foco e Escape confirmados diretamente. Não foi realizada validação completa por teclado, leitor de ecrã, zoom, reflow ou dispositivos físicos. Por isso, **não pode ser declarada plenamente acessível nem compatível com tecnologias de apoio**. Permanece implementada e validada em desenvolvimento, pendente de promoção e validação em produção e de validação específica de acessibilidade.
+
+**Atualização (commit `a1e8c0e`)**: L1 e L2 foram corrigidas e validadas manualmente em desenvolvimento — typecheck, lint, 83/83 testes unitários e 23/23 testes de integração aprovados, além de smoke test manual em browser (produção não utilizada, nenhuma migração executada). L3 e L4 permanecem abertas, sem alteração. A Fase A.1 continua sem validação completa com leitor de ecrã, zoom, reflow e dispositivos físicos, pelo que não deve ser declarada plenamente acessível.
 
 ### 4a.8 Critérios para considerar a acessibilidade da Fase A.1 validada
 
