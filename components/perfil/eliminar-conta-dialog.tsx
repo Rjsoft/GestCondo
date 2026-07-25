@@ -61,6 +61,9 @@ export function EliminarContaDialog() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>
+                Cancelar
+              </Button>
               <Button variant="destructive" onClick={pedirEliminacao} disabled={pending}>
                 {pending ? 'A pedir...' : 'Sim, quero eliminar a minha conta'}
               </Button>

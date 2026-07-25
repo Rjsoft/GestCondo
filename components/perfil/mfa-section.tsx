@@ -229,6 +229,16 @@ function DesativarMfaDialog() {
           />
         </div>
         <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpen(false)
+              setPassword('')
+            }}
+            disabled={pending}
+          >
+            Cancelar
+          </Button>
           <Button variant="destructive" onClick={desativar} disabled={pending || !password}>
             {pending ? 'Aguarde...' : 'Desativar'}
           </Button>
