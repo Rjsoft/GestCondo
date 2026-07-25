@@ -12,7 +12,7 @@ Data: 2026-07-22. Ver `CONTROLLER_PROCESSOR_MATRIX.md` para a análise de papéi
 
 ## Ações identificadas nesta fase
 
-1. **Vercel Analytics não está mencionado na Política de Privacidade nem no `RAT.md`** — corrigir em ambos (ver `RGPD_AUDIT.md`, achado RGPD-01).
+1. ~~Vercel Analytics não está mencionado na Política de Privacidade nem no `RAT.md`~~ **Resolvido** (ver `RGPD_AUDIT.md`, achado RGPD-01) — confirmado 2026-07-25 que já consta em `app/privacidade/page.tsx` (linhas 84 e 95) e em `RAT.md` (secção de subcontratados); o item tinha ficado por marcar apesar de a correção já estar feita.
 2. Confirmar formalmente as regiões de processamento da Neon e da Resend (hoje inferidas, não documentadas).
 3. ~~Localizar ou solicitar o DPA/anexo RGPD de cada subcontratante~~ **Resolvido 2026-07-25** — os três DPAs foram localizados (ver tabela acima). Resend: aplica-se já, sem ação adicional. Neon: aplica-se automaticamente, sem restrição de plano confirmada (fonte oficial da Neon), sem ação adicional. Vercel: **não se aplica enquanto o projeto estiver no plano Hobby** — só passa a aplicar-se automaticamente após upgrade a Pro, que é também necessário por outro motivo (o Hobby proíbe uso comercial, ver `docs/audit/PRE_CLIENTE_EXTERNO.md`); **upgrade adiado por decisão do utilizador até ao primeiro contacto com cliente externo**.
 4. Decidir se o Have I Been Pwned deve constar da Política de Privacidade por transparência, mesmo não processando dados pessoais identificáveis.
