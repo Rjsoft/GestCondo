@@ -10,6 +10,7 @@ import { NovoPontoDialog } from '@/components/assembleias/novo-ponto-dialog'
 import { RegistarPresencaDialog } from '@/components/assembleias/registar-presenca-dialog'
 import { RegistarVotoDialog } from '@/components/assembleias/registar-voto-dialog'
 import { ResultadoBotoesClient } from '@/components/assembleias/resultado-botoes'
+import { VoltarButton } from '@/components/voltar-button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -54,6 +55,9 @@ export default async function AssembleiaDetalhePage({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="self-start">
+        <VoltarButton />
+      </div>
       <PageHeader
         title={`Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}`}
         description={`${formatDataHora(assembleia.dataPrimeiraConvocatoria)} — ${assembleia.local}`}
