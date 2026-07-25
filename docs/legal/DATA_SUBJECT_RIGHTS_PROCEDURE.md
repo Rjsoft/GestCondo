@@ -1,6 +1,6 @@
 # Procedimento de Exercício de Direitos dos Titulares — GestCondo
 
-Data: 2026-07-22. Formaliza, como procedimento, o que `GDPR_CHECKLIST.md` secção 3 já documentava como checklist. Base: RGPD arts. 12º–22º.
+Data: 2026-07-22, **atualizada 2026-07-25** (processo mínimo de oposição/limitação definido — ver secção 3). Formaliza, como procedimento, o que `GDPR_CHECKLIST.md` secção 3 já documentava como checklist. Base: RGPD arts. 12º–22º.
 
 ## 1. Prazo de resposta
 
@@ -19,13 +19,15 @@ Um mês a contar da receção do pedido (art. 12º/3), prorrogável por mais doi
 
 ## 3. Direitos sem autosserviço (processados manualmente pelo administrador)
 
-| Direito | Estado | Procedimento hoje | Procedimento proposto |
-|---|---|---|---|
-| Oposição (art. 21º) | Sem mecanismo dedicado | O titular contacta o administrador do condomínio fora da aplicação | Registar o pedido (data, titular, motivo) num canal auditável — hoje não há onde o fazer dentro da app |
-| Limitação do tratamento (art. 18º) | Sem mecanismo dedicado | Idem | Idem |
-| Retificação/eliminação de dados que o titular não pode editar diretamente (ex. `fracao.proprietario`, permilagem) | Sem mecanismo dedicado | O titular pede ao administrador, que edita manualmente | Registar o pedido e a decisão (`audit_log` já regista a alteração em si, mas não o pedido que a originou) |
+**Processo mínimo definido 2026-07-25** (`docs/audit/PRE_CLIENTE_EXTERNO.md` item 7): o titular contacta o administrador do condomínio (responsável pelo tratamento, decide o mérito do pedido) diretamente, ou, em alternativa, o contacto de privacidade do operador (`rjc-si@netcabo.pt`, ver `app/privacidade/page.tsx` secção 1), que reencaminha o pedido ao administrador competente. Quem recebe o pedido regista, num registo simples (folha de cálculo ou pasta de email dedicada — sem necessidade de funcionalidade nova na app nesta fase), a data de receção, identificação do titular, condomínio, direito invocado, e a data/teor da resposta, para poder demonstrar cumprimento do prazo de um mês (secção 1). O operador (RJCSI) presta assistência técnica ao administrador para executar a decisão quando tecnicamente necessário (ex. localizar um dado específico para limitar o seu tratamento), mas **não decide o mérito do pedido** — essa decisão cabe sempre ao responsável pelo tratamento, consistente com o papel do operador definido no Contrato SaaS (cláusula 2) e no DPA.
 
-**Risco identificado**: sem um registo formal do pedido (data de receção, prazo, decisão, evidência), não é possível demonstrar cumprimento do prazo de um mês nem responder a uma eventual reclamação à CNPD sobre um pedido não autosserviço. Recomenda-se, no mínimo, que o administrador registe estes pedidos por email (já ocorre implicitamente) e que se considere, numa fase seguinte, um formulário dedicado dentro da app que gere um registo com timestamp.
+| Direito | Estado | Procedimento adotado |
+|---|---|---|
+| Oposição (art. 21º) | ✅ Processo mínimo definido | Ver acima |
+| Limitação do tratamento (art. 18º) | ✅ Processo mínimo definido | Ver acima |
+| Retificação/eliminação de dados que o titular não pode editar diretamente (ex. `fracao.proprietario`, permilagem) | ✅ Processo mínimo definido | Ver acima — mesmo canal e registo; a alteração em si já fica registada em `audit_log`, o registo cobre agora também o pedido que a originou |
+
+**Limitação que continua a existir**: o registo é manual (folha de cálculo/email), não um formulário dentro da app com timestamp automático — suficiente como processo mínimo para o primeiro cliente externo, mas vale a pena evoluir para um formulário dedicado numa fase seguinte, à medida que o volume de pedidos justificar o investimento.
 
 ## 4. Validação de identidade
 

@@ -36,7 +36,7 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 | Acesso (art. 15º) | ✅ Implementado 2026-07-09 | Ecrã `/os-meus-dados` (`app/actions/perfil.ts:getMeuPerfil`) — qualquer membro aprovado vê os seus próprios dados. |
 | Retificação (art. 16º) | ✅ Implementado 2026-07-09 | `atualizarMeuPerfil` (`app/actions/perfil.ts`) permite ao próprio corrigir nome/telefone, sem passar pelo admin — nunca aceita um `id` do cliente, sempre a própria linha do chamador. Perfil/fração continuam só editáveis por admin (decisão deliberada). |
 | Apagamento (art. 17º) | ✅ Implementado 2026-07-09 | `user.deleteUser` do better-auth (`lib/auth.ts`), com confirmação por email antes de eliminar. `afterDelete` remove a linha `membro` associada (mesmo padrão de `rejeitarMembro`); `user`/`account`/`session` são removidos pelo próprio better-auth (FK `onDelete: cascade`). |
-| Oposição/limitação (arts. 18º/21º) | ❌ Não | Sem mecanismo automático — processado manualmente pelo admin do condomínio por agora. |
+| Oposição/limitação (arts. 18º/21º) | 🟡 Processo mínimo definido 2026-07-25 | Sem mecanismo automático na app — o titular contacta o administrador do condomínio ou o contacto de privacidade do operador, que reencaminha; registo manual (data, titular, direito, resposta) num registo simples, sem timestamp automático. Ver `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md` secção 3. |
 | Portabilidade (art. 20º) | ✅ Implementado 2026-07-09 | Botão "Exportar os meus dados" em `/os-meus-dados` (`exportarMeusDados`) gera um ficheiro JSON para download. **Exportação de dados pessoais — verificação 2026-07-24**: no estado atual do código, `exportarMeusDados()` (`app/actions/perfil.ts`) não consulta `conta_financeira` e, por isso, não inclui IBAN. Este comportamento é adequado para contas tituladas pelo condomínio enquanto pessoa coletiva. Caso seja permitida ou registada uma conta titulada por uma pessoa singular, deve ser reavaliado se o respetivo IBAN constitui dado pessoal dessa pessoa e se deve ser abrangido pelo direito de acesso/exportação. Esta decisão permanece pendente de validação jurídica e do modelo definitivo de titularidade das contas. |
 | Registo de consentimentos | ❌ N/A por agora | Como a base legal principal não deve ser consentimento (ver secção 2), isto é secundário — mas se no futuro existir qualquer tratamento por consentimento (ex. newsletter, marketing, partilha com terceiros), tem de existir registo de quando/como foi dado e permitir revogação. |
 
@@ -94,7 +94,7 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 - [x] Ecrã de autogestão "Os meus dados" (ver, corrigir) — `/os-meus-dados`, 2026-07-09
 - [x] Função de exportação de dados pessoais (portabilidade) — `/os-meus-dados`, 2026-07-09
 - [x] Função de eliminação de conta (com efeitos claros sobre dados que têm de ser retidos por obrigação legal, ex. registos financeiros) — `user.deleteUser` (`lib/auth.ts`), 2026-07-09, com confirmação por email
-- [ ] Mecanismo de pedido de oposição/limitação, mesmo que processado manualmente numa fase inicial
+- [x] Mecanismo de pedido de oposição/limitação, processado manualmente — **2026-07-25**, ver `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md` secção 3
 - [ ] **2026-07-24**: confirmar, antes da produção, o tratamento dos direitos de acesso, retificação e exportação quando uma conta financeira excecionalmente pertence a uma pessoa singular
 
 ### Segurança e minimização (cruzar com `SECURITY_AUDIT.md`)

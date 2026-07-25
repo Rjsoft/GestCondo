@@ -1,6 +1,6 @@
 # O que tem de estar concluído antes do primeiro cliente externo
 
-Data: 2026-07-22, **atualizada 2026-07-24** (Fase A.1 — exercícios e contas financeiras), **2026-07-25** (identidade legal do operador decidida — item 1; foro competente confirmado — item 2; modelo de Contrato SaaS criado — item 5). Consolida, num só sítio, o que já estava disperso por `RGPD_AUDIT.md`, `TERMS_OF_USE_REVIEW.md`, `PRIVACY_POLICY_REVIEW.md`, `LEGAL_COMPLIANCE_AUDIT.md` e `ROADMAP.md`. "Cliente externo" = alguém que não sejas tu: um condómino real de fora, ou uma empresa de administração terceira.
+Data: 2026-07-22, **atualizada 2026-07-24** (Fase A.1 — exercícios e contas financeiras), **2026-07-25** (identidade legal do operador decidida — item 1; foro competente confirmado — item 2; modelo de Contrato SaaS criado — item 5; processo mínimo de oposição/limitação definido — item 7). Consolida, num só sítio, o que já estava disperso por `RGPD_AUDIT.md`, `TERMS_OF_USE_REVIEW.md`, `PRIVACY_POLICY_REVIEW.md`, `LEGAL_COMPLIANCE_AUDIT.md` e `ROADMAP.md`. "Cliente externo" = alguém que não sejas tu: um condómino real de fora, ou uma empresa de administração terceira.
 
 Nada disto bloqueia o piloto atual (és só tu). Bloqueia entrar com o próximo.
 
@@ -21,7 +21,7 @@ Preparação técnica **não equivale** a autorização para migração, deploy,
 | 4 | DPA (Acordo de Tratamento de Dados) preenchido e assinado | Obrigatório por lei (art. 28º RGPD) sempre que uma empresa administradora terceira trata dados por tua conta. **Modelo já pronto** (`docs/legal/DPA_TEMPLATE.md`) — falta só preencher com os dados do cliente real e celebrar | Surgir o cliente + item 1 |
 | 5 | Contrato SaaS (comercial) | Sem isto não há relação contratual formal com o cliente | 🟡 **Modelo criado 2026-07-25** — `docs/legal/CONTRATO_SAAS_TEMPLATE.md`, sem fidelização, sem SLA formal (decisões do utilizador). Falta preencher preço/dados por cliente e rever com advogado antes de assinar |
 | 6 | DPA dos teus próprios subcontratantes (Neon, Resend, Vercel) | Accountability RGPD (art. 28º) — precisas de conseguir demonstrar que também tu tens isto em ordem com quem processa dados por tua conta | Contactar cada fornecedor (`docs/legal/DATA_SUBPROCESSORS_REGISTER.md`) |
-| 7 | Registo formal de pedidos de oposição/limitação de dados (RGPD-06) | Hoje só há autosserviço (exportar/eliminar). Pedidos fora disso (oposição, limitação) não têm processo formal | Definir um processo mínimo (pode ser tão simples como um email dedicado + registo manual) |
+| 7 | ~~Registo formal de pedidos de oposição/limitação de dados (RGPD-06)~~ | **✅ Processo mínimo definido 2026-07-25** — titular contacta o administrador do condomínio ou o contacto de privacidade do operador (reencaminha); registo manual (data, titular, direito, resposta). Ver `docs/legal/DATA_SUBJECT_RIGHTS_PROCEDURE.md` secção 3 | — |
 
 Estes 7 itens são **bloqueadores para o primeiro cliente externo**, independentemente do estado de qualquer funcionalidade técnica (incluindo a Fase A.1) — nenhum deles é introduzido, resolvido ou dispensado pela Fase A.1.
 

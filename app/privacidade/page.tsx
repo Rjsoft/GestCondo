@@ -142,12 +142,15 @@ export default function PrivacidadePage() {
           <section className="flex flex-col gap-2 text-sm text-foreground">
             <h2 className="font-serif text-sm font-bold">10. Os seus direitos</h2>
             <p>
-              Tem direito de acesso, retificação, apagamento, oposição e portabilidade dos seus
-              dados. Pode consultar e corrigir os seus próprios dados, exportá-los e pedir a
-              eliminação da sua conta em{' '}
+              Tem direito de acesso, retificação, apagamento, oposição, limitação do tratamento e
+              portabilidade dos seus dados. Pode consultar e corrigir os seus próprios dados,
+              exportá-los e pedir a eliminação da sua conta em{' '}
               <Link href="/os-meus-dados" className="text-primary underline-offset-4 hover:underline">Os meus dados</Link>.
-              Para pedidos que não estejam disponíveis por autogestão, contacte o administrador do
-              seu condomínio.
+              Pedidos de oposição ou de limitação do tratamento não estão disponíveis por
+              autogestão: contacte o administrador do seu condomínio (responsável pela decisão) ou,
+              em alternativa, o contacto de privacidade indicado na secção 1, que reencaminha o
+              pedido ao administrador competente. Respondemos no prazo de um mês a contar da
+              receção do pedido, prorrogável por mais dois meses em casos complexos.
             </p>
           </section>
 
