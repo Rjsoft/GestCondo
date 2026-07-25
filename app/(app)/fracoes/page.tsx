@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatData } from '@/lib/format'
+import { formatData, removerAcentos } from '@/lib/format'
 
 export default async function FracoesPage({
   searchParams,
@@ -31,7 +31,7 @@ export default async function FracoesPage({
   const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
-  const search = ((await searchParams).q ?? '').trim().toLowerCase()
+  const search = removerAcentos(((await searchParams).q ?? '').trim().toLowerCase())
   // Contactos pessoais (email/telefone) só são mostrados a quem gere o
   // condomínio ou audita — ver a mesma decisão em getFracoes()
   // (SECURITY_AUDIT.md S13). Para os restantes, getFracoes() já devolve
@@ -51,9 +51,9 @@ export default async function FracoesPage({
   const fracoes = search
     ? todasFracoes.filter(
         (f) =>
-          f.identificacao.toLowerCase().includes(search) ||
-          f.proprietario.toLowerCase().includes(search) ||
-          (f.letra ?? '').toLowerCase().includes(search),
+          removerAcentos(f.identificacao.toLowerCase()).includes(search) ||
+          removerAcentos(f.proprietario.toLowerCase()).includes(search) ||
+          removerAcentos((f.letra ?? '').toLowerCase()).includes(search),
       )
     : todasFracoes
   const condominosPorFracao = new Map<number, string[]>()

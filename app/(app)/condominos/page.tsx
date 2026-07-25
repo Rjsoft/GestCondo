@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatData } from '@/lib/format'
+import { formatData, removerAcentos } from '@/lib/format'
 import { PERFIL_LABEL, type Perfil } from '@/lib/session'
 import { UserCheck } from 'lucide-react'
 
@@ -31,7 +31,7 @@ export default async function CondominosPage({
   const membro = await requireMembroPagina()
   if (!temConsultaGestao(membro)) notFound()
   const podeGerir = temPermissaoGestao(membro)
-  const search = ((await searchParams).q ?? '').trim().toLowerCase()
+  const search = removerAcentos(((await searchParams).q ?? '').trim().toLowerCase())
 
   const [todos, fracoes] = await Promise.all([getMembros(), getFracoes()])
   const pendentes = todos.filter((m) => m.estado === 'pendente')
@@ -41,7 +41,9 @@ export default async function CondominosPage({
   // pedidos pendentes, para não esconder acidentalmente uma aprovação por fazer.
   const membros = search
     ? aprovados.filter(
-        (m) => m.nome.toLowerCase().includes(search) || m.email.toLowerCase().includes(search),
+        (m) =>
+          removerAcentos(m.nome.toLowerCase()).includes(search) ||
+          removerAcentos(m.email.toLowerCase()).includes(search),
       )
     : aprovados
   const fracaoPorId = new Map(fracoes.map((f) => [f.id, f.identificacao]))

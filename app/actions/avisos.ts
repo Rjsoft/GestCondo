@@ -5,7 +5,7 @@ import { aviso, membro } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -14,7 +14,13 @@ export async function getAvisos({ page = 1, search = '' }: { page?: number; sear
   const m = await requireMembroAprovado()
   const base = and(eq(aviso.condominioId, m.condominioId), isNull(aviso.deletedAt))
   const condicao = search
-    ? and(base, or(ilike(aviso.titulo, `%${search}%`), ilike(aviso.conteudo, `%${search}%`)))
+    ? and(
+        base,
+        or(
+          sql`unaccent(${aviso.titulo}) ilike unaccent(${`%${search}%`})`,
+          sql`unaccent(${aviso.conteudo}) ilike unaccent(${`%${search}%`})`,
+        ),
+      )
     : base
 
   const [avisos, [{ total }]] = await Promise.all([

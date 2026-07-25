@@ -3,7 +3,7 @@
 import { db } from '@/lib/db'
 import { auditLog } from '@/lib/db/schema'
 import { requireConsultaGestao } from '@/lib/session'
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
+import { and, count, desc, eq, or, sql } from 'drizzle-orm'
 
 const PAGE_SIZE = 30
 
@@ -14,7 +14,10 @@ export async function getAuditLog({ page = 1, search = '' }: { page?: number; se
   const condicao = search
     ? and(
         eq(auditLog.condominioId, m.condominioId),
-        or(ilike(auditLog.actorNome, `%${search}%`), ilike(auditLog.detalhes, `%${search}%`)),
+        or(
+          sql`unaccent(${auditLog.actorNome}) ilike unaccent(${`%${search}%`})`,
+          sql`unaccent(${auditLog.detalhes}) ilike unaccent(${`%${search}%`})`,
+        ),
       )
     : eq(auditLog.condominioId, m.condominioId)
 

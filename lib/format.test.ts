@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatData, formatDataHora, formatEuro } from './format'
+import { formatData, formatDataHora, formatEuro, removerAcentos } from './format'
 
 // Os testes comparam contra o próprio Intl (em vez de fixar a string exata
 // "1 234,50 €") para não ficarem frágeis a diferenças de dados ICU entre
@@ -78,5 +78,18 @@ describe('formatDataHora', () => {
   it('aceita uma string de data', () => {
     const iso = '2026-03-05T14:30:00Z'
     expect(formatDataHora(iso)).toBe(dataHora(new Date(iso)))
+  })
+})
+
+describe('removerAcentos', () => {
+  it('remove acentos e cedilha, para pesquisa insensível a diacríticos', () => {
+    expect(removerAcentos('orçamento')).toBe('orcamento')
+    expect(removerAcentos('Condómino português, à Rua José')).toBe(
+      'Condomino portugues, a Rua Jose',
+    )
+  })
+
+  it('não altera texto já sem acentos', () => {
+    expect(removerAcentos('sem acentos')).toBe('sem acentos')
   })
 })

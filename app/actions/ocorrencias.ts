@@ -11,7 +11,7 @@ import {
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
-import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -29,7 +29,13 @@ export async function getOcorrencias({ page = 1, search = '' }: { page?: number;
       )
 
   const condicao = search
-    ? and(escopo, or(ilike(ocorrencia.titulo, `%${search}%`), ilike(ocorrencia.descricao, `%${search}%`)))
+    ? and(
+        escopo,
+        or(
+          sql`unaccent(${ocorrencia.titulo}) ilike unaccent(${`%${search}%`})`,
+          sql`unaccent(${ocorrencia.descricao}) ilike unaccent(${`%${search}%`})`,
+        ),
+      )
     : escopo
 
   const [ocorrencias, [{ total }]] = await Promise.all([

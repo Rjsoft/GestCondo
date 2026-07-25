@@ -1,4 +1,5 @@
 import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
+import { removerAcentos } from '@/lib/format'
 import { getFornecedores } from '@/app/actions/fornecedores'
 import { PageHeader } from '@/components/page-header'
 import { NovoFornecedorDialog } from '@/components/fornecedores/novo-fornecedor-dialog'
@@ -22,7 +23,7 @@ export default async function FornecedoresPage({
 }) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
-  const search = ((await searchParams).q ?? '').trim().toLowerCase()
+  const search = removerAcentos(((await searchParams).q ?? '').trim().toLowerCase())
 
   const todos = await getFornecedores()
   // Pesquisa em memória: lista tipicamente pequena por condomínio, mesma
@@ -30,8 +31,8 @@ export default async function FornecedoresPage({
   const fornecedores = search
     ? todos.filter(
         (f) =>
-          f.nome.toLowerCase().includes(search) ||
-          (f.categoria ?? '').toLowerCase().includes(search),
+          removerAcentos(f.nome.toLowerCase()).includes(search) ||
+          removerAcentos((f.categoria ?? '').toLowerCase()).includes(search),
       )
     : todos
 

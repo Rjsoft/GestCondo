@@ -7,7 +7,7 @@ import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, asc, count, desc, eq, getTableColumns, gte, ilike, isNotNull, isNull, lt, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, getTableColumns, gte, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -38,7 +38,10 @@ export async function getMovimentosPaginado({
     ? and(
         eq(movimento.condominioId, m.condominioId),
         isNull(movimento.deletedAt),
-        or(ilike(movimento.categoria, `%${search}%`), ilike(movimento.descricao, `%${search}%`)),
+        or(
+          sql`unaccent(${movimento.categoria}) ilike unaccent(${`%${search}%`})`,
+          sql`unaccent(${movimento.descricao}) ilike unaccent(${`%${search}%`})`,
+        ),
       )
     : and(eq(movimento.condominioId, m.condominioId), isNull(movimento.deletedAt))
 

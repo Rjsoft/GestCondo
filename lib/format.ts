@@ -25,3 +25,9 @@ export function formatDataHora(value: Date | string) {
     minute: '2-digit',
   }).format(d)
 }
+
+// Remove acentos para permitir pesquisa insensível a diacríticos (ex.
+// "orcamento" encontra "orçamento") nas listas filtradas em memória.
+export function removerAcentos(value: string) {
+  return value.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}

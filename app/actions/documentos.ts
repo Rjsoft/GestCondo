@@ -5,7 +5,7 @@ import { documento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, count, desc, eq, ilike, isNull, or } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -14,7 +14,13 @@ export async function getDocumentos({ page = 1, search = '' }: { page?: number; 
   const m = await requireMembroAprovado()
   const base = and(eq(documento.condominioId, m.condominioId), isNull(documento.deletedAt))
   const condicao = search
-    ? and(base, or(ilike(documento.titulo, `%${search}%`), ilike(documento.descricao, `%${search}%`)))
+    ? and(
+        base,
+        or(
+          sql`unaccent(${documento.titulo}) ilike unaccent(${`%${search}%`})`,
+          sql`unaccent(${documento.descricao}) ilike unaccent(${`%${search}%`})`,
+        ),
+      )
     : base
 
   const [documentos, [{ total }]] = await Promise.all([
