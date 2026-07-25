@@ -2,6 +2,8 @@
 
 Data: 2026-07-24. Escrito depois de aplicar a migração `0024` (Fase A.1) em produção sem janela acordada, sem snapshot e sem plano de rollback testado — três lacunas reais dessa execução (`docs/CHECKLIST_TESTE_MANUAL.md`, casos P02/P03/P09). Este documento fecha essas lacunas para a próxima migração.
 
+**Atualização 2026-07-25 — rede de segurança automática, não substituta deste procedimento**: desde a migração `0027`, cada build da Vercel corre `scripts/check-pending-migrations.mjs` (via script `vercel-build`) antes de `next build`. Se a base de dados do ambiente a implantar tiver menos migrações aplicadas do que o repositório, o build falha e a Vercel mantém a versão anterior a servir tráfego. Isto existe porque o deploy é automático a cada push para `main` — ver incidente de 2026-07-25 em `TECHNICAL_DEBT.md` D8, o terceiro desta classe. **Continua a ser obrigatório seguir os passos abaixo e aplicar a migração antes ou imediatamente depois do push** — o gate só evita que um esquecimento vire uma avaria em produção, não aplica nada sozinho nem dispensa autorização explícita para migrar produção.
+
 **Testado nesta sessão**: passos 3 e 4 abaixo (snapshot e verificação dos modos de restauro) foram executados a sério contra a base de dados de produção real, com autorização explícita do Rui — não é um procedimento teórico. Os restantes passos já eram seguidos nas migrações anteriores (ver `TECHNICAL_DEBT.md` D8).
 
 ## Achado estrutural: `development` não é independente de `production`
