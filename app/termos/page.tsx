@@ -30,8 +30,10 @@ export default function TermosPage() {
           </div>
 
           <p className="rounded-md border border-dashed border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-            <strong>[A preencher]</strong> Identificação legal do operador do GestCondo (nome, NIF,
-            morada) e o foro competente (secção 8) ainda não estão definidos.
+            Operador do GestCondo: RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540, com
+            sede na Rua Estêvão de Vasconcelos, 18 R/C-DTO, 2700-351 Amadora. <strong>[A preencher]</strong>{' '}
+            o foro competente (secção 8) ainda não está definido — depende de confirmar a comarca
+            correspondente a esta sede.
           </p>
 
           <section className="flex flex-col gap-2 text-sm text-foreground">
@@ -44,6 +46,17 @@ export default function TermosPage() {
               aplicação é disponibilizada em regime de piloto gratuito, sem qualquer modelo de
               pagamento definido; se e quando existir um modelo pago, estes termos serão atualizados
               antes de entrar em vigor.
+            </p>
+            <p>
+              A RJCSI - Serviços Informáticos, Unipessoal, Lda. fornece e dá suporte técnico ao
+              software GestCondo — não presta serviços de administração de condomínios, não participa
+              nas decisões de gestão (financeiras, assembleares ou de qualquer outra natureza) e não
+              assume qualquer obrigação decorrente da administração do condomínio, que cabe
+              exclusivamente ao administrador eleito e à assembleia de condóminos (Código Civil arts.
+              1430º e seguintes, em especial art. 1436º). O acesso da RJCSI aos dados de um condomínio
+              limita-se ao estritamente necessário para prestar suporte técnico (ex. diagnosticar um
+              erro reportado), nunca para tomar ou influenciar decisões de gestão — nos termos e
+              limites definidos no Acordo de Tratamento de Dados aplicável.
             </p>
           </section>
 

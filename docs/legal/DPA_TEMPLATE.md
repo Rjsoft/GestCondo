@@ -1,6 +1,6 @@
 # Modelo de Acordo de Tratamento de Dados (DPA) — GestCondo
 
-Data: 2026-07-22. Produzido no seguimento do achado RGPD-03/LEGAL_DOCUMENTS_REGISTER.md desta auditoria. **Este é um modelo/template, não um contrato assinado** — hoje não existe nenhuma empresa administradora cliente distinta do próprio utilizador (confirmado: o utilizador é o único com conta na aplicação). Fica pronto a preencher e a rever juridicamente assim que surgir o primeiro cliente administradora.
+Data: 2026-07-22, **atualizada 2026-07-25** (identidade do Subcontratante preenchida). Produzido no seguimento do achado RGPD-03/LEGAL_DOCUMENTS_REGISTER.md desta auditoria. **Este é um modelo/template, não um contrato assinado** — hoje não existe nenhuma empresa administradora cliente distinta do próprio utilizador (confirmado: o utilizador é o único com conta na aplicação). Fica pronto a preencher e a rever juridicamente assim que surgir o primeiro cliente administradora. O campo "Responsável pelo Tratamento" continua por preencher — varia por cliente.
 
 **Campos entre `[colchetes]` têm de ser preenchidos antes de qualquer uso real. Este modelo não substitui revisão por um advogado antes da assinatura** (ver `LEGAL_RGPD_COMPLIANCE_HANDBOOK.md` secção 25).
 
@@ -12,7 +12,7 @@ Nos termos do artigo 28º do Regulamento (UE) 2016/679 (RGPD), entre:
 
 **Responsável pelo Tratamento**: `[nome da empresa administradora]`, com sede em `[morada]`, NIF `[NIF]`, doravante "Responsável".
 
-**Subcontratante**: `[nome/entidade do operador do GestCondo]`, com sede em `[morada]`, NIF `[NIF]`, doravante "Subcontratante".
+**Subcontratante**: RJCSI - Serviços Informáticos, Unipessoal, Lda., com sede na Rua Estêvão de Vasconcelos, 18 R/C-DTO, 2700-351 Amadora, NIF 510666540, doravante "Subcontratante".
 
 Este Acordo aplica-se ao tratamento de dados pessoais efetuado pelo Subcontratante, através da aplicação GestCondo, por conta do Responsável, no âmbito da administração dos condomínios geridos pelo Responsável.
 

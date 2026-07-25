@@ -41,10 +41,13 @@ export default function PrivacidadePage() {
               técnico nesses casos. Já para as métricas de utilização da própria plataforma (ver secção
               5), o operador do GestCondo é o responsável.
             </p>
-            <p className="rounded-md border border-dashed border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-              <strong>[A preencher]</strong> Identificação legal do operador do GestCondo (nome, NIF,
-              morada) e um contacto de privacidade dedicado — ainda não definidos. Até lá, para exercer
-              qualquer direito abaixo, contacte o administrador do seu condomínio ou use a página{' '}
+            <p className="text-sm">
+              <strong>Operador do GestCondo:</strong> RJCSI - Serviços Informáticos, Unipessoal, Lda.,
+              NIF 510666540, com sede na Rua Estêvão de Vasconcelos, 18 R/C-DTO, 2700-351 Amadora.
+              Contacto de privacidade:{' '}
+              <a href="mailto:rjc-si@netcabo.pt" className="text-primary underline-offset-4 hover:underline">rjc-si@netcabo.pt</a>.
+              Para exercer os direitos abaixo, pode ainda contactar o administrador do seu condomínio ou
+              usar a página{' '}
               <Link href="/os-meus-dados" className="text-primary underline-offset-4 hover:underline">Os meus dados</Link>.
             </p>
           </section>

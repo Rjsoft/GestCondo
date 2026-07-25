@@ -1,6 +1,6 @@
 # O que tem de estar concluído antes do primeiro cliente externo
 
-Data: 2026-07-22, **atualizada 2026-07-24** (Fase A.1 — exercícios e contas financeiras). Consolida, num só sítio, o que já estava disperso por `RGPD_AUDIT.md`, `TERMS_OF_USE_REVIEW.md`, `PRIVACY_POLICY_REVIEW.md`, `LEGAL_COMPLIANCE_AUDIT.md` e `ROADMAP.md`. "Cliente externo" = alguém que não sejas tu: um condómino real de fora, ou uma empresa de administração terceira.
+Data: 2026-07-22, **atualizada 2026-07-24** (Fase A.1 — exercícios e contas financeiras), **2026-07-25** (identidade legal do operador decidida — item 1; modelo de Contrato SaaS criado — item 5). Consolida, num só sítio, o que já estava disperso por `RGPD_AUDIT.md`, `TERMS_OF_USE_REVIEW.md`, `PRIVACY_POLICY_REVIEW.md`, `LEGAL_COMPLIANCE_AUDIT.md` e `ROADMAP.md`. "Cliente externo" = alguém que não sejas tu: um condómino real de fora, ou uma empresa de administração terceira.
 
 Nada disto bloqueia o piloto atual (és só tu). Bloqueia entrar com o próximo.
 
@@ -15,11 +15,11 @@ Preparação técnica **não equivale** a autorização para migração, deploy,
 
 | # | Item | Porquê é bloqueador | Depende de |
 |---|---|---|---|
-| 1 | Identidade legal do operador (nome, NIF, morada) e contacto de privacidade | Sem isto, a Política de Privacidade e os Termos ficam com `[A preencher]` visível — não publicável a sério | **Decisão tua** |
+| 1 | ~~Identidade legal do operador (nome, NIF, morada) e contacto de privacidade~~ | **✅ Resolvido 2026-07-25** — RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540, Rua Estêvão de Vasconcelos, 18 R/C-DTO, 2700-351 Amadora; contacto rjc-si@netcabo.pt. Preenchido em `app/privacidade/page.tsx`, `app/termos/page.tsx` e `docs/legal/DPA_TEMPLATE.md` (campo Subcontratante) | — |
 | 2 | Foro competente nos Termos | Depende do item 1 (sede/domicílio do operador) | **Decisão tua**, depois de 1 |
 | 3 | Classificação B2B / B2C / misto nos Termos | Determina se se aplicam regras de proteção do consumidor (RAL/ODR já estão genéricas, mas a classificação em si falta) | Confirmação jurídica externa |
 | 4 | DPA (Acordo de Tratamento de Dados) preenchido e assinado | Obrigatório por lei (art. 28º RGPD) sempre que uma empresa administradora terceira trata dados por tua conta. **Modelo já pronto** (`docs/legal/DPA_TEMPLATE.md`) — falta só preencher com os dados do cliente real e celebrar | Surgir o cliente + item 1 |
-| 5 | Contrato SaaS (comercial) | Sem isto não há relação contratual formal com o cliente | Decisão de modelo de negócio (preço, condições) |
+| 5 | Contrato SaaS (comercial) | Sem isto não há relação contratual formal com o cliente | 🟡 **Modelo criado 2026-07-25** — `docs/legal/CONTRATO_SAAS_TEMPLATE.md`, sem fidelização, sem SLA formal (decisões do utilizador). Falta preencher preço/dados por cliente e rever com advogado antes de assinar |
 | 6 | DPA dos teus próprios subcontratantes (Neon, Resend, Vercel) | Accountability RGPD (art. 28º) — precisas de conseguir demonstrar que também tu tens isto em ordem com quem processa dados por tua conta | Contactar cada fornecedor (`docs/legal/DATA_SUBPROCESSORS_REGISTER.md`) |
 | 7 | Registo formal de pedidos de oposição/limitação de dados (RGPD-06) | Hoje só há autosserviço (exportar/eliminar). Pedidos fora disso (oposição, limitação) não têm processo formal | Definir um processo mínimo (pode ser tão simples como um email dedicado + registo manual) |
 

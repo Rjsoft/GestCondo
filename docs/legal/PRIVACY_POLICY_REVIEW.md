@@ -1,6 +1,6 @@
 # Revisão da Política de Privacidade — GestCondo
 
-Data: 2026-07-22. Analisa `app/privacidade/page.tsx` contra a checklist da secção 5 do `PROMPT_AUDITORIA_JURIDICA_RGPD.md`. **Atualização 2026-07-22 (mesmo dia, sessão seguinte): as alterações da secção 3 foram aplicadas à página**, com autorização expressa do utilizador, exceto PP-1 (identidade da entidade e contacto de privacidade), que continua por decidir e está marcado como `[A preencher]` diretamente no texto publicado.
+Data: 2026-07-22. Analisa `app/privacidade/page.tsx` contra a checklist da secção 5 do `PROMPT_AUDITORIA_JURIDICA_RGPD.md`. **Atualização 2026-07-22 (mesmo dia, sessão seguinte): as alterações da secção 3 foram aplicadas à página**, com autorização expressa do utilizador, exceto PP-1. **Atualização 2026-07-25: PP-1 resolvido** — identidade do operador (RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540) e contacto de privacidade (rjc-si@netcabo.pt) preenchidos na página, com autorização expressa do utilizador.
 
 ## 1. O que já está bem resolvido
 
@@ -13,7 +13,7 @@ Data: 2026-07-22. Analisa `app/privacidade/page.tsx` contra a checklist da secç
 
 | # | Gap | Estado |
 |---|---|---|
-| PP-1 | Sem identificação concreta da entidade responsável (nome, NIF, morada) nem contacto de privacidade dedicado (email) | ❌ **Aberto** — depende de decisão do utilizador; texto publicado com placeholder `[A preencher]` visível na secção 1 |
+| PP-1 | Sem identificação concreta da entidade responsável (nome, NIF, morada) nem contacto de privacidade dedicado (email) | ✅ **Resolvido 2026-07-25** — RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540, Rua Estêvão de Vasconcelos, 18 R/C-DTO, 2700-351 Amadora; contacto rjc-si@netcabo.pt |
 | PP-2 | Vercel Analytics não mencionado | ✅ Resolvido — secção 4 e 5 |
 | PP-3 | Sem menção ao direito de reclamação à CNPD | ✅ Resolvido — secção 11 |
 | PP-4 | Sem secção de segurança | ✅ Resolvido — secção 6 |
@@ -28,6 +28,6 @@ Data: 2026-07-22. Analisa `app/privacidade/page.tsx` contra a checklist da secç
 
 Todos os gaps acima foram fechados diretamente em `app/privacidade/page.tsx`, com autorização expressa do utilizador, exceto PP-1. A página cresceu de 6 para 12 secções (identificação, dados recolhidos, base jurídica, partilha, cookies/métricas, segurança, transferências internacionais, decisões automatizadas, conservação, direitos, reclamações, alterações).
 
-## 4. Dúvida que não posso resolver sozinho
+## 4. Dúvida resolvida em 2026-07-25
 
-O contacto de privacidade concreto (PP-1) e a identificação formal da entidade (nome/NIF a publicar) continuam a depender de uma decisão do utilizador — não posso inventar um contacto de email nem assumir que é o seu próprio contacto pessoal sem confirmar. Perguntado diretamente em 2026-07-22, respondeu "decido depois" — o placeholder `[A preencher]` foi deixado no texto publicado precisamente para que isto não passe despercebido.
+O contacto de privacidade concreto e a identificação formal da entidade (PP-1) foram decididos pelo utilizador em 2026-07-25: RJCSI - Serviços Informáticos, Unipessoal, Lda. (NIF 510666540), contacto rjc-si@netcabo.pt. Perguntado diretamente em 2026-07-22, tinha respondido "decido depois" — o placeholder `[A preencher]` cumpriu o seu propósito de não deixar isto passar despercebido até à decisão.

@@ -6,7 +6,7 @@ Data: 2026-07-22. Produzido na Fase F da auditoria (secção 10 do `PROMPT_AUDIT
 |---|---|---|---|
 | Política de Privacidade | 🟡 Existe, rascunho técnico | `/privacidade`, revisão em `docs/legal/PRIVACY_POLICY_REVIEW.md` (10 gaps, Fase C) | P1 (fechar os gaps PP-1 a PP-10) |
 | Termos de Utilização | 🟡 Existe, rascunho técnico | `/termos`, revisão em `docs/legal/TERMS_OF_USE_REVIEW.md` (12 gaps, Fase C) | P1 (fechar os gaps TU-1 a TU-12) |
-| **Contrato SaaS** (entre operador e cliente — administradora ou condomínio direto) | ❌ **Em falta** | — | **P1** — necessário para formalizar o que os Termos de Utilização só descrevem em geral: objeto, preço (quando existir), SLA, obrigações específicas |
+| **Contrato SaaS** (entre operador e cliente — administradora ou condomínio direto) | 🟡 **Modelo criado 2026-07-25** — `docs/legal/CONTRATO_SAAS_TEMPLATE.md`, pronto a preencher/assinar. Preço, data de início e forma de pagamento continuam por decidir por cliente; sem SLA formal nem fidelização, por decisão do utilizador | `docs/legal/CONTRATO_SAAS_TEMPLATE.md` | P2 — reavaliar para P0 assim que surgir o cliente concreto (preencher preço/dados) |
 | **Acordo de Tratamento de Dados (DPA)** | 🟡 **Modelo criado 2026-07-22** — `docs/legal/DPA_TEMPLATE.md`, pronto a preencher/assinar. **Sem cliente administradora real ainda** (confirmado: o utilizador é hoje o único com conta na aplicação) — por isso não há, hoje, nenhum DPA por assinar de facto | `docs/legal/DPA_TEMPLATE.md`, análise de papéis em `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md` | P2 — reavaliar para P0 assim que surgir o primeiro cliente administradora real |
 | Cláusulas de subcontratação (dentro do DPA) | ❌ Em falta | Depende do DPA acima | P1 (junto com o DPA) |
 | Lista de subcontratantes | ✅ Feito | `RAT.md`, `docs/legal/DATA_SUBPROCESSORS_REGISTER.md` | — |
@@ -35,8 +35,8 @@ Data: 2026-07-22. Produzido na Fase F da auditoria (secção 10 do `PROMPT_AUDIT
 
 ### P0/P1 — bloqueadores comerciais reais
 1. ~~**DPA** (Acordo de Tratamento de Dados)~~ — **modelo pronto 2026-07-22** (`DPA_TEMPLATE.md`); sem cliente administradora real ainda, por isso deixa de ser P0 — reavaliar quando surgir um.
-2. **Contrato SaaS** — falta o documento que formaliza a relação comercial em si (os Termos de Utilização não substituem um contrato).
-3. Fechar os gaps de `PRIVACY_POLICY_REVIEW.md` e `TERMS_OF_USE_REVIEW.md` (22 gaps no total, Fase C).
+2. ~~**Contrato SaaS**~~ — **modelo pronto 2026-07-25** (`CONTRATO_SAAS_TEMPLATE.md`); falta preencher preço/dados por cliente e rever com advogado antes de assinar — reavaliar para P0 quando surgir o primeiro cliente concreto.
+3. Fechar os gaps de `PRIVACY_POLICY_REVIEW.md` e `TERMS_OF_USE_REVIEW.md` (agora 3 restantes: TU-5 foro, TU-7 classificação B2B/B2C — PP-1/TU-1 resolvidos 2026-07-25).
 
 ### P2 — importantes mas não bloqueadores imediatos
 Política de cookies (curta), política de segurança/acessos/backups, política de exportação/eliminação (formalizar o que já existe tecnicamente), termos para convidados, SLA, plano de recuperação de desastre, avaliação de interesse legítimo (Vercel Analytics).
