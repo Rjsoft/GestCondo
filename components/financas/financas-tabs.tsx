@@ -16,6 +16,8 @@ import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
 import { ExerciciosTab, type ContaComSaldo, type ExercicioLinha } from '@/components/financas/exercicios-tab'
 import { NovoDocumentoFornecedorDialog } from '@/components/financas/novo-documento-fornecedor-dialog'
+import { BalancoPatrimonialTab } from '@/components/financas/balanco-patrimonial-tab'
+import type { getBalancoPatrimonial } from '@/app/actions/contas-financeiras'
 import { DocumentoFornecedorActions } from '@/components/financas/documento-fornecedor-actions'
 import { TipoMovimentoBadge, EstadoDocumentoFornecedorBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
@@ -46,8 +48,11 @@ type Movimento = {
   dataLiquidacao: Date | null
   fracaoId: number | null
   fornecedorId: number | null
+  assembleiaPontoId: number | null
   fornecedorNome?: string | null
 }
+
+type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
 
 type SaldoFracao = {
   fracaoId: number
@@ -159,6 +164,8 @@ export function FinancasTabs({
   contasComSaldo,
   exercicioEmVistaId,
   documentosFornecedor,
+  pontosAssembleia,
+  balancoPatrimonialInicial,
   isAdmin,
 }: {
   movimentos: Movimento[]
@@ -186,6 +193,8 @@ export function FinancasTabs({
   contasComSaldo: ContaComSaldo[]
   exercicioEmVistaId: number | null
   documentosFornecedor: DocumentoFornecedor[]
+  pontosAssembleia: PontoAssembleiaOpcao[]
+  balancoPatrimonialInicial: Awaited<ReturnType<typeof getBalancoPatrimonial>> | null
   isAdmin: boolean
 }) {
   return (
@@ -199,6 +208,7 @@ export function FinancasTabs({
         <TabsTrigger value="conciliacao">Conciliação bancária</TabsTrigger>
         <TabsTrigger value="exercicios">Exercícios e contas</TabsTrigger>
         <TabsTrigger value="documentosFornecedor">Documentos de fornecedor</TabsTrigger>
+        <TabsTrigger value="balancoPatrimonial">Balanço patrimonial</TabsTrigger>
       </TabsList>
 
       <TabsContent value="movimentos" className="mt-4">
@@ -210,7 +220,13 @@ export function FinancasTabs({
               Relatório (PDF)
             </Button>
             <ExportarCsvButton movimentos={movimentosCsv} />
-            {isAdmin && <NovoMovimentoDialog fracoes={fracoes} fornecedores={fornecedores} />}
+            {isAdmin && (
+              <NovoMovimentoDialog
+                fracoes={fracoes}
+                fornecedores={fornecedores}
+                pontosAssembleia={pontosAssembleia}
+              />
+            )}
           </div>
         </div>
         <Card>
@@ -254,6 +270,14 @@ export function FinancasTabs({
                           className="ml-2 border-sky-200 bg-sky-100 text-sky-800"
                         >
                           Reserva
+                        </Badge>
+                      )}
+                      {m.assembleiaPontoId != null && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 border-violet-200 bg-violet-100 text-violet-800"
+                        >
+                          Quota extraordinária
                         </Badge>
                       )}
                     </TableCell>
@@ -308,8 +332,10 @@ export function FinancasTabs({
                           destino={m.destino}
                           fracaoId={m.fracaoId}
                           fornecedorId={m.fornecedorId}
+                          assembleiaPontoId={m.assembleiaPontoId}
                           fracoes={fracoes}
                           fornecedores={fornecedores}
+                          pontosAssembleia={pontosAssembleia}
                         />
                       </TableCell>
                     )}
@@ -406,6 +432,7 @@ export function FinancasTabs({
           anoInicial={anoMapaMensal}
           fracoes={fracoes}
           fornecedores={fornecedores}
+          pontosAssembleia={pontosAssembleia}
           isAdmin={isAdmin}
         />
       </TabsContent>
@@ -672,6 +699,14 @@ export function FinancasTabs({
             </Table>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="balancoPatrimonial" className="mt-4">
+        <BalancoPatrimonialTab
+          exercicios={exercicios}
+          exercicioEmVistaIdInicial={exercicioEmVistaId}
+          balancoPatrimonialInicial={balancoPatrimonialInicial}
+        />
       </TabsContent>
     </Tabs>
   )

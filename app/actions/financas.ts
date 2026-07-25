@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
+import { assembleia, assembleiaPonto, fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais } from '@/lib/rateio'
@@ -386,6 +386,56 @@ export async function lancarJurosMora(taxaAnualPercent: number) {
   }
 }
 
+// Pontos de assembleia elegíveis para originar uma quota extraordinária
+// (G05): só de assembleias com ata já aprovada, e só pontos já aprovados —
+// para popular o seletor no diálogo de novo/editar movimento.
+export async function getPontosAprovadosParaQuota() {
+  const m = await requireAcessoFinanceiro()
+  return db
+    .select({
+      id: assembleiaPonto.id,
+      titulo: assembleiaPonto.titulo,
+      assembleiaData: assembleia.dataPrimeiraConvocatoria,
+    })
+    .from(assembleiaPonto)
+    .innerJoin(assembleia, eq(assembleiaPonto.assembleiaId, assembleia.id))
+    .where(
+      and(
+        eq(assembleia.condominioId, m.condominioId),
+        eq(assembleia.estado, 'aprovada'),
+        eq(assembleiaPonto.resultado, 'aprovado'),
+      ),
+    )
+    .orderBy(desc(assembleia.dataPrimeiraConvocatoria))
+}
+
+// Confirma que um ponto de assembleia pode originar uma quota extraordinária
+// (G05): tem de pertencer a uma assembleia do próprio condomínio, com ata já
+// aprovada (imutável), e o ponto em si tem de ter sido aprovado — nunca
+// ligar uma quota a uma deliberação ainda pendente ou reprovada. Isolamento
+// multi-tenant garantido aqui, não ao nível da BD (assembleiaPonto não tem
+// condominioId próprio nem FK composta — ver comentário em lib/db/schema.ts).
+async function validarAssembleiaPonto(condominioId: number, assembleiaPontoId: number) {
+  const [ponto] = await db
+    .select({ id: assembleiaPonto.id })
+    .from(assembleiaPonto)
+    .innerJoin(assembleia, eq(assembleiaPonto.assembleiaId, assembleia.id))
+    .where(
+      and(
+        eq(assembleiaPonto.id, assembleiaPontoId),
+        eq(assembleia.condominioId, condominioId),
+        eq(assembleia.estado, 'aprovada'),
+        eq(assembleiaPonto.resultado, 'aprovado'),
+      ),
+    )
+    .limit(1)
+  if (!ponto) {
+    throw new Error(
+      'Deliberação de assembleia inválida — tem de ser um ponto aprovado de uma assembleia com ata já aprovada, do seu condomínio',
+    )
+  }
+}
+
 export async function criarMovimento(formData: FormData) {
   const admin = await requireAdmin()
 
@@ -399,6 +449,8 @@ export async function criarMovimento(formData: FormData) {
   const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
   const fornecedorIdRaw = String(formData.get('fornecedorId') || '').trim()
   const fornecedorId = fornecedorIdRaw ? Number(fornecedorIdRaw) : null
+  const assembleiaPontoIdRaw = String(formData.get('assembleiaPontoId') || '').trim()
+  const assembleiaPontoId = assembleiaPontoIdRaw ? Number(assembleiaPontoIdRaw) : null
   const destino = String(formData.get('destino') || 'geral')
   const meioPagamentoRaw = String(formData.get('meioPagamento') || '').trim()
   const referenciaMbRaw = String(formData.get('referenciaMb') || '').trim()
@@ -416,6 +468,10 @@ export async function criarMovimento(formData: FormData) {
   if (destino !== 'geral' && destino !== 'reserva') {
     throw new Error('Destino inválido')
   }
+  // Quota extraordinária (G05): só faz sentido numa receita.
+  if (tipo === 'receita' && assembleiaPontoId) {
+    await validarAssembleiaPonto(admin.condominioId, assembleiaPontoId)
+  }
   const dataMovimento = dataStr ? new Date(dataStr) : new Date()
   await garantirExercicioAberto(admin.condominioId, dataMovimento)
 
@@ -431,6 +487,7 @@ export async function criarMovimento(formData: FormData) {
       pago,
       fracaoId: tipo === 'receita' ? fracaoId : null,
       fornecedorId: tipo === 'despesa' ? fornecedorId : null,
+      assembleiaPontoId: tipo === 'receita' ? assembleiaPontoId : null,
       destino,
       // Detalhe do pagamento só faz sentido quando o movimento já nasce pago.
       meioPagamento: pago && meioPagamentoRaw ? meioPagamentoRaw : null,
@@ -445,7 +502,7 @@ export async function criarMovimento(formData: FormData) {
     acao: 'criar',
     entidade: 'movimento',
     entidadeId: novo.id,
-    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)${destino === 'reserva' ? ' [fundo de reserva]' : ''}`,
+    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)${destino === 'reserva' ? ' [fundo de reserva]' : ''}${assembleiaPontoId ? ' [quota extraordinária]' : ''}`,
   })
 
   revalidatePath('/financas')
@@ -473,6 +530,8 @@ export async function atualizarMovimento(formData: FormData) {
   const fracaoId = fracaoIdRaw ? Number(fracaoIdRaw) : null
   const fornecedorIdRaw = String(formData.get('fornecedorId') || '').trim()
   const fornecedorId = fornecedorIdRaw ? Number(fornecedorIdRaw) : null
+  const assembleiaPontoIdRaw = String(formData.get('assembleiaPontoId') || '').trim()
+  const assembleiaPontoId = assembleiaPontoIdRaw ? Number(assembleiaPontoIdRaw) : null
   const destino = String(formData.get('destino') || 'geral')
 
   if (!categoria || !descricao || !valor || !dataStr) {
@@ -492,6 +551,9 @@ export async function atualizarMovimento(formData: FormData) {
   if (atual.tipo === 'receita' && !fracaoId) {
     throw new Error('Selecione a fração a que esta quota diz respeito')
   }
+  if (atual.tipo === 'receita' && assembleiaPontoId) {
+    await validarAssembleiaPonto(admin.condominioId, assembleiaPontoId)
+  }
 
   const novaData = new Date(dataStr)
   await garantirExercicioAberto(admin.condominioId, atual.data)
@@ -507,6 +569,7 @@ export async function atualizarMovimento(formData: FormData) {
       destino,
       fracaoId: atual.tipo === 'receita' ? fracaoId : null,
       fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
+      assembleiaPontoId: atual.tipo === 'receita' ? assembleiaPontoId : null,
     })
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 

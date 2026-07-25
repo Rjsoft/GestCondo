@@ -2,7 +2,14 @@
 
 import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
-import { contaFinanceira, exercicioFinanceiro, movimento, saldoInicialConta } from '@/lib/db/schema'
+import {
+  contaFinanceira,
+  documentoFornecedor,
+  exercicioFinanceiro,
+  fornecedor,
+  movimento,
+  saldoInicialConta,
+} from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import {
   calcularSaldoConta,
@@ -11,6 +18,8 @@ import {
   idsForaDeExercicioFechado,
   normalizarIban,
 } from '@/lib/contas-financeiras'
+import { calcularSaldosDocumentosFornecedor } from '@/lib/documentos-fornecedor'
+import { getSaldoFundoReserva } from '@/app/actions/financas'
 import { MSG_CONTA } from '@/lib/financas'
 import { requireAcessoFinanceiro, requireAdmin, temConsultaGestao } from '@/lib/session'
 import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm'
@@ -305,6 +314,100 @@ export async function getSaldosContas(exercicioId: number) {
       }
     }),
   )
+}
+
+/**
+ * Balanço patrimonial (Ativo/Passivo/Situação Líquida) de um exercício —
+ * G09 de docs/product/MBD_GEST_GAP_ANALYSIS.md secção 7.6. Cálculo puro de
+ * leitura, sem tabela própria: reutiliza `calcularSaldoConta` (mesma lógica
+ * do separador "Exercícios e contas"), `calcularSaldosDocumentosFornecedor`
+ * (mesma lógica do separador "Documentos de fornecedor") e
+ * `getSaldoFundoReserva` (mesma lógica do dashboard) — nunca reimplementa
+ * nenhum destes cálculos.
+ *
+ * Situação Líquida = resíduo (Ativo − Passivo − Fundo de reserva), para que
+ * a equação contabilística Ativo = Passivo + Situação Líquida seja sempre
+ * verdadeira por construção, não por reconciliação manual.
+ *
+ * Limitação assumida (não é uma fachada silenciosa): não inclui
+ * adiantamentos de condóminos como passivo próprio — essa funcionalidade
+ * (G04) ainda não existe (ver FUNCTIONAL_GAPS.md); um condómino que pague
+ * antecipadamente aparece hoje só como uma quota futura já paga, sem
+ * reduzir visivelmente o Ativo por essa via.
+ */
+export async function getBalancoPatrimonial(exercicioId: number) {
+  const m = await requireAcessoFinanceiro()
+
+  const [ex] = await db
+    .select()
+    .from(exercicioFinanceiro)
+    .where(and(eq(exercicioFinanceiro.id, exercicioId), eq(exercicioFinanceiro.condominioId, m.condominioId)))
+    .limit(1)
+  if (!ex) throw new Error('Exercício não encontrado')
+
+  const contas = await db
+    .select()
+    .from(contaFinanceira)
+    .where(and(eq(contaFinanceira.condominioId, m.condominioId), eq(contaFinanceira.estado, 'ativa')))
+    .orderBy(asc(contaFinanceira.nome))
+
+  const saldosContas = await Promise.all(
+    contas.map(async (c) => {
+      const { saldo } = await calcularSaldoConta(c.id, exercicioId)
+      return { id: c.id, nome: c.nome, saldo }
+    }),
+  )
+  const disponibilidades = saldosContas.reduce((s, c) => s + c.saldo, 0)
+
+  // Dívidas de condóminos: total ainda por receber, independentemente do
+  // exercício em que a quota foi lançada — um balanço mostra o saldo atual,
+  // não só o movimento do período (mesmo raciocínio de getMapaSaldos).
+  const quotasPorReceber = await db
+    .select({ valor: movimento.valor })
+    .from(movimento)
+    .where(
+      and(
+        eq(movimento.condominioId, m.condominioId),
+        eq(movimento.tipo, 'receita'),
+        eq(movimento.pago, false),
+        eq(movimento.destino, 'geral'),
+        isNull(movimento.deletedAt),
+      ),
+    )
+  const dividasCondominos = quotasPorReceber.reduce((s, mv) => s + Number(mv.valor), 0)
+
+  const ativoTotal = disponibilidades + dividasCondominos
+
+  // Dívidas a fornecedores: mesmo raciocínio — saldo atual, não só do
+  // exercício em causa.
+  const documentos = await db
+    .select({ id: documentoFornecedor.id, valor: documentoFornecedor.valor, fornecedorId: documentoFornecedor.fornecedorId })
+    .from(documentoFornecedor)
+    .leftJoin(fornecedor, eq(documentoFornecedor.fornecedorId, fornecedor.id))
+    .where(and(eq(documentoFornecedor.condominioId, m.condominioId), isNull(documentoFornecedor.deletedAt)))
+  const saldosDocumentos = await calcularSaldosDocumentosFornecedor(documentos)
+  const dividasFornecedores = [...saldosDocumentos.values()]
+    .filter((s) => s.saldo > 0)
+    .reduce((s, d) => s + d.saldo, 0)
+
+  const passivoTotal = dividasFornecedores
+
+  const fundoReserva = await getSaldoFundoReserva()
+  // Resíduo: garante Ativo = Passivo + Situação Líquida por construção,
+  // não por reconciliação manual entre cálculos independentes.
+  const resultadosAcumulados = ativoTotal - passivoTotal - fundoReserva.saldo
+  const situacaoLiquidaTotal = fundoReserva.saldo + resultadosAcumulados
+
+  return {
+    exercicio: { id: ex.id, designacao: ex.designacao, anoPrincipal: ex.anoPrincipal },
+    ativo: { disponibilidades, contas: saldosContas, dividasCondominos, total: ativoTotal },
+    passivo: { dividasFornecedores, total: passivoTotal },
+    situacaoLiquida: {
+      fundoReserva: fundoReserva.saldo,
+      resultadosAcumulados,
+      total: situacaoLiquidaTotal,
+    },
+  }
 }
 
 /**

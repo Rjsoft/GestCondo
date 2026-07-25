@@ -40,8 +40,11 @@ type Movimento = {
   dataLiquidacao: Date | null
   fracaoId: number | null
   fornecedorId: number | null
+  assembleiaPontoId: number | null
   fornecedorNome?: string | null
 }
+
+type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
 
 type CelulaMapaMensal = {
   mes: number
@@ -72,12 +75,14 @@ export function MapaMensalTab({
   anoInicial,
   fracoes,
   fornecedores,
+  pontosAssembleia,
   isAdmin,
 }: {
   dadosIniciais: LinhaMapaMensal[]
   anoInicial: number
   fracoes: { id: number; identificacao: string }[]
   fornecedores: { id: number; nome: string }[]
+  pontosAssembleia: PontoAssembleiaOpcao[]
   isAdmin: boolean
 }) {
   const [ano, setAno] = useState(anoInicial)
@@ -212,8 +217,10 @@ export function MapaMensalTab({
                       destino={mv.destino}
                       fracaoId={mv.fracaoId}
                       fornecedorId={mv.fornecedorId}
+                      assembleiaPontoId={mv.assembleiaPontoId}
                       fracoes={fracoes}
                       fornecedores={fornecedores}
+                      pontosAssembleia={pontosAssembleia}
                     />
                   )}
                 </div>

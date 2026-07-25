@@ -18,6 +18,7 @@ import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
 type FornecedorOpcao = { id: number; nome: string }
+type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
 
 export function MovimentoActions({
   id,
@@ -30,8 +31,10 @@ export function MovimentoActions({
   destino,
   fracaoId,
   fornecedorId,
+  assembleiaPontoId,
   fracoes,
   fornecedores,
+  pontosAssembleia,
 }: {
   id: number
   pago: boolean
@@ -43,8 +46,10 @@ export function MovimentoActions({
   destino: string
   fracaoId: number | null
   fornecedorId: number | null
+  assembleiaPontoId: number | null
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
+  pontosAssembleia: PontoAssembleiaOpcao[]
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -139,8 +144,10 @@ export function MovimentoActions({
         destino={destino}
         fracaoId={fracaoId}
         fornecedorId={fornecedorId}
+        assembleiaPontoId={assembleiaPontoId}
         fracoes={fracoes}
         fornecedores={fornecedores}
+        pontosAssembleia={pontosAssembleia}
       />
     </>
   )

@@ -5,6 +5,7 @@ import {
   getMapaSaldos,
   getMovimentos,
   getMovimentosPaginado,
+  getPontosAprovadosParaQuota,
   getQuotasEmAtraso,
   getSaldoFundoReserva,
 } from '@/app/actions/financas'
@@ -18,7 +19,7 @@ import {
   getMovimentosPorConciliar,
 } from '@/app/actions/extrato'
 import { getExercicios } from '@/app/actions/exercicios'
-import { getSaldosContas } from '@/app/actions/contas-financeiras'
+import { getBalancoPatrimonial, getSaldosContas } from '@/app/actions/contas-financeiras'
 import { getDocumentosFornecedor } from '@/app/actions/documentos-fornecedor'
 import { PageHeader } from '@/components/page-header'
 import { FinancasTabs } from '@/components/financas/financas-tabs'
@@ -55,6 +56,7 @@ export default async function FinancasPage({
     linhasConciliadas,
     exercicios,
     documentosFornecedor,
+    pontosAssembleia,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -71,6 +73,7 @@ export default async function FinancasPage({
     getLinhasConciliadas(),
     getExercicios(),
     getDocumentosFornecedor(),
+    getPontosAprovadosParaQuota(),
   ])
 
   // Exercício por omissão para mostrar saldos: o aberto mais recente (o
@@ -80,6 +83,9 @@ export default async function FinancasPage({
   const exercicioEmVistaId =
     exercicios.find((e) => e.estado === 'aberto')?.id ?? exercicios[0]?.id ?? null
   const contasComSaldo = exercicioEmVistaId ? await getSaldosContas(exercicioEmVistaId) : []
+  const balancoPatrimonial = exercicioEmVistaId
+    ? await getBalancoPatrimonial(exercicioEmVistaId)
+    : null
 
   // Conta corrente do condomínio: movimentos com destino "geral", excluindo
   // o fundo de reserva (obrigatório por lei e seguido à parte — ver
@@ -176,7 +182,13 @@ export default async function FinancasPage({
         exercicios={exercicios}
         contasComSaldo={contasComSaldo}
         exercicioEmVistaId={exercicioEmVistaId}
+        balancoPatrimonialInicial={balancoPatrimonial}
         documentosFornecedor={documentosFornecedor}
+        pontosAssembleia={pontosAssembleia.map((p) => ({
+          id: p.id,
+          titulo: p.titulo,
+          assembleiaData: p.assembleiaData.toISOString(),
+        }))}
         isAdmin={isAdmin}
       />
     </div>

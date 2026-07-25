@@ -20,13 +20,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible'
 import { DESTINO_LABEL } from '@/lib/financas'
+import { ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
 type FornecedorOpcao = { id: number; nome: string }
+type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
 
 const SEM_FORNECEDOR = '__sem_fornecedor__'
+const SEM_DELIBERACAO = '__sem_deliberacao__'
 
 function paraInputDate(data: Date) {
   return new Date(data).toISOString().slice(0, 10)
@@ -44,8 +48,10 @@ export function EditarMovimentoDialog({
   destino,
   fracaoId,
   fornecedorId,
+  assembleiaPontoId,
   fracoes,
   fornecedores,
+  pontosAssembleia,
 }: {
   id: number
   open: boolean
@@ -58,12 +64,17 @@ export function EditarMovimentoDialog({
   destino: string
   fracaoId: number | null
   fornecedorId: number | null
+  assembleiaPontoId: number | null
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
+  pontosAssembleia: PontoAssembleiaOpcao[]
 }) {
   const [fracaoIdValor, setFracaoIdValor] = useState(fracaoId ? String(fracaoId) : '')
   const [fornecedorIdValor, setFornecedorIdValor] = useState(
     fornecedorId ? String(fornecedorId) : SEM_FORNECEDOR,
+  )
+  const [assembleiaPontoIdValor, setAssembleiaPontoIdValor] = useState(
+    assembleiaPontoId ? String(assembleiaPontoId) : SEM_DELIBERACAO,
   )
   const [destinoValor, setDestinoValor] = useState(destino)
   const [pending, startTransition] = useTransition()
@@ -71,7 +82,12 @@ export function EditarMovimentoDialog({
   const onSubmit = (formData: FormData) => {
     formData.set('id', String(id))
     formData.set('destino', destinoValor)
-    if (tipo === 'receita') formData.set('fracaoId', fracaoIdValor)
+    if (tipo === 'receita') {
+      formData.set('fracaoId', fracaoIdValor)
+      if (assembleiaPontoIdValor !== SEM_DELIBERACAO) {
+        formData.set('assembleiaPontoId', assembleiaPontoIdValor)
+      }
+    }
     if (tipo === 'despesa' && fornecedorIdValor !== SEM_FORNECEDOR) {
       formData.set('fornecedorId', fornecedorIdValor)
     }
@@ -164,18 +180,56 @@ export function EditarMovimentoDialog({
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
-            <Label>Destino</Label>
-            <Select value={destinoValor} onValueChange={(v) => v && setDestinoValor(v)}>
-              <SelectTrigger>
-                <SelectValue>{(v: string | null) => (v ? DESTINO_LABEL[v] : '')}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="geral">Conta corrente do condomínio</SelectItem>
-                <SelectItem value="reserva">Fundo de reserva</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Collapsible defaultOpen={destino === 'reserva' || assembleiaPontoId != null}>
+            <CollapsibleTrigger>
+              <ChevronDown className="h-3.5 w-3.5" />
+              Mais opções
+            </CollapsibleTrigger>
+            <CollapsiblePanel>
+              <div className="flex flex-col gap-2">
+                <Label>Destino</Label>
+                <Select value={destinoValor} onValueChange={(v) => v && setDestinoValor(v)}>
+                  <SelectTrigger>
+                    <SelectValue>{(v: string | null) => (v ? DESTINO_LABEL[v] : '')}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="geral">Conta corrente do condomínio</SelectItem>
+                    <SelectItem value="reserva">Fundo de reserva</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {tipo === 'receita' && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="assembleiaPontoIdEdit">
+                    Quota extraordinária? Ligue a uma decisão de assembleia
+                  </Label>
+                  <Select
+                    value={assembleiaPontoIdValor}
+                    onValueChange={(v) => v && setAssembleiaPontoIdValor(v)}
+                  >
+                    <SelectTrigger id="assembleiaPontoIdEdit">
+                      <SelectValue>
+                        {(v: string | null) => {
+                          if (v === SEM_DELIBERACAO || v == null) return 'Quota normal (sem ligação)'
+                          const p = pontosAssembleia.find((p) => String(p.id) === v)
+                          return p ? p.titulo : 'Quota normal (sem ligação)'
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={SEM_DELIBERACAO}>Quota normal (sem ligação)</SelectItem>
+                      {pontosAssembleia.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.titulo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CollapsiblePanel>
+          </Collapsible>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria">Categoria</Label>

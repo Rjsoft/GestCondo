@@ -21,26 +21,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible'
 import { DESTINO_LABEL, MEIO_PAGAMENTO_LABEL, TIPO_MOVIMENTO_LABEL } from '@/lib/financas'
-import { Plus } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
 type FornecedorOpcao = { id: number; nome: string }
+type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
 
 const SEM_FORNECEDOR = '__sem_fornecedor__'
+const SEM_DELIBERACAO = '__sem_deliberacao__'
 
 export function NovoMovimentoDialog({
   fracoes,
   fornecedores,
+  pontosAssembleia,
 }: {
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
+  pontosAssembleia: PontoAssembleiaOpcao[]
 }) {
   const [open, setOpen] = useState(false)
   const [tipo, setTipo] = useState('despesa')
   const [fracaoId, setFracaoId] = useState('')
   const [fornecedorId, setFornecedorId] = useState(SEM_FORNECEDOR)
+  const [assembleiaPontoId, setAssembleiaPontoId] = useState(SEM_DELIBERACAO)
   const [destino, setDestino] = useState('geral')
   const [pago, setPago] = useState(true)
   const [meioPagamento, setMeioPagamento] = useState('')
@@ -49,7 +55,12 @@ export function NovoMovimentoDialog({
   const onSubmit = (formData: FormData) => {
     formData.set('tipo', tipo)
     formData.set('destino', destino)
-    if (tipo === 'receita') formData.set('fracaoId', fracaoId)
+    if (tipo === 'receita') {
+      formData.set('fracaoId', fracaoId)
+      if (assembleiaPontoId !== SEM_DELIBERACAO) {
+        formData.set('assembleiaPontoId', assembleiaPontoId)
+      }
+    }
     if (tipo === 'despesa' && fornecedorId !== SEM_FORNECEDOR) {
       formData.set('fornecedorId', fornecedorId)
     }
@@ -61,6 +72,7 @@ export function NovoMovimentoDialog({
         setOpen(false)
         setFracaoId('')
         setFornecedorId(SEM_FORNECEDOR)
+        setAssembleiaPontoId(SEM_DELIBERACAO)
         setDestino('geral')
         setPago(true)
         setMeioPagamento('')
@@ -174,25 +186,67 @@ export function NovoMovimentoDialog({
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
-            <Label>Destino</Label>
-            <Select
-              value={destino}
-              onValueChange={(value) => value && setDestino(value)}
-            >
-              <SelectTrigger>
-                <SelectValue>{(v: string | null) => (v ? DESTINO_LABEL[v] : '')}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="geral">Conta corrente do condomínio</SelectItem>
-                <SelectItem value="reserva">Fundo de reserva</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              O fundo de reserva é obrigatório por lei e é seguido à parte
-              das contas correntes.
-            </p>
-          </div>
+          <Collapsible>
+            <CollapsibleTrigger>
+              <ChevronDown className="h-3.5 w-3.5" />
+              Mais opções
+            </CollapsibleTrigger>
+            <CollapsiblePanel>
+              <div className="flex flex-col gap-2">
+                <Label>Destino</Label>
+                <Select
+                  value={destino}
+                  onValueChange={(value) => value && setDestino(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue>{(v: string | null) => (v ? DESTINO_LABEL[v] : '')}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="geral">Conta corrente do condomínio</SelectItem>
+                    <SelectItem value="reserva">Fundo de reserva</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  O fundo de reserva é obrigatório por lei e é seguido à parte
+                  das contas correntes. Na dúvida, deixe em &quot;Conta corrente&quot;.
+                </p>
+              </div>
+
+              {tipo === 'receita' && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="assembleiaPontoId">
+                    Quota extraordinária? Ligue a uma decisão de assembleia
+                  </Label>
+                  <Select
+                    value={assembleiaPontoId}
+                    onValueChange={(value) => value && setAssembleiaPontoId(value)}
+                  >
+                    <SelectTrigger id="assembleiaPontoId">
+                      <SelectValue>
+                        {(v: string | null) => {
+                          if (v === SEM_DELIBERACAO || v == null) return 'Quota normal (sem ligação)'
+                          const p = pontosAssembleia.find((p) => String(p.id) === v)
+                          return p ? p.titulo : 'Quota normal (sem ligação)'
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={SEM_DELIBERACAO}>Quota normal (sem ligação)</SelectItem>
+                      {pontosAssembleia.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.titulo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Só aparecem aqui decisões já aprovadas em assembleia. Se
+                    esta quota vier de uma dessas decisões, escolha-a.
+                  </p>
+                </div>
+              )}
+            </CollapsiblePanel>
+          </Collapsible>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria">Categoria</Label>

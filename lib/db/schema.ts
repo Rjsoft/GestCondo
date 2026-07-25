@@ -273,6 +273,18 @@ export const movimento = pgTable(
     fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
       onDelete: "set null",
     }),
+    // Opcional — liga uma quota extraordinária (tipo "receita") à deliberação
+    // de assembleia que a aprovou (G05). FK simples, não composta: ao
+    // contrário de exercicio/contaFinanceira, `assembleiaPonto` não tem
+    // `condominioId` próprio nem `unique(id, condominioId)` (nunca foi
+    // desenhada para FKs compostas — mesmo caso de `orcamentoRubrica`). O
+    // isolamento multi-tenant é garantido na server action (validação de
+    // que o ponto pertence a uma assembleia do condomínio do chamador),
+    // não ao nível da BD. `set null` em vez de cascade: eliminar o ponto
+    // nunca pode apagar o movimento financeiro.
+    assembleiaPontoId: integer("assembleiaPontoId").references(() => assembleiaPonto.id, {
+      onDelete: "set null",
+    }),
     // Ligação opcional ao exercício/conta financeira a que este movimento
     // pertence (ver exercicioFinanceiro/contaFinanceira mais abaixo) —
     // aditivo, não substitui `destino` (que continua a distinguir a
@@ -293,6 +305,7 @@ export const movimento = pgTable(
     index("movimento_condominio_idx").on(t.condominioId),
     index("movimento_orcamento_idx").on(t.orcamentoId),
     index("movimento_fornecedor_idx").on(t.fornecedorId),
+    index("movimento_assembleia_ponto_idx").on(t.assembleiaPontoId),
     index("movimento_exercicio_idx").on(t.exercicioId),
     index("movimento_conta_financeira_idx").on(t.contaFinanceiraId),
     foreignKey({
