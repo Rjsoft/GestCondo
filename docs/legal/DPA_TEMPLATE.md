@@ -66,7 +66,7 @@ O Subcontratante notifica o Responsável sem atraso indevido após ter conhecime
 
 ### 9. Lei aplicável e foro
 
-Lei portuguesa. Foro: `[a definir]`.
+Lei portuguesa. Foro: Comarca de Lisboa Oeste, secção de Amadora (correspondente à sede do Subcontratante).
 
 ---
 

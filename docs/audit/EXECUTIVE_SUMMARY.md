@@ -41,7 +41,7 @@ Sem vulnerabilidades OWASP clássicas. O bucket de ficheiros público foi **reso
 
 ## 9. Documentação em falta
 
-7 achados de documentos/rastreabilidade (DOC-01 a DOC-04, AUDIT-01 a AUDIT-03, `docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md`); dos 22 gaps nos textos legais (PP-1 a PP-10, TU-1 a TU-12), 18 foram resolvidos 2026-07-22 e mais 2 (PP-1 e TU-1, identidade legal do operador + contacto de privacidade) em 2026-07-25 — restam 2 que dependem de decisões/confirmações pendentes (foro competente, classificação B2B/B2C), marcados como `[A preencher]` nas próprias páginas publicadas.
+7 achados de documentos/rastreabilidade (DOC-01 a DOC-04, AUDIT-01 a AUDIT-03, `docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md`); dos 22 gaps nos textos legais (PP-1 a PP-10, TU-1 a TU-12), 18 foram resolvidos 2026-07-22 e mais 3 (PP-1, TU-1 e TU-5 — identidade legal do operador, contacto de privacidade e foro competente) em 2026-07-25 — resta 1, que depende de confirmação jurídica externa: classificação B2B/B2C (TU-7).
 
 ## 10. Correções prioritárias
 

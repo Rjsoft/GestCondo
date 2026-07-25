@@ -29,13 +29,6 @@ export default function TermosPage() {
             <p className="mt-1 text-sm text-muted-foreground">Última atualização: 22 de julho de 2026</p>
           </div>
 
-          <p className="rounded-md border border-dashed border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-            Operador do GestCondo: RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540, com
-            sede na Rua Estêvão de Vasconcelos, 18 R/C-DTO, 2700-351 Amadora. <strong>[A preencher]</strong>{' '}
-            o foro competente (secção 8) ainda não está definido — depende de confirmar a comarca
-            correspondente a esta sede.
-          </p>
-
           <section className="flex flex-col gap-2 text-sm text-foreground">
             <h2 className="font-serif text-sm font-bold">1. Objeto</h2>
             <p>
@@ -128,7 +121,7 @@ export default function TermosPage() {
             <h2 className="font-serif text-sm font-bold">8. Lei aplicável e foro</h2>
             <p>
               Estes termos regem-se pela lei portuguesa. Em caso de litígio, é competente o tribunal
-              da comarca da sede/domicílio do operador da plataforma (a definir, ver nota no topo),
+              da Comarca de Lisboa Oeste (secção de Amadora, correspondente à sede do operador),
               sem prejuízo das regras imperativas de proteção do consumidor. Em alternativa aos
               tribunais, pode recorrer a uma entidade de Resolução Alternativa de Litígios de
               consumo (lista em{' '}

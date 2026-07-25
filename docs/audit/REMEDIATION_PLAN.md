@@ -66,7 +66,7 @@ Data: 2026-07-22. Organiza os achados desta auditoria (`docs/audit/RGPD_AUDIT.md
 
 1. ~~**Declaração de encargos/dívida** (LEGAL-01)~~ — **Resolvido 2026-07-22.**
 2. ~~**DPA**~~ — **Modelo pronto 2026-07-22** (`DPA_TEMPLATE.md`); sem cliente real ainda, deixa de ser urgente até haver um.
-3. ~~**Fechar gaps de Privacidade/Termos**~~ — **20/22 resolvidos** (18 em 2026-07-22 + PP-1 e TU-1 em 2026-07-25: identidade legal do operador + contacto de privacidade, RJCSI - Serviços Informáticos, Unipessoal, Lda.). Restam 2: foro competente (TU-5, depende de confirmar a comarca da sede) e classificação B2B/B2C (TU-7, precisa de confirmação jurídica). Assinalados com `[A preencher]` diretamente nas páginas publicadas.
+3. ~~**Fechar gaps de Privacidade/Termos**~~ — **21/22 resolvidos** (18 em 2026-07-22 + PP-1, TU-1 e TU-5 em 2026-07-25: identidade legal do operador, contacto de privacidade e foro competente — Comarca de Lisboa Oeste, secção de Amadora). Resta só TU-7 (classificação B2B/B2C, precisa de confirmação jurídica que não posso dar).
 4. ~~**Soft-delete em `seguro`**~~ — **feito 2026-07-22**, e estendido também a `aviso`/`documento`/`ocorrencia` (DOC-01 fechado).
 5. ~~**Bucket de ficheiros deixar de ser público**~~ — **feito 2026-07-22**, via novo store privado (ver `FUNCTIONAL_GAPS.md`).
 6. ~~**Auditar login/falha de login/recuperação de conta** (AUDIT-01)~~ — **feito 2026-07-22**, hook `after` do better-auth em `lib/auth.ts`.

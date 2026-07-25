@@ -78,7 +78,7 @@ Este Contrato pode ser alterado pelo Prestador mediante comunicação prévia ao
 
 ### 11. Lei aplicável e foro
 
-Este Contrato rege-se pela lei portuguesa. Em caso de litígio, é competente o tribunal da comarca da sede do Prestador — `[a confirmar]`, mesma pendência assinalada em `app/termos/page.tsx` secção 8 (depende de confirmar a comarca judicial correspondente à sede na Amadora) — sem prejuízo de regras imperativas de proteção do consumidor aplicáveis, se e quando a classificação B2B/B2C/misto (`TERMS_OF_USE_REVIEW.md`, TU-7) for confirmada.
+Este Contrato rege-se pela lei portuguesa. Em caso de litígio, é competente o tribunal da Comarca de Lisboa Oeste (secção de Amadora, correspondente à sede do Prestador), sem prejuízo de regras imperativas de proteção do consumidor aplicáveis, se e quando a classificação B2B/B2C/misto (`TERMS_OF_USE_REVIEW.md`, TU-7) for confirmada.
 
 ---
 

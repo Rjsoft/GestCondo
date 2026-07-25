@@ -1,6 +1,6 @@
 # Revisão dos Termos de Utilização — GestCondo
 
-Data: 2026-07-22. Analisa `app/termos/page.tsx` contra a checklist da secção 6 do `PROMPT_AUDITORIA_JURIDICA_RGPD.md`. **Atualização 2026-07-22 (mesmo dia, sessão seguinte): a maioria das alterações da secção 4 foi aplicada à página**, com autorização expressa do utilizador. **Atualização 2026-07-25: TU-1 resolvido** — identidade do operador (RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540) preenchida na página. Ficam por resolver TU-5 (foro competente — depende de confirmar a comarca da sede, ainda não verificada) e TU-7 (classificação B2B/B2C/misto, precisa de confirmação jurídica, não aplicada por prudência).
+Data: 2026-07-22. Analisa `app/termos/page.tsx` contra a checklist da secção 6 do `PROMPT_AUDITORIA_JURIDICA_RGPD.md`. **Atualização 2026-07-22 (mesmo dia, sessão seguinte): a maioria das alterações da secção 4 foi aplicada à página**, com autorização expressa do utilizador. **Atualização 2026-07-25: TU-1 e TU-5 resolvidos** — identidade do operador (RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540) preenchida na página, e o foro competente confirmado (Comarca de Lisboa Oeste, secção de Amadora, verificado em fontes do CSM/portal das comarcas). Fica por resolver TU-7 (classificação B2B/B2C/misto, precisa de confirmação jurídica, não aplicada por prudência).
 
 ## 1. O que já está bem resolvido
 
@@ -14,7 +14,7 @@ Objeto (secção 1), contas/credenciais/perfis (secção 2), exatidão dos dados
 | TU-2 | Sem cláusula de propriedade intelectual | ✅ Resolvido — secção 4 |
 | TU-3 | Sem cláusula sobre documentos carregados | ✅ Resolvido — secção 4 (mesma cláusula de propriedade intelectual) |
 | TU-4 | Sem menção a pagamentos/faturação/cancelamento | ✅ Resolvido para o estado atual — secção 1 declara expressamente "piloto gratuito, sem modelo de pagamento definido"; cláusulas de faturação/renovação/cancelamento ficam para quando existir um modelo pago real (confirmado pelo utilizador que ainda não há) |
-| TU-5 | Sem cláusula de lei aplicável nem foro competente | 🟡 Parcialmente resolvido — secção 8 fixa a lei portuguesa; a sede do operador já é conhecida (Amadora), mas a comarca judicial exata ainda não foi verificada |
+| TU-5 | Sem cláusula de lei aplicável nem foro competente | ✅ **Resolvido 2026-07-25** — secção 8 fixa a lei portuguesa e a Comarca de Lisboa Oeste (secção de Amadora), confirmada em fontes do CSM/portal das comarcas |
 | TU-6 | Sem menção a RAL/ODR | ✅ Resolvido — secção 8, com entidades genéricas (portal do consumidor, plataforma ODR europeia), sem comprometer-se com uma entidade de RAL setorial específica |
 | TU-7 | Não define se o modelo é B2B, B2C ou misto | ❌ **Não aplicado deliberadamente** — precisa de confirmação jurídica que não posso dar; escrever uma classificação errada seria pior do que não escrever nenhuma |
 | TU-8 | Sem cláusula sobre utilização proibida | ✅ Resolvido — secção 3 |
@@ -33,5 +33,5 @@ Todos os itens marcados ✅ acima foram fechados diretamente em `app/termos/page
 
 ## 5. Dúvidas que não posso resolver sozinho
 
-- Identidade/NIF da entidade (TU-1) — **resolvido 2026-07-25**, igual a PP-1: RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540. O foro exato (TU-5) continua em aberto — depende de confirmar a comarca correspondente à sede em Amadora, ainda não verificada.
-- Classificação B2B/B2C/misto (TU-7) — decisão que precisa de confirmação jurídica, não escrita por prudência.
+- Identidade/NIF da entidade (TU-1) e foro competente (TU-5) — **ambos resolvidos 2026-07-25**: RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540, Comarca de Lisboa Oeste (secção de Amadora).
+- Classificação B2B/B2C/misto (TU-7) — decisão que precisa de confirmação jurídica, não escrita por prudência. É a única dúvida desta revisão que continua por resolver.
