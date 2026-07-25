@@ -16,8 +16,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible'
 import { TIPO_TITULAR_LABEL, TIPOS_TITULAR } from '@/lib/fracoes'
-import { Plus } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 const SEM_TITULAR = 'nao_especificado'
@@ -111,44 +112,52 @@ export function NovaFracaoDialog() {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="nif">NIF (opcional)</Label>
-              <Input id="nif" name="nif" placeholder="Ex: 123456789" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="contactoEmail">Email de contacto</Label>
-              <Input
-                id="contactoEmail"
-                name="contactoEmail"
-                type="email"
-                placeholder="Opcional"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="contactoTelefone">Telefone de contacto</Label>
-              <Input
-                id="contactoTelefone"
-                name="contactoTelefone"
-                placeholder="Opcional"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notas">Notas</Label>
-            <Textarea id="notas" name="notas" rows={3} placeholder="Opcional" />
-          </div>
-          <div className="flex items-start gap-2">
-            <input
-              id="isentaElevador"
-              name="isentaElevador"
-              type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-input"
-            />
-            <Label htmlFor="isentaElevador" className="font-normal text-xs text-muted-foreground">
-              Isenta da parcela do elevador (ex: rés-do-chão sem acesso ao elevador)
-            </Label>
-          </div>
+          <Collapsible>
+            <CollapsibleTrigger>
+              <ChevronDown className="h-3.5 w-3.5" />
+              Mais opções
+            </CollapsibleTrigger>
+            <CollapsiblePanel>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="nif">NIF (opcional)</Label>
+                  <Input id="nif" name="nif" placeholder="Ex: 123456789" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="contactoEmail">Email de contacto</Label>
+                  <Input
+                    id="contactoEmail"
+                    name="contactoEmail"
+                    type="email"
+                    placeholder="Opcional"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="contactoTelefone">Telefone de contacto</Label>
+                  <Input
+                    id="contactoTelefone"
+                    name="contactoTelefone"
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="notas">Notas</Label>
+                <Textarea id="notas" name="notas" rows={3} placeholder="Opcional" />
+              </div>
+              <div className="flex items-start gap-2">
+                <input
+                  id="isentaElevador"
+                  name="isentaElevador"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-input"
+                />
+                <Label htmlFor="isentaElevador" className="font-normal text-xs text-muted-foreground">
+                  Isenta da parcela do elevador (ex: rés-do-chão sem acesso ao elevador)
+                </Label>
+              </div>
+            </CollapsiblePanel>
+          </Collapsible>
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? 'A guardar...' : 'Guardar fração'}

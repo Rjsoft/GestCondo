@@ -23,8 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible'
 import { TIPO_SEGURO_LABEL } from '@/lib/financas'
-import { Plus } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function NovoSeguroDialog({
@@ -101,66 +102,74 @@ export function NovoSeguroDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="valorPremio">Prémio anual (€)</Label>
-              <Input
-                id="valorPremio"
-                name="valorPremio"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00 (opcional)"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="capitalSeguro">Capital seguro (€)</Label>
-              <Input
-                id="capitalSeguro"
-                name="capitalSeguro"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00 (opcional)"
-              />
-            </div>
-          </div>
-          <p className="-mt-2 text-xs text-muted-foreground">
-            Capital seguro é o valor de reconstrução pelo qual o edifício está
-            seguro (diferente do prémio) — deve ser atualizado todos os anos.
-          </p>
-
-          {fracoes.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <Label>Frações cobertas por esta apólice (opcional)</Label>
-              <p className="-mt-1 text-xs text-muted-foreground">
-                Deixe todas por marcar se esta apólice cobrir só o edifício e
-                partes comuns. Marque as frações cuja fração/recheio também
-                esteja incluída nesta mesma apólice.
-              </p>
-              <div className="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-border p-2">
-                {fracoes.map((f) => (
-                  <label
-                    key={f.id}
-                    className="flex items-center gap-2 text-sm text-foreground"
-                  >
-                    <Checkbox name="fracaoIds" value={String(f.id)} />
-                    {f.identificacao}
-                  </label>
-                ))}
+          <Collapsible>
+            <CollapsibleTrigger>
+              <ChevronDown className="h-3.5 w-3.5" />
+              Mais opções
+            </CollapsibleTrigger>
+            <CollapsiblePanel>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="valorPremio">Prémio anual (€)</Label>
+                  <Input
+                    id="valorPremio"
+                    name="valorPremio"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00 (opcional)"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="capitalSeguro">Capital seguro (€)</Label>
+                  <Input
+                    id="capitalSeguro"
+                    name="capitalSeguro"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00 (opcional)"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+              <p className="-mt-2 text-xs text-muted-foreground">
+                Capital seguro é o valor de reconstrução pelo qual o edifício está
+                seguro (diferente do prémio) — deve ser atualizado todos os anos.
+              </p>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="anexo">Apólice em PDF (opcional, até 15MB)</Label>
-            <Input id="anexo" name="anexo" type="file" accept="application/pdf" />
-          </div>
+              {fracoes.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Label>Frações cobertas por esta apólice (opcional)</Label>
+                  <p className="-mt-1 text-xs text-muted-foreground">
+                    Deixe todas por marcar se esta apólice cobrir só o edifício e
+                    partes comuns. Marque as frações cuja fração/recheio também
+                    esteja incluída nesta mesma apólice.
+                  </p>
+                  <div className="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-border p-2">
+                    {fracoes.map((f) => (
+                      <label
+                        key={f.id}
+                        className="flex items-center gap-2 text-sm text-foreground"
+                      >
+                        <Checkbox name="fracaoIds" value={String(f.id)} />
+                        {f.identificacao}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notas">Notas</Label>
-            <Textarea id="notas" name="notas" rows={2} placeholder="Opcional" />
-          </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="anexo">Apólice em PDF (opcional, até 15MB)</Label>
+                <Input id="anexo" name="anexo" type="file" accept="application/pdf" />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="notas">Notas</Label>
+                <Textarea id="notas" name="notas" rows={2} placeholder="Opcional" />
+              </div>
+            </CollapsiblePanel>
+          </Collapsible>
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>
