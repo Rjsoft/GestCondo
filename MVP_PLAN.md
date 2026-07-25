@@ -30,7 +30,7 @@ Retirado de `FUNCTIONAL_GAPS.md`, agrupado por esforço estimado relativo (não 
 
 **Esforço alto, mas incontornável para o público-alvo:**
 - ✅ Módulo de Assembleias/Atas completo — núcleo feito 2026-07-09, verificado em runtime 2026-07-21.
-- ✅ Exportação PDF/CSV de relatórios financeiros — feito 2026-07-21/23 (relatório de movimentos, balanço, mapa mensal, todos em PDF via impressão + CSV). **Nota (2026-07-23, revista 2026-07-24)**: este ficheiro esteve muito tempo sem revisão face a `FUNCTIONAL_GAPS.md`/`ROADMAP.md`; foi reconciliado na passagem de coerência documental de 2026-07-24. Para o estado detalhado e atual do módulo financeiro — incluindo lacunas ainda confirmadas (balanço patrimonial, execução orçamental por rubrica, documentos de fornecedor com pagamentos parciais) — a fonte é `docs/product/MBD_GEST_GAP_ANALYSIS.md`.
+- ✅ Exportação PDF/CSV de relatórios financeiros — feito 2026-07-21/23 (relatório de movimentos, balanço, mapa mensal, todos em PDF via impressão + CSV). **Nota (2026-07-23, revista 2026-07-24, 2026-07-25)**: este ficheiro esteve muito tempo sem revisão face a `FUNCTIONAL_GAPS.md`/`ROADMAP.md`; foi reconciliado na passagem de coerência documental de 2026-07-24. **2026-07-25**: execução orçamental por rubrica e documentos de fornecedor com pagamentos parciais foram implementados 2026-07-24 (Fase A.2) — em desenvolvimento, ainda não promovidos a produção. Para o estado detalhado e atual do módulo financeiro — incluindo a lacuna ainda confirmada (balanço patrimonial Ativo/Passivo/Situação Líquida) — a fonte é `docs/product/MBD_GEST_GAP_ANALYSIS.md`.
 
 ## 3. Testes — estado atual
 

@@ -79,7 +79,7 @@ Classificação: bloqueia desenvolvimento — não. Bloqueia migração técnica
 
 A ausência de transferência formal entre contas é uma limitação funcional conhecida. O encerramento com saldo diferente de zero está corretamente bloqueado, evitando perda de rasto financeiro. A transferência formal pode ficar para uma fase seguinte, mas deve permanecer no roadmap financeiro — melhoria não bloqueante da Fase A.1, que poderá tornar-se necessária antes de um cliente com várias contas utilizar o módulo.
 
-Fornecedores, documentos financeiros estruturados, pagamentos parciais e rubricas (Fase A.2) continuam fora do âmbito da Fase A.1. A ausência destas funcionalidades não deve ser ocultada num processo comercial — a sua condição de bloqueador depende do âmbito contratado com cada cliente.
+**Atualizado 2026-07-25**: documentos financeiros estruturados, pagamentos parciais e rubricas orçamentais (Fase A.2) foram implementados em 2026-07-24 e mergeados em `main`, mas **ainda não promovidos para a base de dados de produção** (ver `docs/product/MBD_GEST_GAP_ANALYSIS.md`, secção 12) — para um cliente real hoje, continuam indisponíveis na prática, exatamente como antes desta implementação. A ausência destas funcionalidades em produção não deve ser ocultada num processo comercial — a sua condição de bloqueador depende do âmbito contratado com cada cliente.
 
 ## Não bloqueia (mas fica registado para não esquecer)
 
