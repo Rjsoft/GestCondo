@@ -36,7 +36,7 @@ Todos os itens marcados ✅ acima foram fechados diretamente em `app/termos/page
 - Identidade/NIF da entidade (TU-1) e foro competente (TU-5) — **ambos resolvidos 2026-07-25**: RJCSI - Serviços Informáticos, Unipessoal, Lda., NIF 510666540, Comarca de Lisboa Oeste (secção de Amadora).
 - Classificação B2B/B2C/misto (TU-7) — decisão que precisa de confirmação jurídica, não escrita por prudência. É a única dúvida desta revisão que continua por resolver — ver análise preliminar na secção 6.
 
-## 6. Análise preliminar de TU-7 (2026-07-25) — não é uma decisão, é ponto de partida para consulta jurídica
+## 6. Análise preliminar de TU-7 (2026-07-25, revista 2026-07-25) — não é uma decisão, é ponto de partida para consulta jurídica
 
 Dois factos verificados na fonte (não de memória), para dar contexto a uma futura consulta jurídica rápida e barata, em vez de uma auditoria extensa:
 
@@ -44,7 +44,13 @@ Dois factos verificados na fonte (não de memória), para dar contexto a uma fut
 
 **Facto 2 — estatuto jurídico do condomínio (Código Civil art. 1437º e jurisprudência)**: o condomínio **não tem personalidade jurídica plena** (não é uma "pessoa coletiva" como uma empresa), mas tem **personalidade/capacidade judiciária** — pode agir em juízo, sempre representado pelo administrador. É descrito na jurisprudência como um "centro autónomo de imputação de efeitos jurídicos" sem personalidade jurídica — um estatuto sui generis, a meio caminho entre pessoa singular e pessoa coletiva.
 
-**Leitura preliminar, explicitamente não uma conclusão jurídica**: o condomínio não é uma pessoa singular (não se enquadra na definição clássica de consumidor da Lei 24/96), mas também não é uma pessoa coletiva normal como uma empresa — não há enquadramento óbvio para nenhum dos dois lados. Tende mais para **B2B** (ou "não-consumidor") do que para B2C, por faltar o requisito central de "pessoa singular fora do âmbito profissional". Há, no entanto, uma nuance real: quem assina o contrato é o administrador, que pode ser um simples condómino, pessoa singular, a título não profissional — o que pode reabrir a discussão consoante como o Contrato SaaS definir exatamente quem é "o Cliente" (o condomínio enquanto tal, ou o administrador em nome pessoal).
+**Facto 3 — jurisprudência real do STJ sobre "condomínio-consumidor" (encontrada e verificada na fonte 2026-07-25, revisão desta análise)**: ao contrário do que a leitura preliminar original sugeria, existe jurisprudência direta do Supremo Tribunal de Justiça no sentido de o condomínio **poder ser qualificado como consumidor**:
+- **STJ, proc. 1451/16.4T8MTS.P1.S1, 20-01-2022** (Rel. Nuno Pinto Oliveira; confirmado em `jurisprudencia.pt` e no portal oficial do CSM): *"O condomínio deve ser considerado como um consumidor desde que uma das frações seja destinada a uso privado."* Contexto: contrato de empreitada, defeitos em partes comuns.
+- **STJ, proc. 1080/21.0T8FNC.L1.S1, 11-05-2023**: *"A natureza do Condomínio como consumidor depende do tipo de utilização a que se destinam as frações."* Contexto: **contrato de manutenção de elevador, com duração de 12 anos** — um contrato de serviço continuado, estruturalmente mais próximo de um SaaS do que o caso de 2022 — usado para anular uma cláusula penal por desproporcionada, com base no regime de proteção do consumidor.
+
+Nuance entre os dois acórdãos: o de 2022 fala em "pelo menos uma fração" para uso privado; o de 2023 fala em frações "maioritariamente" residenciais — não é totalmente consistente entre si, mas ambos apontam no mesmo sentido geral. Nenhum dos dois é sobre um contrato de SaaS especificamente.
+
+**Leitura preliminar revista, explicitamente não uma conclusão jurídica**: a leitura anterior ("tende para B2B") deixou de ser uma caracterização honesta face a esta jurisprudência. O condomínio não é uma pessoa singular no sentido clássico da Lei 24/96 (Facto 1) nem uma pessoa coletiva normal como uma empresa (Facto 2) — mas o STJ tem repetidamente tratado o condomínio como consumidor sempre que as frações têm uso total ou maioritariamente residencial (Facto 3), que é exatamente o perfil típico dos condomínios visados pelo GestCondo. **A questão está genuinamente em aberto, com jurisprudência real a pesar para o lado do consumidor**, não para B2B como se pensava inicialmente. A nuance sobre quem é "o Cliente" no contrato (o condomínio ou o administrador a título pessoal) está resolvida do lado da redação: `docs/legal/CONTRATO_SAAS_TEMPLATE.md` define o Cliente como o condomínio, representado pelo administrador eleito — mas isso não neutraliza o Facto 3, que qualifica o condomínio enquanto tal como consumidor, independentemente de quem o representa.
 
 **Pergunta concreta a colocar ao advogado**, já suficientemente delimitada para não precisar de uma auditoria extensa: *"Um condomínio, representado pelo seu administrador eleito, ao contratar um SaaS de gestão condominial, é B2B, B2C ou algo à parte, para efeitos da Lei 24/96 e do DL 24/2014 (contratos à distância)?"*
 
@@ -52,3 +58,7 @@ Dois factos verificados na fonte (não de memória), para dar contexto a uma fut
 - [Lei de Defesa do Consumidor (Lei n.º 24/96)](https://ciab.pt/wp-content/uploads/2024/01/Lei-de-Defesa-do-Consumidor.pdf)
 - [Quem é consumidor? — noção jurídica de consumidor na Lei nº 24/96](https://idconsumo.pt/wp-content/uploads/2024/09/2023Gestin25art041.pdf)
 - [Artigo 1437º CC — Representação do condomínio em juízo](https://informador.pt/legislacao/lexit/codigos/direito-civil/codigo-civil/livro-iii-direito-das-coisas/titulo-ii-do-direito-de-propriedade/subtitulo-iv-do-exercicio-e-tutela-dos-direitos-5/capitulo-vi-propriedade-horizontal/seccao-iv-administracao-das-partes-comuns-do-edificio/artigo-1437-o-legitimidade-do-administrador/)
+- [STJ, proc. 1451/16.4T8MTS.P1.S1, 20-01-2022 — jurisprudencia.pt](https://jurisprudencia.pt/acordao/205388/)
+- [STJ, proc. 1451/16.4T8MTS.P1.S1, 20-01-2022 — portal oficial CSM](https://jurisprudencia.csm.org.pt/ecli/ECLI:PT:STJ:2022:1451.16.4T8MTS.P1.S1.2C)
+- ["Condomínio-consumidor" — comentário doutrinário, Nova Consumer Lab](https://novaconsumerlab.novalaw.unl.pt/stj_condominio-consumidor/)
+- [STJ, proc. 1080/21.0T8FNC.L1.S1, 11-05-2023 — citado por APEGAC](https://apegac.com/condominio-pode-ser-qualificado-como-consumidor)
