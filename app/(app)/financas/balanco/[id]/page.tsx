@@ -3,6 +3,7 @@ import { getBalancoOrcamento } from '@/app/actions/orcamentos'
 import { getCondominioAtual, requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { ImprimirButton } from '@/components/imprimir-button'
+import { VoltarButton } from '@/components/voltar-button'
 import {
   Table,
   TableBody,
@@ -46,7 +47,8 @@ export default async function BalancoOrcamentoPage({
 
   return (
     <div className="mx-auto max-w-4xl print:max-w-none">
-      <div className="mb-4 flex justify-end print:hidden">
+      <div className="mb-4 flex justify-between print:hidden">
+        <VoltarButton />
         <ImprimirButton />
       </div>
 

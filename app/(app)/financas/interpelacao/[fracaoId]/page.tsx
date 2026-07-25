@@ -3,6 +3,7 @@ import { getDeclaracaoDivida } from '@/app/actions/financas'
 import { getCondominioAtual, requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { ImprimirButton } from '@/components/imprimir-button'
+import { VoltarButton } from '@/components/voltar-button'
 import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
 import {
   Table,
@@ -56,6 +57,7 @@ export default async function InterpelacaoPage({
     <div className="mx-auto max-w-2xl print:max-w-none">
       <div className="mb-4 flex items-center justify-between gap-4 print:hidden">
         <div className="flex flex-wrap items-center gap-2 text-sm">
+          <VoltarButton />
           <span className="text-muted-foreground">Prazo de pagamento:</span>
           {PRAZOS_DIAS.map((p) => (
             <a

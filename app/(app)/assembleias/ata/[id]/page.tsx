@@ -4,6 +4,7 @@ import { getCondominioAtual, requireMembroPagina } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ImprimirButton } from '@/components/imprimir-button'
+import { VoltarButton } from '@/components/voltar-button'
 import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
 import { formatDataHora } from '@/lib/format'
 
@@ -40,7 +41,8 @@ export default async function AtaPage({
 
   return (
     <div className="mx-auto max-w-2xl print:max-w-none">
-      <div className="mb-4 flex justify-end print:hidden">
+      <div className="mb-4 flex justify-between print:hidden">
+        <VoltarButton />
         <ImprimirButton />
       </div>
 

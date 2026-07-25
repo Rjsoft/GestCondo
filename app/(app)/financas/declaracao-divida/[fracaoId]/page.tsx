@@ -3,6 +3,7 @@ import { getDeclaracaoDivida } from '@/app/actions/financas'
 import { getCondominioAtual, requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { ImprimirButton } from '@/components/imprimir-button'
+import { VoltarButton } from '@/components/voltar-button'
 import {
   Table,
   TableBody,
@@ -37,7 +38,8 @@ export default async function DeclaracaoDividaPage({
 
   return (
     <div className="mx-auto max-w-2xl print:max-w-none">
-      <div className="mb-4 flex justify-end print:hidden">
+      <div className="mb-4 flex justify-between print:hidden">
+        <VoltarButton />
         <ImprimirButton />
       </div>
 
