@@ -3,6 +3,8 @@ import { getDocumentos } from '@/app/actions/documentos'
 import { PageHeader } from '@/components/page-header'
 import { NovoDocumentoDialog } from '@/components/documentos/novo-documento-dialog'
 import { DocumentoActions } from '@/components/documentos/documento-actions'
+import { ConfirmarLeituraDocumentoButton } from '@/components/documentos/confirmar-leitura-button'
+import { ConfirmacoesDocumentoDialog } from '@/components/documentos/confirmacoes-documento-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
@@ -80,6 +82,10 @@ export default async function DocumentosPage({
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <ConfirmarLeituraDocumentoButton documentoId={d.id} confirmado={d.jaConfirmei} />
+                    <ConfirmacoesDocumentoDialog documentoId={d.id} total={d.totalConfirmacoes} />
                   </div>
                 </div>
                 {isAdmin && <DocumentoActions id={d.id} />}

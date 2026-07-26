@@ -1,11 +1,12 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { documento } from '@/lib/db/schema'
+import { confirmacaoLeitura, documento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm'
+import { confirmarLeitura, getConfirmacoesLeitura } from '@/lib/confirmacao-leitura'
+import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -23,7 +24,7 @@ export async function getDocumentos({ page = 1, search = '' }: { page?: number; 
       )
     : base
 
-  const [documentos, [{ total }]] = await Promise.all([
+  const [documentosPagina, [{ total }]] = await Promise.all([
     db
       .select()
       .from(documento)
@@ -34,7 +35,64 @@ export async function getDocumentos({ page = 1, search = '' }: { page?: number; 
     db.select({ total: count() }).from(documento).where(condicao),
   ])
 
+  const documentoIds = documentosPagina.map((d) => d.id)
+  const confirmacoes = documentoIds.length
+    ? await db
+        .select({ entidadeId: confirmacaoLeitura.entidadeId, membroId: confirmacaoLeitura.membroId })
+        .from(confirmacaoLeitura)
+        .where(
+          and(
+            eq(confirmacaoLeitura.condominioId, m.condominioId),
+            eq(confirmacaoLeitura.entidade, 'documento'),
+            inArray(confirmacaoLeitura.entidadeId, documentoIds),
+          ),
+        )
+    : []
+
+  const documentos = documentosPagina.map((d) => ({
+    ...d,
+    totalConfirmacoes: confirmacoes.filter((c) => c.entidadeId === d.id).length,
+    jaConfirmei: confirmacoes.some((c) => c.entidadeId === d.id && c.membroId === m.id),
+  }))
+
   return { documentos, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
+}
+
+/** Regista que o membro autenticado confirma ter lido este documento. */
+export async function confirmarLeituraDocumento(id: number) {
+  const m = await requireMembroAprovado()
+  const [d] = await db
+    .select({ id: documento.id })
+    .from(documento)
+    .where(and(eq(documento.id, id), eq(documento.condominioId, m.condominioId), isNull(documento.deletedAt)))
+    .limit(1)
+  if (!d) throw new Error('Documento não encontrado')
+
+  await confirmarLeitura({
+    condominioId: m.condominioId,
+    membroId: m.id,
+    entidade: 'documento',
+    entidadeId: id,
+  })
+
+  await registarAuditoria({
+    actor: m,
+    acao: 'atualizar',
+    entidade: 'documento',
+    entidadeId: id,
+    detalhes: 'Confirmação de leitura',
+  })
+
+  revalidatePath('/documentos')
+}
+
+/**
+ * Lista de quem já confirmou a leitura — visível a qualquer membro aprovado,
+ * mesmo critério já usado para avisos/assembleias.
+ */
+export async function getConfirmacoesLeituraDocumento(id: number) {
+  const m = await requireMembroAprovado()
+  return getConfirmacoesLeitura(m.condominioId, 'documento', id)
 }
 
 export async function criarDocumento(formData: FormData) {

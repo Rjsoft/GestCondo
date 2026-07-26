@@ -354,6 +354,12 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           </li>
           <li>Dê um título ao documento e clique em &ldquo;Guardar&rdquo;.</li>
         </ol>
+        <Subtitulo>Confirmar leitura</Subtitulo>
+        <p>
+          Junto de cada documento (por exemplo, o regulamento do condomínio)
+          há um botão para confirmar que o leu — fica registado com data e
+          hora, e qualquer membro pode ver quantas confirmações já existem.
+        </p>
       </>
     ),
   },

@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { confirmacaoLeitura, membro } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 
-export type EntidadeConfirmavel = 'aviso' | 'assembleia'
+export type EntidadeConfirmavel = 'aviso' | 'assembleia' | 'documento'
 
 /**
  * Regista a confirmação de leitura de um membro para um aviso/convocatória.
