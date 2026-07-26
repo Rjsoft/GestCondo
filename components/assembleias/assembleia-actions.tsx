@@ -44,6 +44,11 @@ export function AssembleiaActions({
     })
   }
 
+  // Uma assembleia cancelada é um estado terminal sem nenhuma ação
+  // possível (não há "Ver ata" nem "Marcar como realizada"/"Cancelar") —
+  // sem este caso, o botão ficava visível a abrir um menu vazio.
+  if (estado === 'cancelada') return null
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" size="icon" disabled={pending} />}>
