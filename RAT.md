@@ -51,6 +51,8 @@ Data: 2026-07-09, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 | Destinatários | Todos os membros aprovados do condomínio (a ata é, por natureza, um documento a comunicar a todos os condóminos). |
 | Prazo de conservação | Sem prazo de eliminação definido — atas são registo legal permanente da vida do condomínio; uma vez aprovada, a ata é imutável (`assembleia.estado = 'aprovada'` bloqueia alterações, ver `app/actions/assembleias.ts`). |
 
+**Dossier de apoio à assembleia (decisão do utilizador, 2026-07-26)**: o dossier consolidado (convocatória, resumo financeiro, mapa de saldos por fração, balanço, anexos) num único PDF inclui, por decisão explícita do responsável pelo tratamento, o **nome completo e o saldo de dívida de todos os condóminos**, visível a todos os condóminos convocados — réplica deliberada da prática de mercado das administrações profissionais tradicionais (ver `docs/product/MBD_GEST_GAP_ANALYSIS.md` secções 8–9 para a análise que fundamentou a decisão). Base legal: dever de prestação de contas à assembleia (art. 1436º/j CC), o mesmo que já cobre o relatório de movimentos e o balanço isolados. Destinatários: os mesmos já previstos para a ata (todos os membros aprovados associados à assembleia) — não há aqui uma finalidade nova, só uma consolidação de peças já geradas separadamente com a mesma base legal e o mesmo destinatário.
+
 ## 5. Documentos, fotos de ocorrências e apólices (upload de ficheiros)
 
 | | |

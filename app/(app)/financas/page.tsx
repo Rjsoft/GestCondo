@@ -7,6 +7,7 @@ import {
   getMovimentosPaginado,
   getPontosAprovadosParaQuota,
   getQuotasEmAtraso,
+  getResumoFinanceiro,
   getSaldoFundoReserva,
 } from '@/app/actions/financas'
 import { getOrcamentos } from '@/app/actions/orcamentos'
@@ -57,6 +58,7 @@ export default async function FinancasPage({
     exercicios,
     documentosFornecedor,
     pontosAssembleia,
+    resumoFinanceiro,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -74,6 +76,7 @@ export default async function FinancasPage({
     getExercicios(),
     getDocumentosFornecedor(),
     getPontosAprovadosParaQuota(),
+    getResumoFinanceiro(),
   ])
 
   // Exercício por omissão para mostrar saldos: o aberto mais recente (o
@@ -87,17 +90,7 @@ export default async function FinancasPage({
     ? await getBalancoPatrimonial(exercicioEmVistaId)
     : null
 
-  // Conta corrente do condomínio: movimentos com destino "geral", excluindo
-  // o fundo de reserva (obrigatório por lei e seguido à parte — ver
-  // getSaldoFundoReserva).
-  const movimentosGeral = movimentos.filter((m) => m.destino !== 'reserva')
-  const receitas = movimentosGeral
-    .filter((m) => m.tipo === 'receita')
-    .reduce((s, m) => s + Number(m.valor), 0)
-  const despesas = movimentosGeral
-    .filter((m) => m.tipo === 'despesa')
-    .reduce((s, m) => s + Number(m.valor), 0)
-  const saldo = receitas - despesas
+  const { receitas, despesas, saldo } = resumoFinanceiro
 
   return (
     <div>

@@ -281,6 +281,18 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           estiver aprovada; depois de aprovada, ficam fixos tal como o resto
           da ata.
         </p>
+        <Subtitulo>Dossier de apoio (para quem tem acesso financeiro)</Subtitulo>
+        <p>
+          O botão &ldquo;Dossier de apoio (PDF)&rdquo;, na página de detalhe
+          da assembleia, reúne num único documento a ordem de trabalhos, o
+          resumo financeiro do condomínio, o mapa de saldos por fração (com
+          o nome e a dívida de cada condómino) e o balanço patrimonial, para
+          preparar ou acompanhar a prestação de contas em assembleia. Por
+          mostrar dívidas nominais, só é visível a quem já tem acesso
+          financeiro (administrador, gestor, condómino ou auditor) — um
+          inquilino continua a ver a convocatória e a ata normalmente, mas
+          não este dossier.
+        </p>
       </>
     ),
   },

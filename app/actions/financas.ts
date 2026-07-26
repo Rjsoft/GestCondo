@@ -29,6 +29,24 @@ export async function getMovimentos() {
     .orderBy(desc(movimento.data))
 }
 
+/**
+ * Totais da conta corrente do condomínio (exclui fundo de reserva, seguido
+ * à parte — ver getSaldoFundoReserva). Mesmo cálculo antes feito inline em
+ * app/(app)/financas/page.tsx; extraído para ser reutilizado também pelo
+ * dossier de apoio à assembleia.
+ */
+export async function getResumoFinanceiro() {
+  const movimentos = await getMovimentos()
+  const movimentosGeral = movimentos.filter((m) => m.destino !== 'reserva')
+  const receitas = movimentosGeral
+    .filter((m) => m.tipo === 'receita')
+    .reduce((s, m) => s + Number(m.valor), 0)
+  const despesas = movimentosGeral
+    .filter((m) => m.tipo === 'despesa')
+    .reduce((s, m) => s + Number(m.valor), 0)
+  return { receitas, despesas, saldo: receitas - despesas }
+}
+
 export async function getMovimentosPaginado({
   page = 1,
   search = '',

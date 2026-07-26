@@ -27,6 +27,8 @@ Data: 2026-07-22. Base: RGPD art. 35º, critérios do Grupo de Trabalho do art. 
 - o volume de condomínios geridos pela mesma administradora crescer substancialmente (tratamento em larga escala deixa de ser hipotético);
 - for introduzida qualquer funcionalidade de decisão automatizada com efeito direto sobre um titular (ex. suspensão automática de acesso por dívida, sem revisão humana).
 
+**Nota 2026-07-26 — dossier de apoio à assembleia**: a nova consolidação (ver `RAT.md` secção 4) reúne num único PDF dados já existentes em separado (nome, dívida por fração, presença/voto), com a mesma base legal e o mesmo destinatário — não introduz uma categoria de dado nova nem alarga o destinatário além dos já previstos para a ata. Mantém-se dentro dos critérios já avaliados acima ("dados financeiros", "concentração de informação... dentro de um condomínio"); não muda a conclusão.
+
 Não foi criado `DPIA_TEMPLATE.md` — não é necessário enquanto esta conclusão se mantiver.
 
 ---

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getAssembleiaDetalhe } from '@/app/actions/assembleias'
-import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import { PageHeader } from '@/components/page-header'
 import { AssembleiaStatusBadge } from '@/components/badges'
 import { AssembleiaActions } from '@/components/assembleias/assembleia-actions'
@@ -52,6 +52,7 @@ export default async function AssembleiaDetalhePage({
   if (!detalhe) notFound()
 
   const isAdmin = temPermissaoGestao(membro)
+  const veFinancas = temAcessoFinanceiro(membro)
   const {
     assembleia,
     pontos,
@@ -93,6 +94,15 @@ export default async function AssembleiaDetalhePage({
               render={<Link href={`/assembleias/${assembleia.id}/procuracao`} />}
             >
               Procuração (PDF)
+            </Button>
+          )}
+          {veFinancas && (
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={`/assembleias/${assembleia.id}/dossier`} />}
+            >
+              Dossier de apoio (PDF)
             </Button>
           )}
           {isAdmin && assembleia.estado === 'realizada' && (

@@ -114,6 +114,9 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 - [x] Modelo de Acordo de Subcontratação (DPA) para empresas de administração clientes — **modelo pronto 2026-07-22** (`docs/legal/DPA_TEMPLATE.md`); falta preencher/assinar quando houver um cliente real. Ver `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`.
 - [x] Lista de subprocessadores documentada — `RAT.md` e `/privacidade`, 2026-07-09; **atualizada 2026-07-22** com o Vercel Analytics (`docs/legal/DATA_SUBPROCESSORS_REGISTER.md`) — a Política de Privacidade em `/privacidade` ainda não foi atualizada com esta adição (ver Fase C da auditoria).
 
+### Novo desde 2026-07-26
+- [x] Decisão explícita registada sobre o dossier consolidado de apoio à assembleia — o utilizador optou pela réplica da prática de mercado (nome completo + saldo de dívida de todos os condóminos, visível a todos), não pela versão anonimizada por fração inicialmente proposta na análise. Base legal e destinatários documentados em `RAT.md` secção 4; não é uma finalidade nova (mesma base e destinatário já cobertos pela ata e pelos relatórios financeiros isolados, só consolidados num único ficheiro).
+
 ### Novo desde 2026-07-22 (Fase B da auditoria — ver `docs/audit/RGPD_AUDIT.md`)
 - [x] Matriz responsável/subcontratante por cenário de uso — `docs/legal/CONTROLLER_PROCESSOR_MATRIX.md`
 - [x] Registo de subcontratantes com detalhe (localização, salvaguardas) — `docs/legal/DATA_SUBPROCESSORS_REGISTER.md`

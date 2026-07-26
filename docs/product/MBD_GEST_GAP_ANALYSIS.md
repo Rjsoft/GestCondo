@@ -223,8 +223,7 @@ Adicionar `movimento.assembleiaPontoId` (FK `assembleia_ponto`, `onDelete: set n
 | Quota extraordinária ligada a deliberação | `PERFIS_ACESSO_FINANCEIRO` | `PERFIS_GESTAO` | Sem alteração de padrão — é só um campo adicional em `movimento` |
 | Balanço patrimonial | `PERFIS_ACESSO_FINANCEIRO` | N/A (só leitura, calculado) | Mesmo padrão do balanço orçamento-vs-real já existente |
 | Dossier de assembleia (gerar) | — | `PERFIS_GESTAO` | Geração é uma ação de escrita (mesmo que produza só um PDF) — regista em `audit_log` |
-| Dossier de assembleia (consultar/descarregar) — **versão protegida** | Todos os membros aprovados do condomínio associados à assembleia | — | **Decisão 2026-07-23**: por omissão, o dossier distribuído aos condóminos usa a versão protegida — sem nomes completos associados a dívidas, mapa de saldos identificado por fração (não por titular), totais globais e informação de incumprimento agregada/anonimizada quando relevante |
-| Dossier de assembleia (consultar/descarregar) — **versão integral** | `PERFIS_CONSULTA_GESTAO` (admin, gestor, auditor) + outros utilizadores com legitimidade expressa (a definir caso a caso, ex. um condómino membro da comissão fiscalizadora) | — | Versão com identificação nominal completa das dívidas de todas as frações — nunca gerada nem distribuída por omissão |
+| Dossier de assembleia (consultar/descarregar) | Todos os membros aprovados do condomínio associados à assembleia | — | **Decisão final 2026-07-26** (substitui a proposta de versão protegida por omissão de 2026-07-23, nunca implementada): réplica da prática de mercado — uma única versão, com nome completo e saldo de dívida de todos os condóminos, distribuída a todos os condóminos convocados. Sem versão anonimizada nem versão integral separada. |
 
 ---
 
@@ -248,7 +247,7 @@ Aplicável às propostas da secção 7, seguindo o padrão do `GDPR_CHECKLIST.md
 | Risco | Área | Gravidade | Mitigação proposta |
 |---|---|---|---|
 | Modelar `exercicio_financeiro`/`conta_financeira` sem migrar corretamente o histórico existente de `movimento` | G01, G02 | Alto | Migração aditiva apenas (campos opcionais/`set null`), nunca obrigar dados antigos a ter exercício/conta — resolvido por data quando necessário |
-| Dossier de assembleia expor dados financeiros pessoais a quem não devia | G18 | Alto | Matriz de permissões (secção 8) + validar com utilizador antes de implementar (pergunta em aberto, secção 13) |
+| Dossier de assembleia expor dados financeiros pessoais a quem não devia | G18 | Alto (aceite pelo utilizador) | **Decidido 2026-07-26**: exposição total é intencional (réplica da prática de mercado, base legal art. 1436º/j CC) — ver matriz de permissões (secção 8) e `RAT.md` secção 4. Já não é um risco em aberto, é um comportamento decidido e documentado. |
 | `documento_fornecedor` duplicar `movimento` e os dois ficarem dessincronizados (saldo do documento vs. soma de movimentos reais) | G06 | Médio | `pagamento_documento_fornecedor.movimentoId` como ponte obrigatória — nunca permitir que o saldo do documento seja editado independentemente dos pagamentos reais |
 | Fechar um exercício por engano e bloquear lançamentos legítimos | G01 | Médio | Reabertura sempre possível por admin, com motivo obrigatório em `audit_log` — nunca irreversível |
 | `orcamento_rubrica` criar incoerência entre soma das rubricas e `orcamento.valorAnual` | G08 | Baixo | Validação: soma das rubricas não pode exceder `valorAnual` (aviso, não bloqueio — pode haver margem deliberada) |
@@ -319,10 +318,10 @@ Correções pontuais às contradições identificadas na secção 6 — sem marc
 **Conteúdo**: G18, G17 (anexos à ata).
 **Dependências**: Fases A-C (o dossier só é útil quando as peças que o compõem já existem).
 **Alterações de schema**: possivelmente uma tabela `dossier_assembleia` para guardar a versão gerada (estado rascunho/final) — a confirmar em desenho detalhado nessa fase.
-**Risco**: alto do ponto de vista RGPD (secção 9) — **requer decisão explícita do utilizador antes de desenhar** (secção 13).
-**Testes**: geração reproduzível byte a byte a partir dos mesmos dados; verificação de minimização por perfil do destinatário.
+**Risco**: era alto do ponto de vista RGPD (secção 9) enquanto a exposição de dívidas estivesse por decidir — **decisão tomada 2026-07-26** (réplica da prática de mercado, ver secção 8 e `RAT.md` secção 4); já não bloqueia o desenho.
+**Testes**: geração reproduzível byte a byte a partir dos mesmos dados.
 **Critério de conclusão**: dossier pré-visualizável, exportável em PDF, com paginação e identificação do condomínio/exercício.
-**Documentação afetada**: `RAT.md`, `GDPR_CHECKLIST.md`, possivelmente `docs/legal/PRIVACY_POLICY_REVIEW.md`.
+**Documentação afetada**: `RAT.md`, `GDPR_CHECKLIST.md`, `docs/legal/DPIA_SCREENING.md` — já atualizados 2026-07-26.
 
 ### Fase E — Funcionalidades de maturidade
 **Objetivo**: itens já conhecidos, não específicos deste PDF, mas relacionados.
