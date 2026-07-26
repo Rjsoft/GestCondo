@@ -21,10 +21,10 @@ A Neon mostra os dois branches como bases de dados distintas (connection strings
 
 ### 3. Snapshot manual (novo passo obrigatório)
 1. Neon Console → projeto GestCondo → branch **`production`** (confirmar no seletor lateral antes de continuar — `development` não suporta esta ação).
-2. `Backup & Restore` → secção "Or restore from a snapshot" → `Create`.
-3. Confirmar na lista que o snapshot aparece com timestamp de agora e "Expires on: never".
+2. `Backup & Restore` → secção "Or restore from a snapshot": se já existir um snapshot, **apagá-lo primeiro** (menu "..." na linha do snapshot → eliminar) — só depois disso aparece o botão para criar um novo.
+3. Confirmar na lista que o snapshot novo aparece com timestamp de agora e "Expires on: never".
 
-**Limite do plano Free**: só existe espaço para **1 snapshot manual de cada vez** — criar um novo obriga a que o anterior deixe de ficar disponível (confirmado pela mensagem "Upgrade for more snapshots" / "You've reached the manual snapshot limit"). Não é preciso apagar nada à mão; criar um novo snapshot antes de cada migração é suficiente.
+**Limite do plano Free**: só existe espaço para **1 snapshot manual de cada vez**. Ao contrário do que uma versão anterior deste documento dizia, a UI **não** substitui automaticamente o snapshot antigo ao criar um novo — quando já existe um, a secção "Create snapshot" só mostra "Upgrade for schedules"/"Upgrade for more snapshots", sem botão de criar. É preciso apagar o existente primeiro (confirmado 2026-07-26). O upgrade do plano Neon está deliberadamente adiado nesta fase (decisão do utilizador, mesma lógica do adiamento do Vercel Pro).
 
 ### 4. Se for preciso reverter — dois modos, escolher o certo
 
