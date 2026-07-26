@@ -118,6 +118,15 @@ export const condominio = pgTable("condominio", {
   nome: text("nome").notNull(),
   morada: text("morada"),
   nif: text("nif"),
+  // Dados formais do edifício — todos opcionais e em texto livre, tal como
+  // morada/nif já são (formatos de registo predial/matricial variam por
+  // concelho). Gap identificado 2026-07-22 por comparação com um template
+  // de contabilidade de condomínio real.
+  numeroMatricial: text("numeroMatricial"),
+  conservatoriaRegistoPredial: text("conservatoriaRegistoPredial"),
+  licencaHabitacao: text("licencaHabitacao"),
+  projetoArquiteto: text("projetoArquiteto"),
+  areaConstrucao: numeric("areaConstrucao", { precision: 10, scale: 2 }),
   // Código de convite partilhado para novos membros se juntarem a este
   // condomínio (em vez de criarem um condomínio novo) — ver lib/session.ts
   // e app/onboarding. Não determina o nível de acesso: quem entra por

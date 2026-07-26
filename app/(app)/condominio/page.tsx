@@ -21,7 +21,16 @@ export default async function CondominioPage() {
       />
       <Card>
         <CardContent className="p-5">
-          <EditarCondominioForm nome={condominio.nome} morada={condominio.morada} nif={condominio.nif} />
+          <EditarCondominioForm
+            nome={condominio.nome}
+            morada={condominio.morada}
+            nif={condominio.nif}
+            numeroMatricial={condominio.numeroMatricial}
+            conservatoriaRegistoPredial={condominio.conservatoriaRegistoPredial}
+            licencaHabitacao={condominio.licencaHabitacao}
+            projetoArquiteto={condominio.projetoArquiteto}
+            areaConstrucao={condominio.areaConstrucao}
+          />
         </CardContent>
       </Card>
       <Card>

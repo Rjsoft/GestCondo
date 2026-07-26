@@ -433,6 +433,11 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         <ul className="list-disc pl-5">
           <li>Corrigir o nome, morada e NIF do condomínio.</li>
           <li>
+            Preencher os dados formais do edifício — número matricial,
+            conservatória do registo predial, licença de habitação, projeto/
+            arquiteto e área de construção. Todos opcionais.
+          </li>
+          <li>
             Gerar (ou regenerar) o código de convite — um código que
             partilha com novos condóminos para se juntarem a este
             condomínio. Regenerar invalida imediatamente o código anterior.

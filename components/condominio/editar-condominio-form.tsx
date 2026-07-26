@@ -11,10 +11,20 @@ export function EditarCondominioForm({
   nome,
   morada,
   nif,
+  numeroMatricial,
+  conservatoriaRegistoPredial,
+  licencaHabitacao,
+  projetoArquiteto,
+  areaConstrucao,
 }: {
   nome: string
   morada: string | null
   nif: string | null
+  numeroMatricial: string | null
+  conservatoriaRegistoPredial: string | null
+  licencaHabitacao: string | null
+  projetoArquiteto: string | null
+  areaConstrucao: string | null
 }) {
   const [pending, startTransition] = useTransition()
 
@@ -43,6 +53,58 @@ export function EditarCondominioForm({
         <Label htmlFor="nif">NIF do condomínio</Label>
         <Input id="nif" name="nif" defaultValue={nif ?? ''} placeholder="Opcional — aparece nos recibos" />
       </div>
+
+      <h3 className="mt-2 font-serif text-sm font-bold text-foreground">Dados formais do edifício</h3>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="numeroMatricial">Número matricial</Label>
+        <Input
+          id="numeroMatricial"
+          name="numeroMatricial"
+          defaultValue={numeroMatricial ?? ''}
+          placeholder="Opcional"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="conservatoriaRegistoPredial">Conservatória do registo predial</Label>
+        <Input
+          id="conservatoriaRegistoPredial"
+          name="conservatoriaRegistoPredial"
+          defaultValue={conservatoriaRegistoPredial ?? ''}
+          placeholder="Opcional — conservatória e número de registo"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="licencaHabitacao">Licença de habitação</Label>
+        <Input
+          id="licencaHabitacao"
+          name="licencaHabitacao"
+          defaultValue={licencaHabitacao ?? ''}
+          placeholder="Opcional — número e data"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="projetoArquiteto">Projeto / arquiteto</Label>
+        <Input
+          id="projetoArquiteto"
+          name="projetoArquiteto"
+          defaultValue={projetoArquiteto ?? ''}
+          placeholder="Opcional"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="areaConstrucao">Área de construção (m²)</Label>
+        <Input
+          id="areaConstrucao"
+          name="areaConstrucao"
+          type="number"
+          step="0.01"
+          min="0"
+          defaultValue={areaConstrucao ?? ''}
+          placeholder="Opcional"
+        />
+      </div>
+
       <div>
         <Button type="submit" disabled={pending}>
           {pending ? 'A guardar...' : 'Guardar alterações'}

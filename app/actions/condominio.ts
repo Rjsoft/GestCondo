@@ -53,14 +53,32 @@ export async function atualizarCondominio(formData: FormData) {
   const nome = String(formData.get('nome') || '').trim()
   const morada = String(formData.get('morada') || '').trim()
   const nif = String(formData.get('nif') || '').trim()
+  const numeroMatricial = String(formData.get('numeroMatricial') || '').trim()
+  const conservatoriaRegistoPredial = String(formData.get('conservatoriaRegistoPredial') || '').trim()
+  const licencaHabitacao = String(formData.get('licencaHabitacao') || '').trim()
+  const projetoArquiteto = String(formData.get('projetoArquiteto') || '').trim()
+  const areaConstrucaoTexto = String(formData.get('areaConstrucao') || '').trim()
 
   if (!nome) {
     throw new Error('Preencha o nome do condomínio')
   }
+  if (areaConstrucaoTexto) {
+    const valor = Number(areaConstrucaoTexto)
+    if (Number.isNaN(valor) || valor < 0) throw new Error('Área de construção inválida')
+  }
 
   await db
     .update(condominio)
-    .set({ nome, morada: morada || null, nif: nif || null })
+    .set({
+      nome,
+      morada: morada || null,
+      nif: nif || null,
+      numeroMatricial: numeroMatricial || null,
+      conservatoriaRegistoPredial: conservatoriaRegistoPredial || null,
+      licencaHabitacao: licencaHabitacao || null,
+      projetoArquiteto: projetoArquiteto || null,
+      areaConstrucao: areaConstrucaoTexto || null,
+    })
     .where(eq(condominio.id, admin.condominioId))
 
   await registarAuditoria({
@@ -68,7 +86,7 @@ export async function atualizarCondominio(formData: FormData) {
     acao: 'atualizar',
     entidade: 'condominio',
     entidadeId: admin.condominioId,
-    detalhes: 'Dados do condomínio atualizados (nome/morada/NIF)',
+    detalhes: 'Dados do condomínio atualizados',
   })
 
   revalidatePath('/condominio')
