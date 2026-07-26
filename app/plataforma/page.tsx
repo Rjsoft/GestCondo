@@ -1,10 +1,22 @@
-import { requireOperadorPlataforma } from '@/lib/session'
+import { redirect } from 'next/navigation'
+import { getSession, requireOperadorPlataforma } from '@/lib/session'
 import { listarCondominiosPlataforma } from '@/app/actions/plataforma'
 import { PlataformaTabela } from '@/components/plataforma/plataforma-tabela'
 import { Building2 } from 'lucide-react'
 
 export default async function PlataformaPage() {
-  await requireOperadorPlataforma()
+  const session = await getSession()
+  if (!session?.user) redirect('/sign-in')
+
+  try {
+    await requireOperadorPlataforma()
+  } catch {
+    // Autenticado mas sem ser operador da plataforma — manda para o painel
+    // normal (que por sua vez trata onboarding/aprovação pendente), em vez
+    // de rebentar com um erro 500 genérico.
+    redirect('/')
+  }
+
   const condominios = await listarCondominiosPlataforma()
 
   return (
