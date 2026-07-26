@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:check-drift": "node scripts/check-migration-drift.mjs"
+    "db:check-drift": "node scripts/check-migration-drift.mjs",
+    "db:limpar-dev": "node scripts/limpar-bd-dev.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
