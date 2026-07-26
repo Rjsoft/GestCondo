@@ -2,10 +2,14 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Building2 } from 'lucide-react'
+import { VoltarButton } from '@/components/voltar-button'
 
 export default function PrivacidadePage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
+      <div className="mb-4">
+        <VoltarButton />
+      </div>
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Building2 className="h-5 w-5" />

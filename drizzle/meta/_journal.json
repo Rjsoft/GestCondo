@@ -225,6 +225,13 @@
       "when": 1785056724443,
       "tag": "0031_curved_stephen_strange",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1785062172148,
+      "tag": "0032_overjoyed_lifeguard",
+      "breakpoints": true
     }
   ]
 }

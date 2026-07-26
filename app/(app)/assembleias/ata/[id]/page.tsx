@@ -32,7 +32,7 @@ export default async function AtaPage({
   const detalhe = await getAssembleiaDetalhe(assembleiaId)
   if (!detalhe) notFound()
 
-  const { assembleia, pontos, presencas, totalPermilagem, permilagemPresente } = detalhe
+  const { assembleia, pontos, presencas, totalPermilagem, permilagemPresente, anexos } = detalhe
   // Ainda não há nada para mostrar antes de a assembleia acontecer.
   if (assembleia.estado === 'convocada') notFound()
 
@@ -133,6 +133,26 @@ export default async function AtaPage({
               <p className="whitespace-pre-wrap text-sm text-foreground">
                 {assembleia.textoAta}
               </p>
+            </div>
+          )}
+
+          {anexos.length > 0 && (
+            <div>
+              <h2 className="mb-2 font-serif text-sm font-bold text-foreground">Anexos</h2>
+              <ul className="flex flex-col gap-1 text-sm">
+                {anexos.map((a) => (
+                  <li key={a.id}>
+                    <a
+                      href={`/api/ficheiros?url=${encodeURIComponent(a.url)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline-offset-4 hover:underline print:text-foreground"
+                    >
+                      {a.titulo}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

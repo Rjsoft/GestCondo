@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/blob'
 import { db } from '@/lib/db'
-import { documento, ocorrencia, seguro } from '@/lib/db/schema'
+import { assembleiaAnexo, documento, documentoFornecedor, ocorrencia, seguro } from '@/lib/db/schema'
 import { requireMembroAprovado } from '@/lib/session'
 import { and, eq } from 'drizzle-orm'
 
 /**
  * Serve ficheiros do Vercel Blob (documentos, fotos de ocorrências,
- * apólices de seguro — ver lib/storage.ts). Só serve um ficheiro se
- * pertencer a um dos três registos (documento/ocorrência/seguro) do
+ * apólices de seguro, documentos de fornecedor, anexos de ata — ver
+ * lib/storage.ts). Só serve um ficheiro se pertencer a um dos registos do
  * condomínio do membro autenticado — mesmo nível de controlo de acesso
  * (por página, não por ficheiro individual) que já existia antes desta
  * mudança, mas agora sem o URL do Blob poder ser acedido diretamente.
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Não autenticado', { status: 401 })
   }
 
-  const [[doc], [ocor], [seg]] = await Promise.all([
+  const [[doc], [ocor], [seg], [docFornecedor], [anexoAta]] = await Promise.all([
     db
       .select({ id: documento.id })
       .from(documento)
@@ -47,9 +47,19 @@ export async function GET(request: NextRequest) {
       .from(seguro)
       .where(and(eq(seguro.anexoUrl, url), eq(seguro.condominioId, membro.condominioId)))
       .limit(1),
+    db
+      .select({ id: documentoFornecedor.id })
+      .from(documentoFornecedor)
+      .where(and(eq(documentoFornecedor.anexoUrl, url), eq(documentoFornecedor.condominioId, membro.condominioId)))
+      .limit(1),
+    db
+      .select({ id: assembleiaAnexo.id })
+      .from(assembleiaAnexo)
+      .where(and(eq(assembleiaAnexo.url, url), eq(assembleiaAnexo.condominioId, membro.condominioId)))
+      .limit(1),
   ])
 
-  if (!doc && !ocor && !seg) {
+  if (!doc && !ocor && !seg && !docFornecedor && !anexoAta) {
     return new NextResponse('Ficheiro não encontrado', { status: 404 })
   }
 

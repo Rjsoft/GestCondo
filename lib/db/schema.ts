@@ -909,6 +909,34 @@ export const assembleiaVoto = pgTable(
   ],
 )
 
+// Anexo à ata de uma assembleia (planta, orçamento discutido, proposta de
+// fornecedor, etc.) — distinto de `documento`, que é solto, sem ligação a
+// nenhuma assembleia específica. `condominioId` repetido (não só via join a
+// `assembleia`) pelo mesmo motivo de `documento`/`ocorrencia`/`seguro`:
+// permite a verificação direta em app/api/ficheiros/route.ts. Só ficheiro
+// carregado, sem opção de link colado à mão (ao contrário de `documento`).
+// Só pode ser adicionado/removido enquanto a assembleia não estiver
+// aprovada/cancelada (ver assertEditavel em app/actions/assembleias.ts) —
+// mesma garantia de imutabilidade da ata depois de fechada.
+export const assembleiaAnexo = pgTable(
+  "assembleia_anexo",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    assembleiaId: integer("assembleiaId")
+      .notNull()
+      .references(() => assembleia.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    titulo: text("titulo").notNull(),
+    url: text("url").notNull(),
+    nomeFicheiro: text("nomeFicheiro"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("assembleia_anexo_assembleia_idx").on(t.assembleiaId)],
+)
+
 // Registo de auditoria: quem fez o quê, quando, a que entidade. Escrito
 // pelas próprias server actions (ver lib/audit.ts) sempre que uma ação
 // sensível é executada (criar/atualizar/eliminar dados partilhados,

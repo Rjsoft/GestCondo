@@ -11,6 +11,8 @@ import { RegistarPresencaDialog } from '@/components/assembleias/registar-presen
 import { RegistarVotoDialog } from '@/components/assembleias/registar-voto-dialog'
 import { ResultadoBotoesClient } from '@/components/assembleias/resultado-botoes'
 import { ConfirmacaoLeituraAssembleia } from '@/components/assembleias/confirmacao-leitura'
+import { NovoAnexoDialog } from '@/components/assembleias/novo-anexo-dialog'
+import { AnexoActions } from '@/components/assembleias/anexo-actions'
 import { VoltarButton } from '@/components/voltar-button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -59,6 +61,7 @@ export default async function AssembleiaDetalhePage({
     permilagemPresente,
     confirmacoesLeitura,
     jaConfirmeiLeitura,
+    anexos,
   } = detalhe
   const editavel = assembleia.estado === 'convocada' || assembleia.estado === 'realizada'
   const quorumPct = totalPermilagem > 0 ? (permilagemPresente / totalPermilagem) * 100 : 0
@@ -251,6 +254,39 @@ export default async function AssembleiaDetalhePage({
             </Card>
           ))}
         </div>
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-serif text-lg font-bold text-foreground">Anexos</h2>
+          {isAdmin && editavel && <NovoAnexoDialog assembleiaId={assembleia.id} />}
+        </div>
+        <Card>
+          <CardContent className="p-5">
+            {anexos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Ainda não existe nenhum anexo.</p>
+            ) : (
+              <ul className="flex flex-col gap-2 text-sm">
+                {anexos.map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-center justify-between gap-3 border-b border-border pb-2 last:border-0 last:pb-0"
+                  >
+                    <a
+                      href={`/api/ficheiros?url=${encodeURIComponent(a.url)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      {a.titulo}
+                    </a>
+                    {isAdmin && editavel && <AnexoActions id={a.id} />}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {(assembleia.estado === 'realizada' || assembleia.estado === 'aprovada') &&

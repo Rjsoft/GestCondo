@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import {
   assembleia,
+  assembleiaAnexo,
   assembleiaPonto,
   assembleiaPresenca,
   assembleiaVoto,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
+import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
 import { confirmarLeitura, getConfirmacoesLeitura, jaConfirmouLeitura } from '@/lib/confirmacao-leitura'
 import { and, asc, desc, eq, inArray, isNotNull } from 'drizzle-orm'
@@ -81,7 +83,7 @@ export async function getAssembleiaDetalhe(id: number) {
     .orderBy(asc(assembleiaPonto.ordem))
   const pontoIds = pontos.map((p) => p.id)
 
-  const [presencas, votos, fracoes, totalPermilagem, confirmacoesLeitura, jaConfirmei] = await Promise.all([
+  const [presencas, votos, fracoes, totalPermilagem, confirmacoesLeitura, jaConfirmei, anexos] = await Promise.all([
     db.select().from(assembleiaPresenca).where(eq(assembleiaPresenca.assembleiaId, id)),
     pontoIds.length
       ? db.select().from(assembleiaVoto).where(inArray(assembleiaVoto.pontoId, pontoIds))
@@ -90,6 +92,7 @@ export async function getAssembleiaDetalhe(id: number) {
     getTotalPermilagem(m.condominioId),
     getConfirmacoesLeitura(m.condominioId, 'assembleia', id),
     jaConfirmouLeitura(m.id, 'assembleia', id),
+    db.select().from(assembleiaAnexo).where(eq(assembleiaAnexo.assembleiaId, id)).orderBy(asc(assembleiaAnexo.createdAt)),
   ])
 
   const fracaoPorId = new Map(fracoes.map((f) => [f.id, f]))
@@ -140,6 +143,7 @@ export async function getAssembleiaDetalhe(id: number) {
     permilagemPresente,
     confirmacoesLeitura,
     jaConfirmeiLeitura: jaConfirmei,
+    anexos,
   }
 }
 
@@ -470,4 +474,78 @@ export async function cancelarAssembleia(assembleiaId: number) {
 
   revalidatePath(`/assembleias/${assembleiaId}`)
   revalidatePath('/assembleias')
+}
+
+/**
+ * Anexa um ficheiro à ata (planta, orçamento discutido, proposta de
+ * fornecedor, etc.) — só enquanto a assembleia não estiver aprovada/
+ * cancelada, mesma garantia de imutabilidade das restantes tabelas.
+ */
+export async function adicionarAnexoAta(assembleiaId: number, formData: FormData) {
+  const admin = await requireAdmin()
+  const a = await getAssembleiaOuFalhar(assembleiaId, admin.condominioId)
+  assertEditavel(a.estado)
+
+  const titulo = String(formData.get('titulo') || '').trim()
+  if (!titulo) throw new Error('Indique o título do anexo')
+
+  const ficheiro = formData.get('ficheiro')
+  if (!(ficheiro instanceof File) || ficheiro.size === 0) {
+    throw new Error('Selecione um ficheiro')
+  }
+  const { url, nomeFicheiro } = await guardarFicheiro(ficheiro, 'assembleias')
+
+  const [novo] = await db
+    .insert(assembleiaAnexo)
+    .values({
+      condominioId: admin.condominioId,
+      assembleiaId,
+      userId: admin.userId,
+      titulo,
+      url,
+      nomeFicheiro,
+    })
+    .returning({ id: assembleiaAnexo.id })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'assembleia',
+    entidadeId: assembleiaId,
+    detalhes: `Anexo adicionado à ata: ${titulo}`,
+  })
+
+  revalidatePath(`/assembleias/${assembleiaId}`)
+  revalidatePath(`/assembleias/ata/${assembleiaId}`)
+
+  return novo.id
+}
+
+export async function eliminarAnexoAta(anexoId: number) {
+  const admin = await requireAdmin()
+
+  const [anexo] = await db
+    .select()
+    .from(assembleiaAnexo)
+    .where(and(eq(assembleiaAnexo.id, anexoId), eq(assembleiaAnexo.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!anexo) throw new Error('Anexo não encontrado')
+
+  const a = await getAssembleiaOuFalhar(anexo.assembleiaId, admin.condominioId)
+  assertEditavel(a.estado)
+
+  await db.delete(assembleiaAnexo).where(eq(assembleiaAnexo.id, anexoId))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'assembleia',
+    entidadeId: anexo.assembleiaId,
+    detalhes: `Anexo removido da ata: ${anexo.titulo}`,
+  })
+
+  await apagarFicheiro(anexo.url)
+
+  revalidatePath(`/assembleias/${anexo.assembleiaId}`)
+  revalidatePath(`/assembleias/ata/${anexo.assembleiaId}`)
 }
