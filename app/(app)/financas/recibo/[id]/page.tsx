@@ -129,8 +129,10 @@ export default async function ReciboPage({
           </dl>
 
           <p className="text-center text-xs text-muted-foreground">
-            Documento gerado automaticamente pelo GestCondo — não substitui
-            fatura-recibo emitida nos termos legais, quando aplicável.
+            Recibo de quitação da quota (art. 23.º, n.º 4 do CIRC) — o
+            condomínio não é, em regra, sujeito passivo de IVA e não emite
+            fatura. Se este condomínio exercer atividade sujeita a IVA,
+            consulte o contabilista sobre a emissão de fatura.
           </p>
         </CardContent>
       </Card>
