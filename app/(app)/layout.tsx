@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { PendingScreen } from '@/components/pending-screen'
 import { SuspensoScreen } from '@/components/suspenso-screen'
-import { getCondominioAtual, getMembroAtual, getSession } from '@/lib/session'
+import { ehOperadorPlataforma, getCondominioAtual, getMembroAtual, getSession } from '@/lib/session'
 import { Toaster } from '@/components/ui/sonner'
 
 export default async function AppLayout({
@@ -14,6 +14,10 @@ export default async function AppLayout({
   if (!membro) {
     const session = await getSession()
     if (!session?.user) redirect('/sign-in')
+    // Conta de operador da plataforma sem nenhum condomínio associado — não
+    // faz sentido mandá-la para o onboarding (não gere nenhum condomínio),
+    // vai direta para /plataforma.
+    if (await ehOperadorPlataforma(session.user.id)) redirect('/plataforma')
     redirect('/onboarding')
   }
 

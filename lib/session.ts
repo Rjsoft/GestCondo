@@ -185,6 +185,20 @@ export async function requireOperadorPlataforma(): Promise<{
 }
 
 /**
+ * Como `requireOperadorPlataforma`, mas sem lançar — usado pelo layout para
+ * decidir para onde mandar uma conta autenticada sem nenhum `membro` (em
+ * vez de assumir sempre onboarding, ver app/(app)/layout.tsx).
+ */
+export async function ehOperadorPlataforma(userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ operadorPlataforma: user.operadorPlataforma })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+  return row?.operadorPlataforma ?? false
+}
+
+/**
  * Helper para server actions: exige acesso de consulta de gestão (admin,
  * gestor ou auditor). Usar para leituras administrativas (ex. lista de
  * condóminos) que não devem ficar visíveis a condóminos/inquilinos comuns,
