@@ -439,6 +439,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           administrador) ou &ldquo;Aprovado&rdquo;. Visível a quem tem
           permissão de gestão ou consulta.
         </p>
+        <p>
+          Um administrador pode remover a conta de um condómino ou inquilino
+          já aprovado (ícone de caixote do lixo, com confirmação) — não
+          apaga a fração nem o histórico financeiro, só a conta de acesso.
+          Útil, por exemplo, quando o proprietário de uma fração falece: o
+          herdeiro cria conta nova com o código de convite, o administrador
+          liga-a à fração em &ldquo;Editar&rdquo;, e só depois remove a
+          conta antiga. Não é possível remover a própria conta por aqui.
+        </p>
       </>
     ),
   },

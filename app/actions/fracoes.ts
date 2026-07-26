@@ -267,6 +267,44 @@ export async function rejeitarMembro(id: number) {
   revalidatePath('/condominos')
 }
 
+/**
+ * Remove a conta de um condómino/inquilino já aprovado — distinto de
+ * `rejeitarMembro`, que só se usa em pedidos pendentes. Necessário, por
+ * exemplo, quando o proprietário de uma fração falece: o herdeiro cria
+ * conta nova e liga-a à fração, e esta ação retira a conta antiga (que,
+ * até aqui, só podia ser editada, nunca eliminada — FUNCTIONAL_GAPS.md,
+ * "Sucessão do titular (óbito)"). Não apaga a fração nem o seu histórico
+ * financeiro, só a conta de acesso.
+ */
+export async function removerMembro(id: number) {
+  const admin = await requireAdmin()
+  if (id === admin.id) {
+    throw new Error('Não pode remover a sua própria conta por aqui')
+  }
+
+  const [alvo] = await db
+    .select({ nome: membro.nome, email: membro.email })
+    .from(membro)
+    .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!alvo) throw new Error('Membro não encontrado')
+
+  await db
+    .delete(membro)
+    .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'membro',
+    entidadeId: id,
+    detalhes: `${alvo.nome} (${alvo.email})`,
+  })
+
+  revalidatePath('/condominos')
+  revalidatePath('/fracoes')
+}
+
 export async function atualizarMembro(formData: FormData) {
   const admin = await requireAdmin()
   const id = Number(formData.get('id'))

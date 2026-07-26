@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/page-header'
 import { PerfilSelect } from '@/components/condominos/perfil-select'
 import { EditarMembroDialog } from '@/components/condominos/editar-membro-dialog'
 import { MembroStatusActions } from '@/components/condominos/membro-status-actions'
+import { RemoverMembroButton } from '@/components/condominos/remover-membro-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SearchInput } from '@/components/ui/search-input'
 import {
@@ -132,15 +133,20 @@ export default async function CondominosPage({
                     {formatData(m.createdAt)}
                   </TableCell>
                   <TableCell>
-                    {podeGerir && (
-                      <EditarMembroDialog
-                        id={m.id}
-                        nome={m.nome}
-                        fracaoId={m.fracaoId}
-                        telefone={m.telefone}
-                        fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
-                      />
-                    )}
+                    <div className="flex items-center gap-1">
+                      {podeGerir && (
+                        <EditarMembroDialog
+                          id={m.id}
+                          nome={m.nome}
+                          fracaoId={m.fracaoId}
+                          telefone={m.telefone}
+                          fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
+                        />
+                      )}
+                      {podeGerir && m.id !== membro.id && (
+                        <RemoverMembroButton id={m.id} nome={m.nome} />
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
