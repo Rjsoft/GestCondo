@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table'
 import { MovimentoActions } from '@/components/financas/movimento-actions'
 import { ExportarMapaMensalCsvButton } from '@/components/financas/exportar-mapa-mensal-csv-button'
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FileText, Receipt } from 'lucide-react'
 import { formatEuro, formatData } from '@/lib/format'
 
 const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
@@ -205,6 +205,16 @@ export function MapaMensalTab({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-medium text-foreground">{formatEuro(Number(mv.valor))}</span>
+                  {mv.tipo === 'receita' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Ver recibo"
+                      render={<Link href={`/financas/recibo/${mv.id}`} />}
+                    >
+                      <Receipt className="h-4 w-4" />
+                    </Button>
+                  )}
                   {isAdmin && (
                     <MovimentoActions
                       id={mv.id}

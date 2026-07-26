@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { FileText } from 'lucide-react'
+import { FileText, Receipt } from 'lucide-react'
 import { NovoMovimentoDialog } from '@/components/financas/novo-movimento-dialog'
 import { MovimentoActions } from '@/components/financas/movimento-actions'
 import { ExportarCsvButton } from '@/components/financas/exportar-csv-button'
@@ -241,6 +241,7 @@ export function FinancasTabs({
                   <TableHead>Tipo</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="w-10" />
                   {isAdmin && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
@@ -248,7 +249,7 @@ export function FinancasTabs({
                 {movimentos.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 8 : 7}
+                      colSpan={isAdmin ? 9 : 8}
                       className="py-10 text-center text-muted-foreground"
                     >
                       {pesquisaMovimentos
@@ -318,6 +319,18 @@ export function FinancasTabs({
                     >
                       {m.tipo === 'receita' ? '+' : '−'}
                       {formatEuro(Number(m.valor))}
+                    </TableCell>
+                    <TableCell>
+                      {m.tipo === 'receita' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Ver recibo"
+                          render={<Link href={`/financas/recibo/${m.id}`} />}
+                        >
+                          <Receipt className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                     {isAdmin && (
                       <TableCell>

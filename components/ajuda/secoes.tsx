@@ -327,12 +327,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             condomínio tem e deve num exercício.
           </li>
         </ul>
-        <Subtitulo>Como emitir um recibo ou relatório</Subtitulo>
+        <Subtitulo>Como obter um recibo ou relatório</Subtitulo>
         <p>
-          Na lista de movimentos, use o botão &ldquo;Relatório (PDF)&rdquo;
-          para gerar um relatório imprimível de todos os movimentos, ou
-          &ldquo;Exportar CSV&rdquo; para descarregar os dados numa folha de
-          cálculo.
+          Junto de cada quota (receita) na lista de movimentos, ou dentro de
+          cada mês no &ldquo;Mapa mensal&rdquo;, existe um ícone de recibo —
+          qualquer pessoa com acesso financeiro (incluindo um condómino) pode
+          abri-lo e imprimir/guardar em PDF, sem precisar de pedir ao
+          administrador. Para um relatório com todos os movimentos, use o
+          botão &ldquo;Relatório (PDF)&rdquo;, ou &ldquo;Exportar CSV&rdquo;
+          para descarregar os dados numa folha de cálculo.
         </p>
       </>
     ),
