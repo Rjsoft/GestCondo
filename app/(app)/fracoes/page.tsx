@@ -122,6 +122,13 @@ export default async function FracoesPage({
                   <TableRow key={f.id}>
                     <TableCell className="font-medium">
                       {f.letra ? `${f.letra} — ${f.identificacao}` : f.identificacao}
+                      {(f.areaPrivativa || f.areaComum) && (
+                        <span className="block text-xs font-normal text-muted-foreground">
+                          {f.areaPrivativa && `${Number(f.areaPrivativa).toFixed(2)} m² privativos`}
+                          {f.areaPrivativa && f.areaComum ? ' + ' : ''}
+                          {f.areaComum && `${Number(f.areaComum).toFixed(2)} m² comuns`}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {f.proprietario}
@@ -169,6 +176,8 @@ export default async function FracoesPage({
                             permilagem={Number(f.permilagem)}
                             contactoEmail={f.contactoEmail}
                             contactoTelefone={f.contactoTelefone}
+                            areaPrivativa={f.areaPrivativa}
+                            areaComum={f.areaComum}
                             representanteLegal={f.representanteLegal}
                             representanteLegalContacto={f.representanteLegalContacto}
                             notas={f.notas}

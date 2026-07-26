@@ -33,6 +33,8 @@ export function EditarFracaoDialog({
   permilagem,
   contactoEmail,
   contactoTelefone,
+  areaPrivativa,
+  areaComum,
   representanteLegal,
   representanteLegalContacto,
   notas,
@@ -46,6 +48,8 @@ export function EditarFracaoDialog({
   permilagem: number
   contactoEmail: string | null
   contactoTelefone: string | null
+  areaPrivativa: string | null
+  areaComum: string | null
   representanteLegal: string | null
   representanteLegalContacto: string | null
   notas: string | null
@@ -134,7 +138,14 @@ export function EditarFracaoDialog({
           </div>
           <Collapsible
             defaultOpen={Boolean(
-              nif || contactoEmail || contactoTelefone || representanteLegal || representanteLegalContacto || notas,
+              nif ||
+                contactoEmail ||
+                contactoTelefone ||
+                areaPrivativa ||
+                areaComum ||
+                representanteLegal ||
+                representanteLegalContacto ||
+                notas,
             )}
           >
             <CollapsibleTrigger>
@@ -163,6 +174,32 @@ export function EditarFracaoDialog({
                     id="contactoTelefone"
                     name="contactoTelefone"
                     defaultValue={contactoTelefone ?? ''}
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="areaPrivativa">Área privativa (m²)</Label>
+                  <Input
+                    id="areaPrivativa"
+                    name="areaPrivativa"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    defaultValue={areaPrivativa ?? ''}
+                    placeholder="Opcional"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="areaComum">Área comum imputada (m²)</Label>
+                  <Input
+                    id="areaComum"
+                    name="areaComum"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    defaultValue={areaComum ?? ''}
                     placeholder="Opcional"
                   />
                 </div>

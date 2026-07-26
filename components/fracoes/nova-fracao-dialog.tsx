@@ -143,6 +143,30 @@ export function NovaFracaoDialog() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-2">
+                  <Label htmlFor="areaPrivativa">Área privativa (m²)</Label>
+                  <Input
+                    id="areaPrivativa"
+                    name="areaPrivativa"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Opcional"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="areaComum">Área comum imputada (m²)</Label>
+                  <Input
+                    id="areaComum"
+                    name="areaComum"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="representanteLegal">Representante legal</Label>
                   <Input
                     id="representanteLegal"

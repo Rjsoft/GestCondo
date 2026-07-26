@@ -65,6 +65,8 @@ export async function criarFracao(formData: FormData) {
   const tipoTitular = lerTipoTitular(formData)
   const nif = String(formData.get('nif') || '').trim()
   const permilagem = String(formData.get('permilagem') || '0')
+  const areaPrivativaRaw = String(formData.get('areaPrivativa') || '').trim()
+  const areaComumRaw = String(formData.get('areaComum') || '').trim()
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
   const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
   const representanteLegal = String(formData.get('representanteLegal') || '').trim()
@@ -87,6 +89,8 @@ export async function criarFracao(formData: FormData) {
       tipoTitular,
       nif: nif || null,
       permilagem,
+      areaPrivativa: areaPrivativaRaw || null,
+      areaComum: areaComumRaw || null,
       contactoEmail: contactoEmail || null,
       contactoTelefone: contactoTelefone || null,
       representanteLegal: representanteLegal || null,
@@ -118,6 +122,8 @@ export async function atualizarFracao(formData: FormData) {
   const tipoTitular = lerTipoTitular(formData)
   const nif = String(formData.get('nif') || '').trim()
   const permilagem = String(formData.get('permilagem') || '0')
+  const areaPrivativaRaw = String(formData.get('areaPrivativa') || '').trim()
+  const areaComumRaw = String(formData.get('areaComum') || '').trim()
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
   const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
   const representanteLegal = String(formData.get('representanteLegal') || '').trim()
@@ -137,6 +143,8 @@ export async function atualizarFracao(formData: FormData) {
       tipoTitular,
       nif: nif || null,
       permilagem,
+      areaPrivativa: areaPrivativaRaw || null,
+      areaComum: areaComumRaw || null,
       contactoEmail: contactoEmail || null,
       contactoTelefone: contactoTelefone || null,
       representanteLegal: representanteLegal || null,

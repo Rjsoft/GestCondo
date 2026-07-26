@@ -418,10 +418,11 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         </p>
         <p>
           Em &ldquo;Mais opções&rdquo; pode ainda preencher o NIF, contactos
-          de email/telefone, notas e, quando o proprietário é uma empresa ou
-          uma herança indivisa, o nome e contacto de um representante legal
-          (procurador, gerente, cabeça-de-casal) — mostrado na listagem por
-          baixo do proprietário.
+          de email/telefone, a área privativa e a área comum imputada (em
+          m²), notas e, quando o proprietário é uma empresa ou uma herança
+          indivisa, o nome e contacto de um representante legal (procurador,
+          gerente, cabeça-de-casal) — tudo mostrado na listagem por baixo do
+          proprietário, quando preenchido.
         </p>
       </>
     ),

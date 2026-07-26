@@ -286,6 +286,13 @@ export const fracao = pgTable(
     permilagem: numeric("permilagem", { precision: 8, scale: 2 })
       .notNull()
       .default("0"),
+    // Área em m², informação normalmente presente na ficha de fração —
+    // distinta da permilagem (que é a quota-parte para efeitos de rateio).
+    // Opcionais, texto livre sem cálculo automático (a área comum imputada
+    // a cada fração é normalmente proporcional à permilagem, mas pode não
+    // ser exatamente isso na prática, por isso não se deriva uma da outra).
+    areaPrivativa: numeric("areaPrivativa", { precision: 8, scale: 2 }),
+    areaComum: numeric("areaComum", { precision: 8, scale: 2 }),
     contactoEmail: text("contactoEmail"),
     contactoTelefone: text("contactoTelefone"),
     // Procurador/representante do proprietário (pessoa coletiva, herança
