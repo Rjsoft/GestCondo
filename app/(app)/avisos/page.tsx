@@ -3,6 +3,8 @@ import { getAvisos } from '@/app/actions/avisos'
 import { PageHeader } from '@/components/page-header'
 import { NovoAvisoDialog } from '@/components/avisos/novo-aviso-dialog'
 import { AvisoActions } from '@/components/avisos/aviso-actions'
+import { ConfirmarLeituraAvisoButton } from '@/components/avisos/confirmar-leitura-button'
+import { ConfirmacoesAvisoDialog } from '@/components/avisos/confirmacoes-aviso-dialog'
 import { PrioridadeBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { SearchInput } from '@/components/ui/search-input'
@@ -59,6 +61,10 @@ export default async function AvisosPage({
                     <p className="mt-3 text-xs text-muted-foreground">
                       {a.autorNome} · {formatDataHora(a.createdAt)}
                     </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <ConfirmarLeituraAvisoButton avisoId={a.id} confirmado={a.jaConfirmei} />
+                      <ConfirmacoesAvisoDialog avisoId={a.id} total={a.totalConfirmacoes} />
+                    </div>
                   </div>
                   {isAdmin && <AvisoActions id={a.id} />}
                 </CardContent>

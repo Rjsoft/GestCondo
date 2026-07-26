@@ -86,7 +86,7 @@ A ausência de transferência formal entre contas é uma limitação funcional c
 ## Não bloqueia (mas fica registado para não esquecer)
 
 - Política de cookies dedicada, política de segurança/backups formais — documentos de maturidade, redigir quando houver tempo.
-- "Três orçamentos" para obras extraordinárias, numeração sequencial de atas — funcionalidades de produto, não bloqueiam legalmente.
+- "Três orçamentos" para obras extraordinárias — funcionalidade de produto, não bloqueia legalmente. Numeração sequencial de atas **resolvida 2026-07-26** (`ROADMAP.md`, `FUNCTIONAL_GAPS.md` secção 2).
 - T1–T4 da Fase A.1 (ver secção acima) — não bloqueiam continuação do desenvolvimento.
 - Transferência formal entre contas (Fase A.1) e Fase A.2 completa — não bloqueiam continuação do desenvolvimento.
 - Melhorias adicionais de auditoria e revisão estética não crítica — não bloqueiam continuação do desenvolvimento.

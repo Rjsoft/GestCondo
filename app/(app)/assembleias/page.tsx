@@ -59,6 +59,11 @@ export default async function AssembleiasPage() {
                   <TableCell className="font-medium">
                     <Link href={`/assembleias/${a.id}`} className="block hover:underline">
                       {formatDataHora(a.dataPrimeiraConvocatoria)}
+                      {a.numero && (
+                        <span className="ml-2 font-normal text-muted-foreground">
+                          Ata nº {a.numero}
+                        </span>
+                      )}
                     </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">

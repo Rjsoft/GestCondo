@@ -77,8 +77,15 @@ export type MembroSessao = {
   /** Fração de que este membro é proprietário (perfil condomino) ou
    * arrendatário (perfil inquilino). `null` se ainda não associado. */
   fracaoId: number | null
-  /** Operador da plataforma — ver comentário acima de `Perfil`. */
+  /** Super Admin (empresa gestora multi-condomínio, futuro) — ver comentário acima de `Perfil`. */
   isSuperAdmin: boolean
+  /** Operador da plataforma (RJCSI) — controla /plataforma e a subscrição
+   * de qualquer condomínio. Distinto de `isSuperAdmin`, ver lib/db/schema.ts. */
+  isOperadorPlataforma: boolean
+  /** Estado de subscrição do condomínio deste membro — "suspenso" bloqueia
+   * o acesso (ver requireMembroAprovado/requireAdmin), exceto para
+   * isOperadorPlataforma. */
+  condominioSuspenso: boolean
 }
 
 /** Tem poderes de administração do condomínio (admin, gestor, ou super admin). */

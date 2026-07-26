@@ -50,7 +50,7 @@ export default async function AtaPage({
         <CardContent className="flex flex-col gap-6 p-8 print:p-0">
           <CabecalhoDocumento
             condominio={condominio}
-            titulo={`Ata de Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}`}
+            titulo={`Ata de Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}${assembleia.numero ? ` nº ${assembleia.numero}` : ''}`}
             subtitulo={`${formatDataHora(assembleia.dataPrimeiraConvocatoria)} — ${assembleia.local}`}
           />
           {assembleia.estado !== 'aprovada' && (

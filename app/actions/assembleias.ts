@@ -12,7 +12,8 @@ import {
 import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
-import { and, asc, desc, eq, inArray } from 'drizzle-orm'
+import { confirmarLeitura, getConfirmacoesLeitura, jaConfirmouLeitura } from '@/lib/confirmacao-leitura'
+import { and, asc, desc, eq, inArray, isNotNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const ESTADOS_EDITAVEIS = ['convocada', 'realizada']
@@ -80,13 +81,15 @@ export async function getAssembleiaDetalhe(id: number) {
     .orderBy(asc(assembleiaPonto.ordem))
   const pontoIds = pontos.map((p) => p.id)
 
-  const [presencas, votos, fracoes, totalPermilagem] = await Promise.all([
+  const [presencas, votos, fracoes, totalPermilagem, confirmacoesLeitura, jaConfirmei] = await Promise.all([
     db.select().from(assembleiaPresenca).where(eq(assembleiaPresenca.assembleiaId, id)),
     pontoIds.length
       ? db.select().from(assembleiaVoto).where(inArray(assembleiaVoto.pontoId, pontoIds))
       : Promise.resolve([]),
     db.select().from(fracao).where(eq(fracao.condominioId, m.condominioId)).orderBy(asc(fracao.identificacao)),
     getTotalPermilagem(m.condominioId),
+    getConfirmacoesLeitura(m.condominioId, 'assembleia', id),
+    jaConfirmouLeitura(m.id, 'assembleia', id),
   ])
 
   const fracaoPorId = new Map(fracoes.map((f) => [f.id, f]))
@@ -135,7 +138,32 @@ export async function getAssembleiaDetalhe(id: number) {
     })),
     totalPermilagem,
     permilagemPresente,
+    confirmacoesLeitura,
+    jaConfirmeiLeitura: jaConfirmei,
   }
+}
+
+/** Regista que o membro autenticado confirma ter lido a convocatória. */
+export async function confirmarLeituraAssembleia(assembleiaId: number) {
+  const m = await requireMembroAprovado()
+  await getAssembleiaOuFalhar(assembleiaId, m.condominioId)
+
+  await confirmarLeitura({
+    condominioId: m.condominioId,
+    membroId: m.id,
+    entidade: 'assembleia',
+    entidadeId: assembleiaId,
+  })
+
+  await registarAuditoria({
+    actor: m,
+    acao: 'atualizar',
+    entidade: 'assembleia',
+    entidadeId: assembleiaId,
+    detalhes: 'Confirmação de leitura da convocatória',
+  })
+
+  revalidatePath(`/assembleias/${assembleiaId}`)
 }
 
 export async function criarAssembleia(formData: FormData) {
@@ -393,17 +421,29 @@ export async function aprovarAta(assembleiaId: number, textoAta: string) {
     throw new Error('A assembleia tem de estar marcada como realizada antes de aprovar a ata')
   }
 
-  await db
-    .update(assembleia)
-    .set({ estado: 'aprovada', textoAta: textoAta.trim() || null })
-    .where(eq(assembleia.id, assembleiaId))
+  const numero = await db.transaction(async (tx) => {
+    const [ultima] = await tx
+      .select({ numero: assembleia.numero })
+      .from(assembleia)
+      .where(and(eq(assembleia.condominioId, admin.condominioId), isNotNull(assembleia.numero)))
+      .orderBy(desc(assembleia.numero))
+      .limit(1)
+    const novoNumero = (ultima?.numero ?? 0) + 1
+
+    await tx
+      .update(assembleia)
+      .set({ estado: 'aprovada', textoAta: textoAta.trim() || null, numero: novoNumero })
+      .where(eq(assembleia.id, assembleiaId))
+
+    return novoNumero
+  })
 
   await registarAuditoria({
     actor: admin,
     acao: 'aprovar',
     entidade: 'assembleia',
     entidadeId: assembleiaId,
-    detalhes: 'Ata aprovada — assembleia encerrada e imutável',
+    detalhes: `Ata aprovada (nº ${numero}) — assembleia encerrada e imutável`,
   })
 
   revalidatePath(`/assembleias/${assembleiaId}`)

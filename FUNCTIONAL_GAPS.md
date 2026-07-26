@@ -32,6 +32,8 @@ Módulo inteiro pedido como essencial para o mercado português — **Assembleia
 | Dados formais do edifício | ❌ Em falta | Sem registo matricial, conservatória, licença de habitação, projeto/arquiteto, área de construção. `condominio` só tem nome/morada/NIF. Gap identificado 2026-07-22 por comparação com um template de contabilidade de condomínio real (`7_EDIFICIO`). | P2 |
 | Património/inventário do condomínio | ❌ Em falta | Sem entidade para bens do condomínio (mobiliário, equipamento, segurança) com valor de aquisição/depreciação/valor atual. Gap identificado 2026-07-22, mesma comparação (`10_PATRIMONIO`). | P2 |
 | Área privativa/comum por fração (m²) | 🟡 Parcial | `fracao` tem permilagem mas não área em m² (privativa nem parte comum) — informação normalmente presente na ficha de fração. Gap identificado 2026-07-22, mesma comparação (`8_FRACCOES`). | P3 |
+| Exportação/importação completa dos dados do condomínio | ✅ **Resolvido 2026-07-26** | `exportarCondominio()`/`importarCondominio()` (`app/actions/condominio.ts`) — exportação em JSON de todas as tabelas do condomínio (admin, botão em `/condominio`); importação só cria um condomínio **novo** (terceiro modo no onboarding), nunca escreve sobre um existente, com todos os ids remapeados. Não inclui conteúdo binário de anexos nem a lista de condóminos com conta (`membro`) — ver comentário em `exportarCondominio` para o porquê. Testado com `pnpm test`/`pnpm test:db`. | — |
+| Ajuda/manual dentro da aplicação | ✅ **Resolvido 2026-07-26** | Página `/ajuda`, visível a todos os perfis, com uma secção por módulo escrita para um utilizador sem experiência nenhuma (linguagem simples, passo a passo, cabeçalhos semânticos para leitor de ecrã). Teste real com NVDA continua pendente (ver `docs/audit/ACCESSIBILITY_AUDIT.md`). | — |
 
 ## 2. Assembleias — implementado 2026-07-09 (núcleo P1), verificado em runtime 2026-07-21
 
@@ -44,14 +46,14 @@ Módulo inteiro pedido como essencial para o mercado português — **Assembleia
 | Cálculo de quórum (por permilagem) | ✅ Permilagem presente / permilagem total do condomínio, mostrado na página de detalhe e na ata. Sem distinção automática de limiar 1ª vs. 2ª convocatória — a app mostra o número, quem qualifica se o quórum exigido foi atingido é o administrador | P1 |
 | Votação por permilagem | ✅ Voto por fração (`favor`/`contra`/`abstencao`) por ponto, com soma de permilagem por opção | P1 |
 | Deliberações | ✅ Resultado (`aprovado`/`reprovado`/`adiado`) definido manualmente pelo administrador por ponto, com base nos números mostrados | P1 |
-| Atas | ✅ **P1** — texto livre + ata gerada automaticamente (presenças, votação, deliberações) em `/assembleias/ata/[id]`, imprimível. Torna-se imutável assim que aprovada (`estado: 'aprovada'` bloqueia qualquer escrita nas tabelas associadas) | — |
+| Atas | ✅ **P1** — texto livre + ata gerada automaticamente (presenças, votação, deliberações) em `/assembleias/ata/[id]`, imprimível. Torna-se imutável assim que aprovada (`estado: 'aprovada'` bloqueia qualquer escrita nas tabelas associadas). **Resolvido 2026-07-26**: numeração sequencial do livro de atas (`assembleia.numero`, `unique(condominioId, numero)`), atribuída na aprovação, mostrada em `/assembleias`, na página de detalhe e na ata | — |
 | Anexos à ata | ❌ | P2 — depende de upload de ficheiros (ver secção 6) |
 | Histórico de assembleias | ✅ Lista em `/assembleias`, ordenada por data | P1 |
 | Videoconferência (quando legalmente admissível) | ❌ | P3 |
 | Notificação por email de convocatórias | ✅ Envio automático a todos os membros aprovados do condomínio ao convocar (`lib/email.ts`) | — |
-| Registo de receção/leitura/confirmação de convocatória | ❌ | P2 — juridicamente relevante para provar convocação regular |
+| Registo de receção/leitura/confirmação de convocatória | ✅ **Resolvido 2026-07-26** — botão "Confirmar leitura" na página de detalhe da assembleia, registado em `confirmacao_leitura` (membro, data/hora), visível a qualquer membro; mesmo mecanismo para avisos (ver secção 5) | — |
 
-Este é o módulo funcionalmente mais crítico para o mercado português (as assembleias e as suas atas são o instrumento legal central da vida do condomínio, Código Civil arts. 1430º–1438º-A). Foi construído de raiz em 2026-07-09, com a exigência de integridade que o justificava: uma ata aprovada não é silenciosamente editável — `estado: 'aprovada'` bloqueia qualquer escrita nas tabelas associadas, verificado em runtime em 2026-07-21. Falta apenas o que está marcado ❌ acima: anexos à ata, registo de receção/leitura da convocatória e videoconferência.
+Este é o módulo funcionalmente mais crítico para o mercado português (as assembleias e as suas atas são o instrumento legal central da vida do condomínio, Código Civil arts. 1430º–1438º-A). Foi construído de raiz em 2026-07-09, com a exigência de integridade que o justificava: uma ata aprovada não é silenciosamente editável — `estado: 'aprovada'` bloqueia qualquer escrita nas tabelas associadas, verificado em runtime em 2026-07-21. Falta apenas anexos à ata e videoconferência (ambos ❌ acima); numeração sequencial e confirmação de leitura da convocatória foram resolvidas em 2026-07-26.
 
 ## 3. Gestão financeira
 
@@ -102,8 +104,8 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Avisos aos condóminos | ✅ Implementado | `app/(app)/avisos/page.tsx`, com prioridade. | — |
 | Notificações (push/email) | ✅ Implementado 2026-07-09 — email enviado quando um aviso `importante`/`urgente` é publicado (a todos os membros aprovados) e quando o estado de uma ocorrência é atualizado (a quem a reportou). Avisos `normal` não geram email, para não sobrecarregar a caixa de entrada. Sem notificação push (só email). | — |
 | Mensagens internas (condómino ↔ admin) | ❌ Em falta | Sem qualquer canal de mensagem direta/privada. | P2 |
-| Histórico de comunicações | 🟡 Parcial | Avisos ficam listados indefinidamente, mas não há registo de "quem viu o quê". | P2 |
-| Confirmação de leitura | ❌ Em falta | Nem em avisos nem (mais crítico) em convocatórias de assembleia. | P1/P2 conforme uso |
+| Histórico de comunicações | ✅ **Resolvido 2026-07-26** | Confirmação de leitura por membro (ver linha abaixo) mostra quem já viu cada aviso, além da listagem indefinida já existente. | — |
+| Confirmação de leitura | ✅ **Resolvido 2026-07-26** — botão "Confirmar leitura" em avisos e na convocatória de assembleia, registado em `confirmacao_leitura` (membro, data/hora, `unique(membroId, entidade, entidadeId)`); administrador vê contagem/lista de quem confirmou | — |
 | Regras contra exposição de emails entre condóminos | ✅ Resolvido 2026-07-07 | Ver `SECURITY_AUDIT.md` S13. | — |
 
 ## 6. Documentos

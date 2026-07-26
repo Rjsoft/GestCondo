@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { PendingScreen } from '@/components/pending-screen'
+import { SuspensoScreen } from '@/components/suspenso-screen'
 import { getCondominioAtual, getMembroAtual, getSession } from '@/lib/session'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -14,6 +15,15 @@ export default async function AppLayout({
     const session = await getSession()
     if (!session?.user) redirect('/sign-in')
     redirect('/onboarding')
+  }
+
+  if (membro.condominioSuspenso && !membro.isOperadorPlataforma) {
+    return (
+      <>
+        <SuspensoScreen email={membro.email} />
+        <Toaster />
+      </>
+    )
   }
 
   if (membro.estado !== 'aprovado' && !membro.isSuperAdmin) {
@@ -32,6 +42,7 @@ export default async function AppLayout({
       nome={membro.nome}
       perfil={membro.perfil}
       isSuperAdmin={membro.isSuperAdmin}
+      isOperadorPlataforma={membro.isOperadorPlataforma}
       condominioNome={condominio?.nome ?? 'Condomínio'}
     >
       {children}

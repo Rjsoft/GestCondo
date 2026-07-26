@@ -20,6 +20,8 @@ function membro(perfil: Perfil, isSuperAdmin = false): MembroSessao {
     estado: 'aprovado',
     fracaoId: null,
     isSuperAdmin,
+    isOperadorPlataforma: false,
+    condominioSuspenso: false,
   }
 }
 

@@ -1,0 +1,25 @@
+'use client'
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SECOES_AJUDA } from '@/components/ajuda/secoes'
+
+export function AjudaTabs() {
+  return (
+    <Tabs defaultValue={SECOES_AJUDA[0].value} className="mt-4">
+      <TabsList className="h-auto flex-wrap">
+        {SECOES_AJUDA.map((s) => (
+          <TabsTrigger key={s.value} value={s.value} className="flex-none">
+            {s.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {SECOES_AJUDA.map((s) => (
+        <TabsContent key={s.value} value={s.value} className="mt-4">
+          <div className="flex max-w-2xl flex-col gap-3 text-sm text-foreground">
+            {s.conteudo}
+          </div>
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
+}

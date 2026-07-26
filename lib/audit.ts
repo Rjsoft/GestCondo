@@ -109,6 +109,8 @@ export async function registarEventoAutenticacao(
           estado: m.estado as MembroSessao['estado'],
           fracaoId: m.fracaoId,
           isSuperAdmin: false,
+          isOperadorPlataforma: false,
+          condominioSuspenso: false,
         },
         acao,
         entidade: 'membro',

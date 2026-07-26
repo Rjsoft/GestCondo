@@ -10,6 +10,7 @@ import { NovoPontoDialog } from '@/components/assembleias/novo-ponto-dialog'
 import { RegistarPresencaDialog } from '@/components/assembleias/registar-presenca-dialog'
 import { RegistarVotoDialog } from '@/components/assembleias/registar-voto-dialog'
 import { ResultadoBotoesClient } from '@/components/assembleias/resultado-botoes'
+import { ConfirmacaoLeituraAssembleia } from '@/components/assembleias/confirmacao-leitura'
 import { VoltarButton } from '@/components/voltar-button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -49,7 +50,16 @@ export default async function AssembleiaDetalhePage({
   if (!detalhe) notFound()
 
   const isAdmin = temPermissaoGestao(membro)
-  const { assembleia, pontos, presencas, fracoes, totalPermilagem, permilagemPresente } = detalhe
+  const {
+    assembleia,
+    pontos,
+    presencas,
+    fracoes,
+    totalPermilagem,
+    permilagemPresente,
+    confirmacoesLeitura,
+    jaConfirmeiLeitura,
+  } = detalhe
   const editavel = assembleia.estado === 'convocada' || assembleia.estado === 'realizada'
   const quorumPct = totalPermilagem > 0 ? (permilagemPresente / totalPermilagem) * 100 : 0
 
@@ -59,7 +69,7 @@ export default async function AssembleiaDetalhePage({
         <VoltarButton />
       </div>
       <PageHeader
-        title={`Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}`}
+        title={`Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}${assembleia.numero ? ` — Ata nº ${assembleia.numero}` : ''}`}
         description={`${formatDataHora(assembleia.dataPrimeiraConvocatoria)} — ${assembleia.local}`}
       >
         <div className="flex items-center gap-2">
@@ -106,6 +116,18 @@ export default async function AssembleiaDetalhePage({
           </p>
         </CardContent>
       </Card>
+
+      {assembleia.estado !== 'cancelada' && (
+        <Card>
+          <CardContent className="p-5">
+            <ConfirmacaoLeituraAssembleia
+              assembleiaId={assembleia.id}
+              confirmado={jaConfirmeiLeitura}
+              confirmacoes={confirmacoesLeitura}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div>
         <div className="mb-3 flex items-center justify-between">

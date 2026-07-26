@@ -23,6 +23,8 @@ import {
   X,
   Settings,
   Truck,
+  HelpCircle,
+  Landmark,
 } from 'lucide-react'
 import {
   PERFIL_LABEL,
@@ -36,7 +38,7 @@ type NavItem = {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
-  visivel?: (perfil: Perfil, isSuperAdmin: boolean) => boolean
+  visivel?: (perfil: Perfil, isSuperAdmin: boolean, isOperadorPlataforma: boolean) => boolean
 }
 
 const NAV: NavItem[] = [
@@ -75,11 +77,18 @@ const NAV: NavItem[] = [
       isSuperAdmin || PERFIS_CONSULTA_GESTAO.includes(perfil),
   },
   { href: '/os-meus-dados', label: 'Os meus dados', icon: UserCog },
+  { href: '/ajuda', label: 'Ajuda', icon: HelpCircle },
   {
     href: '/condominio',
     label: 'Condomínio',
     icon: Settings,
     visivel: (perfil, isSuperAdmin) => isSuperAdmin || PERFIS_GESTAO.includes(perfil),
+  },
+  {
+    href: '/plataforma',
+    label: 'Plataforma',
+    icon: Landmark,
+    visivel: (_perfil, _isSuperAdmin, isOperadorPlataforma) => isOperadorPlataforma,
   },
 ]
 
@@ -88,19 +97,23 @@ export function AppShell({
   nome,
   perfil,
   isSuperAdmin,
+  isOperadorPlataforma,
   condominioNome,
 }: {
   children: React.ReactNode
   nome: string
   perfil: Perfil
   isSuperAdmin: boolean
+  isOperadorPlataforma: boolean
   condominioNome: string
 }) {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
 
-  const items = NAV.filter((i) => !i.visivel || i.visivel(perfil, isSuperAdmin))
+  const items = NAV.filter(
+    (i) => !i.visivel || i.visivel(perfil, isSuperAdmin, isOperadorPlataforma),
+  )
 
   const iniciais = nome
     .split(' ')

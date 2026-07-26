@@ -85,6 +85,8 @@ export const auth = betterAuth({
               estado: (m.estado as MembroSessao['estado']) ?? 'aprovado',
               fracaoId: m.fracaoId,
               isSuperAdmin: false,
+              isOperadorPlataforma: false,
+              condominioSuspenso: false,
             },
             acao: 'eliminar',
             entidade: 'membro',

@@ -2,16 +2,16 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { criarCondominio, entrarComCodigo } from '@/app/actions/condominio'
+import { criarCondominio, entrarComCodigo, importarCondominio } from '@/app/actions/condominio'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Building2, KeyRound } from 'lucide-react'
+import { Building2, KeyRound, Upload } from 'lucide-react'
 
 export function OnboardingForm() {
   const router = useRouter()
-  const [modo, setModo] = useState<'escolher' | 'codigo' | 'novo'>('escolher')
+  const [modo, setModo] = useState<'escolher' | 'codigo' | 'novo' | 'importar'>('escolher')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -37,6 +37,19 @@ export function OnboardingForm() {
         router.refresh()
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Erro ao criar o condomínio')
+      }
+    })
+  }
+
+  const onSubmitImportar = (formData: FormData) => {
+    setError(null)
+    startTransition(async () => {
+      try {
+        await importarCondominio(formData)
+        router.push('/')
+        router.refresh()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao importar o condomínio')
       }
     })
   }
@@ -72,6 +85,10 @@ export function OnboardingForm() {
               <Button variant="outline" className="justify-start" onClick={() => setModo('novo')}>
                 <Building2 className="h-4 w-4" />
                 Quero criar um condomínio novo
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => setModo('importar')}>
+                <Upload className="h-4 w-4" />
+                Tenho um ficheiro de exportação
               </Button>
             </div>
           )}
@@ -134,6 +151,43 @@ export function OnboardingForm() {
                 </Button>
                 <Button type="submit" disabled={pending} className="flex-1">
                   {pending ? 'A criar...' : 'Criar condomínio'}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {modo === 'importar' && (
+            <form action={onSubmitImportar} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="ficheiro">Ficheiro de exportação</Label>
+                <Input id="ficheiro" name="ficheiro" type="file" accept="application/json" required autoFocus />
+                <p className="text-xs text-muted-foreground">
+                  Cria um condomínio novo com os dados desse ficheiro (exportado
+                  em &ldquo;Condomínio&rdquo; → &ldquo;Exportar dados&rdquo;). Fica
+                  como administrador. Os condóminos e inquilinos com conta não
+                  são recriados automaticamente — terá de os convidar de novo
+                  com o código de convite.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="nomeImportar">Nome do condomínio (opcional)</Label>
+                <Input
+                  id="nomeImportar"
+                  name="nome"
+                  placeholder="Deixe em branco para usar o nome do ficheiro"
+                />
+              </div>
+              {error && (
+                <p className="text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={() => setModo('escolher')} disabled={pending}>
+                  Voltar
+                </Button>
+                <Button type="submit" disabled={pending} className="flex-1">
+                  {pending ? 'A importar...' : 'Importar condomínio'}
                 </Button>
               </div>
             </form>

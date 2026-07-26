@@ -25,11 +25,20 @@ export const user = pgTable("user", {
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
   // Campo próprio da aplicação (não gerido pelo better-auth): identifica um
-  // operador da plataforma ("Super Admin"), com acesso de gestão em
-  // qualquer condomínio a que também pertença como `membro`. Não existe
+  // "Super Admin", com acesso de gestão em qualquer condomínio a que
+  // também pertença como `membro` — reservado para a futura empresa de
+  // administração multi-condomínio (ROADMAP.md, Fase 5), ainda não
+  // construída. Não confundir com `operadorPlataforma` abaixo. Não existe
   // ainda nenhuma UI para o ativar — é definido diretamente na base de
-  // dados pelo operador da plataforma (ver lib/session.ts).
+  // dados (ver lib/session.ts).
   superAdmin: boolean("superAdmin").notNull().default(false),
+  // Operador do próprio SaaS (RJCSI) — controla /plataforma e o estado de
+  // subscrição de QUALQUER condomínio, independentemente de lhe pertencer
+  // como `membro`. Distinto de `superAdmin`: esse dá acesso de gestão
+  // dentro de condomínios de que já se é membro; este só controla
+  // suspender/reativar o acesso por falta de pagamento, em toda a
+  // plataforma. Definido diretamente na base de dados (ver lib/session.ts).
+  operadorPlataforma: boolean("operadorPlataforma").notNull().default(false),
   // Campo do plugin "two-factor" do better-auth.
   twoFactorEnabled: boolean("twoFactorEnabled").notNull().default(false),
 })
@@ -114,6 +123,16 @@ export const condominio = pgTable("condominio", {
   // e app/onboarding. Não determina o nível de acesso: quem entra por
   // código continua "pendente" até um admin aprovar, tal como hoje.
   codigoConvite: text("codigoConvite").unique(),
+  // Controlo de acesso por subscrição — geríve em /plataforma por quem tem
+  // `user.operadorPlataforma` (ver lib/session.ts). "suspenso" bloqueia o
+  // acesso de qualquer membro (incluindo admin/gestor), exceto do próprio
+  // operador da plataforma. Cobrança em si continua manual — isto só
+  // controla o corte de acesso.
+  estadoSubscricao: text("estadoSubscricao").notNull().default("ativo"), // "ativo" | "suspenso"
+  // Nota livre do operador da plataforma (ex. motivo da suspensão) — nunca
+  // mostrada aos membros do condomínio.
+  notaSubscricao: text("notaSubscricao"),
+  subscricaoAtualizadaEm: timestamp("subscricaoAtualizadaEm"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
 
@@ -814,9 +833,16 @@ export const assembleia = pgTable(
     dataSegundaConvocatoria: timestamp("dataSegundaConvocatoria"),
     estado: text("estado").notNull().default("convocada"), // "convocada" | "realizada" | "aprovada" | "cancelada"
     textoAta: text("textoAta"),
+    // Número sequencial no livro de atas do condomínio, atribuído só na
+    // aprovação (app/actions/assembleias.ts:aprovarAta) — assembleias
+    // canceladas ou ainda por aprovar não consomem número.
+    numero: integer("numero"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
-  (t) => [index("assembleia_condominio_idx").on(t.condominioId)],
+  (t) => [
+    index("assembleia_condominio_idx").on(t.condominioId),
+    unique("assembleia_condominio_numero_uq").on(t.condominioId, t.numero),
+  ],
 )
 
 // Ordem de trabalhos de uma assembleia — cada ponto é também onde fica
@@ -907,5 +933,31 @@ export const auditLog = pgTable(
   (t) => [
     index("audit_log_condominio_idx").on(t.condominioId),
     index("audit_log_entidade_idx").on(t.entidade, t.entidadeId),
+  ],
+)
+
+// Confirmação de leitura de um aviso ou de uma convocatória de assembleia
+// por um membro — accountability perante a assembleia/administração
+// ("provar" que um condómino teve acesso a uma comunicação). Registada por
+// ação explícita do membro (botão "Confirmar leitura"), nunca automática só
+// por a página ter sido carregada. `entidade`/`entidadeId` seguem o mesmo
+// padrão de `audit_log` (sem FK real, porque a entidade varia).
+export const confirmacaoLeitura = pgTable(
+  "confirmacao_leitura",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    membroId: integer("membroId")
+      .notNull()
+      .references(() => membro.id, { onDelete: "cascade" }),
+    entidade: text("entidade").notNull(), // "aviso" | "assembleia"
+    entidadeId: integer("entidadeId").notNull(),
+    confirmadoEm: timestamp("confirmadoEm").notNull().defaultNow(),
+  },
+  (t) => [
+    index("confirmacao_leitura_entidade_idx").on(t.entidade, t.entidadeId),
+    unique("confirmacao_leitura_membro_entidade_uq").on(t.membroId, t.entidade, t.entidadeId),
   ],
 )

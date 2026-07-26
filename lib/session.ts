@@ -61,13 +61,25 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
 
   const { id: userId } = session.user
 
-  const [[existente], [userRow]] = await Promise.all([
-    db.select().from(membro).where(eq(membro.userId, userId)).orderBy(asc(membro.id)).limit(1),
-    db.select({ superAdmin: user.superAdmin }).from(user).where(eq(user.id, userId)).limit(1),
+  const [[linha], [userRow]] = await Promise.all([
+    db
+      .select({ membro, estadoSubscricao: condominio.estadoSubscricao })
+      .from(membro)
+      .innerJoin(condominio, eq(membro.condominioId, condominio.id))
+      .where(eq(membro.userId, userId))
+      .orderBy(asc(membro.id))
+      .limit(1),
+    db
+      .select({ superAdmin: user.superAdmin, operadorPlataforma: user.operadorPlataforma })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1),
   ])
   const isSuperAdmin = userRow?.superAdmin ?? false
+  const isOperadorPlataforma = userRow?.operadorPlataforma ?? false
 
-  if (!existente) return null
+  if (!linha) return null
+  const { membro: existente, estadoSubscricao } = linha
 
   return {
     id: existente.id,
@@ -79,6 +91,8 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     estado: (existente.estado as EstadoMembro) ?? 'aprovado',
     fracaoId: existente.fracaoId,
     isSuperAdmin,
+    isOperadorPlataforma,
+    condominioSuspenso: estadoSubscricao === 'suspenso',
   }
 }
 
@@ -108,6 +122,9 @@ export async function requireMembroPagina(): Promise<MembroSessao> {
 export async function requireMembroAprovado(): Promise<MembroSessao> {
   const m = await getMembroAtual()
   if (!m) throw new Error('Não autorizado')
+  if (m.condominioSuspenso && !m.isOperadorPlataforma) {
+    throw new Error('O acesso a este condomínio está suspenso. Contacte o suporte.')
+  }
   if (m.estado !== 'aprovado' && !m.isSuperAdmin) {
     throw new Error('A sua conta aguarda aprovação de um administrador')
   }
@@ -131,8 +148,40 @@ export async function requireUserId(): Promise<string> {
 export async function requireAdmin(): Promise<MembroSessao> {
   const m = await getMembroAtual()
   if (!m) throw new Error('Não autorizado')
+  if (m.condominioSuspenso && !m.isOperadorPlataforma) {
+    throw new Error('O acesso a este condomínio está suspenso. Contacte o suporte.')
+  }
   if (!temPermissaoGestao(m)) throw new Error('Apenas administradores')
   return m
+}
+
+/**
+ * Helper para server actions/páginas de `/plataforma`: exige que a conta
+ * seja o operador da plataforma (`user.operadorPlataforma`), sem exigir
+ * nenhum `membro` — ao contrário de `requireAdmin`, controla condomínios
+ * de que a conta pode nem fazer parte.
+ */
+export async function requireOperadorPlataforma(): Promise<{
+  userId: string
+  nome: string
+  email: string
+}> {
+  const session = await getSession()
+  if (!session?.user) throw new Error('Não autorizado')
+
+  const [row] = await db
+    .select({ operadorPlataforma: user.operadorPlataforma })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1)
+
+  if (!row?.operadorPlataforma) throw new Error('Apenas o operador da plataforma')
+
+  return {
+    userId: session.user.id,
+    nome: session.user.name,
+    email: session.user.email,
+  }
 }
 
 /**

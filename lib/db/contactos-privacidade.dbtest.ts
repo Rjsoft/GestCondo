@@ -33,6 +33,8 @@ function membro(perfil: MembroSessao['perfil'], condominioId: number): MembroSes
     estado: 'aprovado',
     fracaoId: null,
     isSuperAdmin: false,
+    isOperadorPlataforma: false,
+    condominioSuspenso: false,
   }
 }
 
