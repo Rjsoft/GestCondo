@@ -213,6 +213,27 @@ export const fornecedor = pgTable(
   (t) => [index("fornecedor_condominio_idx").on(t.condominioId)],
 )
 
+// Lista de referência rápida para situações de urgência (ex. porteiro,
+// manutenção de elevadores, eletricista/canalizador de urgência) — distinta
+// de `fornecedor` (gestão comercial/financeira): visível a qualquer membro
+// aprovado, não só a quem gere (ver app/(app)/page.tsx). Eliminação direta,
+// sem soft-delete — não é dado financeiro nem sujeito a retenção legal.
+export const contactoEmergencia = pgTable(
+  "contacto_emergencia",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    nome: text("nome").notNull(),
+    telefone: text("telefone").notNull(),
+    descricao: text("descricao"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("contacto_emergencia_condominio_idx").on(t.condominioId)],
+)
+
 // Frações do condomínio
 export const fracao = pgTable(
   "fracao",

@@ -117,6 +117,10 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         </p>
         <Subtitulo>O que mostra</Subtitulo>
         <ul className="list-disc pl-5">
+          <li>
+            Contactos de emergência (ex: porteiro, manutenção de elevadores) —
+            visíveis a todos, geridos só por administradores/gestores.
+          </li>
           <li>Saldo atual, receitas e despesas da conta corrente.</li>
           <li>Quantas ocorrências ainda estão por resolver.</li>
           <li>Os avisos mais recentes, com um resumo do texto.</li>

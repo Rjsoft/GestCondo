@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
+import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
+import { getContactosEmergencia } from '@/app/actions/contactos-emergencia'
 import { db } from '@/lib/db'
 import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ContactosEmergenciaCard } from '@/components/painel/contactos-emergencia-card'
 import { PrioridadeBadge, EstadoBadge } from '@/components/badges'
 import { formatEuro, formatData } from '@/lib/format'
 import {
@@ -23,7 +25,7 @@ export default async function DashboardPage() {
   // (ver lib/session.ts) — o painel só lhes mostra avisos e ocorrências.
   const veFinancas = temAcessoFinanceiro(membro)
 
-  const [movimentos, avisos, ocorrencias, fracoes] = await Promise.all([
+  const [movimentos, avisos, ocorrencias, fracoes, contactosEmergencia] = await Promise.all([
     veFinancas
       ? db
           .select()
@@ -50,6 +52,7 @@ export default async function DashboardPage() {
     veFinancas
       ? db.select().from(fracao).where(eq(fracao.condominioId, membro.condominioId))
       : Promise.resolve([] as (typeof fracao.$inferSelect)[]),
+    getContactosEmergencia(),
   ])
 
   // Conta corrente do condomínio: exclui o fundo de reserva, que é
@@ -78,6 +81,11 @@ export default async function DashboardPage() {
       <PageHeader
         title={`Bem-vindo, ${membro.nome.split(' ')[0]}`}
         description="Visão geral do estado atual do condomínio."
+      />
+
+      <ContactosEmergenciaCard
+        contactos={contactosEmergencia}
+        isAdmin={temPermissaoGestao(membro)}
       />
 
       <div
