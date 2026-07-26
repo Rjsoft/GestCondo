@@ -439,6 +439,11 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           gerente, cabeça-de-casal) — tudo mostrado na listagem por baixo do
           proprietário, quando preenchido.
         </p>
+        <p className="text-xs text-muted-foreground">
+          Sempre que o proprietário de uma fração é alterado (ex: após uma
+          venda), fica registado em &ldquo;Auditoria&rdquo; quem era o
+          proprietário antes e depois da alteração, com data e autor.
+        </p>
       </>
     ),
   },

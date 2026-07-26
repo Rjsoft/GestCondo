@@ -134,6 +134,19 @@ export async function atualizarFracao(formData: FormData) {
     throw new Error('Preencha a identificação e o proprietário')
   }
 
+  // Proprietário anterior, para o registo de auditoria mostrar a transição
+  // completa (De X para Y) quando muda — sem isto perdia-se o registo de
+  // quem era o proprietário antes de uma venda/sucessão, relevante para
+  // apurar responsabilidade por dívidas (FUNCTIONAL_GAPS.md, "Histórico de
+  // titularidade"). Reaproveita o audit_log já existente, sem tabela nova
+  // — mesmo padrão já usado para o histórico de estado das ocorrências.
+  const [antes] = await db
+    .select({ proprietario: fracao.proprietario })
+    .from(fracao)
+    .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!antes) throw new Error('Fração não encontrada')
+
   await db
     .update(fracao)
     .set({
@@ -158,7 +171,10 @@ export async function atualizarFracao(formData: FormData) {
     acao: 'atualizar',
     entidade: 'fracao',
     entidadeId: id,
-    detalhes: `${identificacao} — ${proprietario}`,
+    detalhes:
+      antes.proprietario !== proprietario
+        ? `${identificacao}: proprietário alterado de "${antes.proprietario}" para "${proprietario}"`
+        : `${identificacao} — ${proprietario}`,
   })
 
   revalidatePath('/fracoes')
