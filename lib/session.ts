@@ -170,12 +170,17 @@ export async function requireOperadorPlataforma(): Promise<{
   if (!session?.user) throw new Error('Não autorizado')
 
   const [row] = await db
-    .select({ operadorPlataforma: user.operadorPlataforma })
+    .select({ operadorPlataforma: user.operadorPlataforma, twoFactorEnabled: user.twoFactorEnabled })
     .from(user)
     .where(eq(user.id, session.user.id))
     .limit(1)
 
   if (!row?.operadorPlataforma) throw new Error('Apenas o operador da plataforma')
+  // Conta com poder de suspender/reativar qualquer condomínio — MFA é
+  // obrigatório, não opcional como para os restantes perfis (pedido do
+  // Rui, 2026-07-26). Mensagem distinta da de cima para quem chama
+  // conseguir distinguir "não é operador" de "é operador mas falta MFA".
+  if (!row.twoFactorEnabled) throw new Error('MFA_OBRIGATORIO')
 
   return {
     userId: session.user.id,
@@ -196,6 +201,36 @@ export async function ehOperadorPlataforma(userId: string): Promise<boolean> {
     .where(eq(user.id, userId))
     .limit(1)
   return row?.operadorPlataforma ?? false
+}
+
+/**
+ * Variante de `requireOperadorPlataforma` que não lança — usada só pela
+ * página `/plataforma` para decidir que ecrã mostrar (tabela normal vs.
+ * ecrã a exigir MFA), nunca para autorizar leitura/escrita de dados.
+ */
+export async function getOperadorPlataforma(): Promise<{
+  userId: string
+  nome: string
+  email: string
+  twoFactorEnabled: boolean
+} | null> {
+  const session = await getSession()
+  if (!session?.user) return null
+
+  const [row] = await db
+    .select({ operadorPlataforma: user.operadorPlataforma, twoFactorEnabled: user.twoFactorEnabled })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1)
+
+  if (!row?.operadorPlataforma) return null
+
+  return {
+    userId: session.user.id,
+    nome: session.user.name,
+    email: session.user.email,
+    twoFactorEnabled: row.twoFactorEnabled,
+  }
 }
 
 /**
