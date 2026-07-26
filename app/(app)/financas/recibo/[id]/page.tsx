@@ -63,11 +63,26 @@ export default async function ReciboPage({
                 {fracaoDoMovimento?.proprietario ?? '—'}
               </dd>
             </div>
-            {fracaoDoMovimento?.nif && (
-              <div className="flex justify-between border-b border-border pb-2">
-                <dt className="text-muted-foreground">NIF do condómino</dt>
-                <dd className="font-medium text-foreground">{fracaoDoMovimento.nif}</dd>
-              </div>
+            {movimento.pagadorNome ? (
+              <>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <dt className="text-muted-foreground">Pago por</dt>
+                  <dd className="font-medium text-foreground">{movimento.pagadorNome}</dd>
+                </div>
+                {movimento.pagadorNif && (
+                  <div className="flex justify-between border-b border-border pb-2">
+                    <dt className="text-muted-foreground">NIF do pagador</dt>
+                    <dd className="font-medium text-foreground">{movimento.pagadorNif}</dd>
+                  </div>
+                )}
+              </>
+            ) : (
+              fracaoDoMovimento?.nif && (
+                <div className="flex justify-between border-b border-border pb-2">
+                  <dt className="text-muted-foreground">NIF do condómino</dt>
+                  <dd className="font-medium text-foreground">{fracaoDoMovimento.nif}</dd>
+                </div>
+              )
             )}
             <div className="flex justify-between border-b border-border pb-2">
               <dt className="text-muted-foreground">Categoria</dt>

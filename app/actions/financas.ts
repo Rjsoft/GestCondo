@@ -458,6 +458,8 @@ export async function criarMovimento(formData: FormData) {
   const meioPagamentoRaw = String(formData.get('meioPagamento') || '').trim()
   const referenciaMbRaw = String(formData.get('referenciaMb') || '').trim()
   const dataLiquidacaoRaw = String(formData.get('dataLiquidacao') || '').trim()
+  const pagadorNome = String(formData.get('pagadorNome') || '').trim()
+  const pagadorNif = String(formData.get('pagadorNif') || '').trim()
 
   if (!categoria || !descricao || !valor) {
     throw new Error('Preencha todos os campos obrigatórios')
@@ -491,6 +493,9 @@ export async function criarMovimento(formData: FormData) {
       fracaoId: tipo === 'receita' ? fracaoId : null,
       fornecedorId: tipo === 'despesa' ? fornecedorId : null,
       assembleiaPontoId: tipo === 'receita' ? assembleiaPontoId : null,
+      // Só faz sentido numa receita — é o pagador da quota, não da despesa.
+      pagadorNome: tipo === 'receita' && pagadorNome ? pagadorNome : null,
+      pagadorNif: tipo === 'receita' && pagadorNif ? pagadorNif : null,
       destino,
       // Detalhe do pagamento só faz sentido quando o movimento já nasce pago.
       meioPagamento: pago && meioPagamentoRaw ? meioPagamentoRaw : null,
@@ -536,6 +541,8 @@ export async function atualizarMovimento(formData: FormData) {
   const assembleiaPontoIdRaw = String(formData.get('assembleiaPontoId') || '').trim()
   const assembleiaPontoId = assembleiaPontoIdRaw ? Number(assembleiaPontoIdRaw) : null
   const destino = String(formData.get('destino') || 'geral')
+  const pagadorNome = String(formData.get('pagadorNome') || '').trim()
+  const pagadorNif = String(formData.get('pagadorNif') || '').trim()
 
   if (!categoria || !descricao || !valor || !dataStr) {
     throw new Error('Preencha todos os campos obrigatórios')
@@ -573,6 +580,8 @@ export async function atualizarMovimento(formData: FormData) {
       fracaoId: atual.tipo === 'receita' ? fracaoId : null,
       fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
       assembleiaPontoId: atual.tipo === 'receita' ? assembleiaPontoId : null,
+      pagadorNome: atual.tipo === 'receita' && pagadorNome ? pagadorNome : null,
+      pagadorNif: atual.tipo === 'receita' && pagadorNif ? pagadorNif : null,
     })
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 

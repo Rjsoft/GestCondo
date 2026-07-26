@@ -379,6 +379,14 @@ export const movimento = pgTable(
     // abaixo, que substituem uma FK simples por uma FK em (id,condominioId).
     exercicioId: integer("exercicioId"),
     contaFinanceiraId: integer("contaFinanceiraId"),
+    // Pagador do movimento, quando diferente do proprietário registado na
+    // fração — ex. herança indivisa em que cada herdeiro paga a sua quota-
+    // parte e precisa do seu próprio recibo com o seu NIF (para efeitos de
+    // dedução de mais-valias em IRS, entre outros). Opcionais; quando
+    // preenchidos, o recibo (`/financas/recibo/[id]`) mostra este nome/NIF
+    // em vez do NIF único da fração — ver lib/db/schema.ts `fracao.nif`.
+    pagadorNome: text("pagadorNome"),
+    pagadorNif: text("pagadorNif"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },

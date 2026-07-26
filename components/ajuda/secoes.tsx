@@ -337,6 +337,14 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           botão &ldquo;Relatório (PDF)&rdquo;, ou &ldquo;Exportar CSV&rdquo;
           para descarregar os dados numa folha de cálculo.
         </p>
+        <p>
+          Quando quem paga uma quota não é o proprietário registado na fração
+          (por exemplo, um dos vários herdeiros de uma fração em herança
+          indivisa), preencha &ldquo;Pago por&rdquo; e &ldquo;NIF do
+          pagador&rdquo; em &ldquo;Mais opções&rdquo; ao lançar ou editar o
+          movimento — o recibo passa a mostrar esse nome/NIF em vez do NIF
+          único da fração, para cada pagador poder comprovar a sua parte.
+        </p>
       </>
     ),
   },

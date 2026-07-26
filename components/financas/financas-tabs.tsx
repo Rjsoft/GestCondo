@@ -49,6 +49,8 @@ type Movimento = {
   fracaoId: number | null
   fornecedorId: number | null
   assembleiaPontoId: number | null
+  pagadorNome: string | null
+  pagadorNif: string | null
   fornecedorNome?: string | null
 }
 
@@ -346,6 +348,8 @@ export function FinancasTabs({
                           fracaoId={m.fracaoId}
                           fornecedorId={m.fornecedorId}
                           assembleiaPontoId={m.assembleiaPontoId}
+                          pagadorNome={m.pagadorNome}
+                          pagadorNif={m.pagadorNif}
                           fracoes={fracoes}
                           fornecedores={fornecedores}
                           pontosAssembleia={pontosAssembleia}

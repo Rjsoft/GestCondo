@@ -49,6 +49,8 @@ export function EditarMovimentoDialog({
   fracaoId,
   fornecedorId,
   assembleiaPontoId,
+  pagadorNome,
+  pagadorNif,
   fracoes,
   fornecedores,
   pontosAssembleia,
@@ -65,6 +67,8 @@ export function EditarMovimentoDialog({
   fracaoId: number | null
   fornecedorId: number | null
   assembleiaPontoId: number | null
+  pagadorNome: string | null
+  pagadorNif: string | null
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
@@ -180,7 +184,9 @@ export function EditarMovimentoDialog({
             </div>
           )}
 
-          <Collapsible defaultOpen={destino === 'reserva' || assembleiaPontoId != null}>
+          <Collapsible
+            defaultOpen={destino === 'reserva' || assembleiaPontoId != null || Boolean(pagadorNome)}
+          >
             <CollapsibleTrigger>
               <ChevronDown className="h-3.5 w-3.5" />
               Mais opções
@@ -226,6 +232,36 @@ export function EditarMovimentoDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {tipo === 'receita' && (
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="pagadorNomeEdit">Pago por (opcional)</Label>
+                      <Input
+                        id="pagadorNomeEdit"
+                        name="pagadorNome"
+                        defaultValue={pagadorNome ?? ''}
+                        placeholder="Ex: herdeira, se diferente do proprietário"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="pagadorNifEdit">NIF do pagador</Label>
+                      <Input
+                        id="pagadorNifEdit"
+                        name="pagadorNif"
+                        defaultValue={pagadorNif ?? ''}
+                        placeholder="Opcional"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Preencha só se quem pagou não for o proprietário registado
+                    (ex: um dos vários herdeiros de uma fração). O recibo
+                    passa a mostrar este nome/NIF em vez do NIF da fração.
+                  </p>
                 </div>
               )}
             </CollapsiblePanel>

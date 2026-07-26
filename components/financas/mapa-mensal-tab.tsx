@@ -41,6 +41,8 @@ type Movimento = {
   fracaoId: number | null
   fornecedorId: number | null
   assembleiaPontoId: number | null
+  pagadorNome: string | null
+  pagadorNif: string | null
   fornecedorNome?: string | null
 }
 
@@ -228,6 +230,8 @@ export function MapaMensalTab({
                       fracaoId={mv.fracaoId}
                       fornecedorId={mv.fornecedorId}
                       assembleiaPontoId={mv.assembleiaPontoId}
+                      pagadorNome={mv.pagadorNome}
+                      pagadorNif={mv.pagadorNif}
                       fracoes={fracoes}
                       fornecedores={fornecedores}
                       pontosAssembleia={pontosAssembleia}

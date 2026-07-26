@@ -32,6 +32,8 @@ export function MovimentoActions({
   fracaoId,
   fornecedorId,
   assembleiaPontoId,
+  pagadorNome,
+  pagadorNif,
   fracoes,
   fornecedores,
   pontosAssembleia,
@@ -47,6 +49,8 @@ export function MovimentoActions({
   fracaoId: number | null
   fornecedorId: number | null
   assembleiaPontoId: number | null
+  pagadorNome: string | null
+  pagadorNif: string | null
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
@@ -145,6 +149,8 @@ export function MovimentoActions({
         fracaoId={fracaoId}
         fornecedorId={fornecedorId}
         assembleiaPontoId={assembleiaPontoId}
+        pagadorNome={pagadorNome}
+        pagadorNif={pagadorNif}
         fracoes={fracoes}
         fornecedores={fornecedores}
         pontosAssembleia={pontosAssembleia}

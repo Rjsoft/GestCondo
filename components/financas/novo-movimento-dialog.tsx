@@ -245,6 +245,31 @@ export function NovoMovimentoDialog({
                   </p>
                 </div>
               )}
+
+              {tipo === 'receita' && (
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="pagadorNome">Pago por (opcional)</Label>
+                      <Input
+                        id="pagadorNome"
+                        name="pagadorNome"
+                        placeholder="Ex: herdeira, se diferente do proprietário"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="pagadorNif">NIF do pagador</Label>
+                      <Input id="pagadorNif" name="pagadorNif" placeholder="Opcional" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Preencha só se quem pagou não for o proprietário registado
+                    (ex: um dos vários herdeiros de uma fração). O recibo
+                    passa a mostrar este nome/NIF em vez do NIF da fração —
+                    útil para cada herdeiro comprovar a sua parte.
+                  </p>
+                </div>
+              )}
             </CollapsiblePanel>
           </Collapsible>
 
