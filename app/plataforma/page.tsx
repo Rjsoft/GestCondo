@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getSession, getOperadorPlataforma } from '@/lib/session'
-import { listarCondominiosPlataforma } from '@/app/actions/plataforma'
+import { listarCondominiosPlataforma, listarOperadoresPlataforma } from '@/app/actions/plataforma'
 import { PlataformaTabela } from '@/components/plataforma/plataforma-tabela'
+import { OperadoresSecao } from '@/components/plataforma/operadores-secao'
 import { SairButton } from '@/components/plataforma/sair-button'
 import { MfaObrigatorioScreen } from '@/components/plataforma/mfa-obrigatorio-screen'
 import { Building2 } from 'lucide-react'
@@ -25,7 +26,10 @@ export default async function PlataformaPage() {
     return <MfaObrigatorioScreen />
   }
 
-  const condominios = await listarCondominiosPlataforma()
+  const [condominios, operadores] = await Promise.all([
+    listarCondominiosPlataforma(),
+    listarOperadoresPlataforma(),
+  ])
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -44,6 +48,7 @@ export default async function PlataformaPage() {
         <SairButton />
       </div>
 
+      <OperadoresSecao operadores={operadores} />
       <PlataformaTabela condominios={condominios} />
     </div>
   )

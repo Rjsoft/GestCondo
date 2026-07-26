@@ -1,11 +1,11 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { condominio, membro } from '@/lib/db/schema'
+import { condominio, membro, user } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { requireOperadorPlataforma } from '@/lib/session'
 import type { MembroSessao } from '@/lib/perfis'
-import { count, eq } from 'drizzle-orm'
+import { count, eq, ilike } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -82,6 +82,54 @@ export async function alterarEstadoSubscricao(
         ? `Subscrição suspensa pelo operador da plataforma${nota ? `: ${nota.trim()}` : ''}`
         : 'Subscrição reativada pelo operador da plataforma',
   })
+
+  revalidatePath('/plataforma')
+}
+
+/**
+ * Lista todas as contas com acesso à plataforma (`user.operadorPlataforma`)
+ * — só leitura/visibilidade, para não ser preciso ir à BD só para saber
+ * quem tem acesso.
+ */
+export async function listarOperadoresPlataforma() {
+  await requireOperadorPlataforma()
+
+  return db
+    .select({ id: user.id, email: user.email, twoFactorEnabled: user.twoFactorEnabled })
+    .from(user)
+    .where(eq(user.operadorPlataforma, true))
+    .orderBy(user.email)
+}
+
+/**
+ * Promove uma conta já existente (por email) a operador da plataforma.
+ * Nunca cria contas novas nem remove/despromove — remoção continua manual
+ * (decisão registada em FUNCTIONAL_GAPS.md: evita o risco de um operador se
+ * auto-remover ou remover o último operador restante).
+ *
+ * Sem entrada em audit_log: essa tabela exige um condominioId (NOT NULL,
+ * FK) e esta ação não pertence a nenhum condomínio — forçar um id sem
+ * sentido seria mais enganador do que não registar nada. Fica só o log do
+ * servidor (visível nos runtime logs da Vercel).
+ */
+export async function promoverOperadorPlataforma(email: string) {
+  const operador = await requireOperadorPlataforma()
+
+  const emailLimpo = email.trim()
+  const [alvo] = await db
+    .select({ id: user.id, email: user.email, operadorPlataforma: user.operadorPlataforma })
+    .from(user)
+    .where(ilike(user.email, emailLimpo))
+    .limit(1)
+
+  if (!alvo) throw new Error('Não existe nenhuma conta com este email. A pessoa tem de criar conta primeiro.')
+  if (alvo.operadorPlataforma) throw new Error('Esta conta já tem acesso à plataforma.')
+
+  await db.update(user).set({ operadorPlataforma: true }).where(eq(user.id, alvo.id))
+
+  console.log(
+    `[plataforma] ${operador.email} promoveu ${alvo.email} a operador da plataforma em ${new Date().toISOString()}`,
+  )
 
   revalidatePath('/plataforma')
 }
