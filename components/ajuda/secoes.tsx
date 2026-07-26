@@ -202,7 +202,10 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           Cada ocorrência tem um estado: &ldquo;Aberta&rdquo; (ainda por
           tratar), &ldquo;Em curso&rdquo; (já em resolução) ou
           &ldquo;Resolvida&rdquo;. Quando o administrador muda o estado da
-          sua ocorrência, recebe automaticamente um email a informar.
+          sua ocorrência, recebe automaticamente um email a informar. Cada
+          mudança de estado fica registada em &ldquo;Auditoria&rdquo;, com
+          data, autor e a transição completa (ex: &ldquo;de Aberta para Em
+          curso&rdquo;) — pesquisável aí pelo título da ocorrência.
         </p>
         <Subtitulo>Atribuir a um fornecedor (para o administrador)</Subtitulo>
         <p>

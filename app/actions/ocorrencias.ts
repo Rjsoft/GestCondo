@@ -117,6 +117,18 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
   // Apenas admin/gestor gerem o estado das ocorrências.
   const admin = await requireAdmin()
   if (!ESTADOS.includes(estado)) throw new Error('Estado inválido')
+
+  // Estado anterior, para o registo de auditoria mostrar a transição
+  // completa (De X para Y) — sem isto não se sabia quando/de onde uma
+  // ocorrência tinha mudado de estado, só o estado atual (FUNCTIONAL_GAPS.md,
+  // "Histórico de intervenções"). Reaproveita o audit_log já existente, sem
+  // tabela nova: a página /auditoria já lista por data/autor/entidade.
+  const [antes] = await db
+    .select({ estado: ocorrencia.estado })
+    .from(ocorrencia)
+    .where(and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)))
+    .limit(1)
+
   const [atualizada] = await db
     .update(ocorrencia)
     .set({ estado, updatedAt: new Date() })
@@ -128,12 +140,17 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
     )
     .returning({ userId: ocorrencia.userId, titulo: ocorrencia.titulo })
 
+  // Título incluído no detalhe (não só "estado alterado de X para Y") para
+  // a pesquisa em /auditoria encontrar o histórico completo de uma
+  // ocorrência específica pelo título, tal como já encontra a sua criação.
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'ocorrencia',
     entidadeId: id,
-    detalhes: `Estado alterado para "${estado}"`,
+    detalhes: antes
+      ? `${atualizada?.titulo ?? ''}: estado alterado de "${ESTADO_LABEL[antes.estado] ?? antes.estado}" para "${ESTADO_LABEL[estado] ?? estado}"`
+      : `${atualizada?.titulo ?? ''}: estado alterado para "${ESTADO_LABEL[estado] ?? estado}"`,
   })
 
   // Notifica quem reportou a ocorrência — não o próprio admin que a
