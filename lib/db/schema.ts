@@ -776,13 +776,24 @@ export const ocorrencia = pgTable(
     // nesta fase (ver FUNCTIONAL_GAPS.md).
     fotoUrl: text("fotoUrl"),
     fotoNomeFicheiro: text("fotoNomeFicheiro"),
+    // Fornecedor a quem a ocorrência foi atribuída para tratar — opcional,
+    // só regista "quem está a tratar disto", sem nenhuma ligação a despesas
+    // ou aprovação de orçamento (fica para uma iteração futura). `set null`
+    // em vez de cascade: eliminar o fornecedor nunca pode apagar a
+    // ocorrência (mesmo padrão de movimento.fornecedorId).
+    fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     updatedAt: timestamp("updatedAt").notNull().defaultNow(),
     // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01) — mesmo
     // padrão de movimento/seguro.deletedAt.
     deletedAt: timestamp("deletedAt"),
   },
-  (t) => [index("ocorrencia_condominio_idx").on(t.condominioId)],
+  (t) => [
+    index("ocorrencia_condominio_idx").on(t.condominioId),
+    index("ocorrencia_fornecedor_idx").on(t.fornecedorId),
+  ],
 )
 
 // Documentos e atas

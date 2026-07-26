@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import {
   atualizarEstadoOcorrencia,
+  atribuirFornecedorOcorrencia,
   eliminarOcorrencia,
 } from '@/app/actions/ocorrencias'
 import { Button } from '@/components/ui/button'
@@ -23,16 +24,22 @@ const ESTADOS = [
   { value: 'resolvida', label: 'Resolvida' },
 ]
 
+const SEM_FORNECEDOR = '__sem_fornecedor__'
+
 export function OcorrenciaActions({
   id,
   estado,
   isAdmin,
   isOwner,
+  fornecedorId,
+  fornecedores,
 }: {
   id: number
   estado: string
   isAdmin: boolean
   isOwner: boolean
+  fornecedorId: number | null
+  fornecedores: { id: number; nome: string }[]
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -42,6 +49,18 @@ export function OcorrenciaActions({
       try {
         await atualizarEstadoOcorrencia(id, novoEstado)
         toast.success('Estado atualizado')
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro')
+      }
+    })
+  }
+
+  const mudarFornecedor = (valor: string) => {
+    const novoFornecedorId = valor === SEM_FORNECEDOR ? null : Number(valor)
+    startTransition(async () => {
+      try {
+        await atribuirFornecedorOcorrencia(id, novoFornecedorId)
+        toast.success(novoFornecedorId ? 'Fornecedor atribuído' : 'Fornecedor removido')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro')
       }
@@ -79,6 +98,31 @@ export function OcorrenciaActions({
             {ESTADOS.map((e) => (
               <SelectItem key={e.value} value={e.value}>
                 {e.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      {isAdmin && (
+        <Select
+          value={fornecedorId ? String(fornecedorId) : SEM_FORNECEDOR}
+          onValueChange={(value) => value && mudarFornecedor(value)}
+          disabled={pending}
+        >
+          <SelectTrigger size="sm">
+            <SelectValue>
+              {(v: string | null) =>
+                v && v !== SEM_FORNECEDOR
+                  ? (fornecedores.find((f) => String(f.id) === v)?.nome ?? '')
+                  : 'Sem fornecedor'
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={SEM_FORNECEDOR}>Sem fornecedor</SelectItem>
+            {fornecedores.map((f) => (
+              <SelectItem key={f.id} value={String(f.id)}>
+                {f.nome}
               </SelectItem>
             ))}
           </SelectContent>

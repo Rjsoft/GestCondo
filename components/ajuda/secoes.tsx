@@ -200,6 +200,14 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           &ldquo;Resolvida&rdquo;. Quando o administrador muda o estado da
           sua ocorrência, recebe automaticamente um email a informar.
         </p>
+        <Subtitulo>Atribuir a um fornecedor (para o administrador)</Subtitulo>
+        <p>
+          Junto do estado, o administrador pode escolher qual o fornecedor
+          responsável por tratar a ocorrência (ex: a empresa de manutenção do
+          elevador), a partir da lista já registada em &ldquo;Fornecedores&rdquo;.
+          O nome do fornecedor atribuído passa a aparecer no cartão da
+          ocorrência, visível a todos.
+        </p>
       </>
     ),
   },
@@ -255,6 +263,16 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           Na página de detalhe de cada assembleia há um botão para confirmar
           que leu a convocatória — fica registado com data e hora, e
           qualquer membro pode ver quantas confirmações já existem.
+        </p>
+        <Subtitulo>Anexos à ata</Subtitulo>
+        <p>
+          O administrador pode juntar ficheiros à assembleia (ex: uma planta,
+          um orçamento discutido, uma proposta de fornecedor) na secção
+          &ldquo;Anexos&rdquo; da página de detalhe — em PDF ou imagem, até
+          15MB. Ficam visíveis a todos os membros, também na ata imprimível.
+          Só é possível adicionar ou remover anexos enquanto a ata ainda não
+          estiver aprovada; depois de aprovada, ficam fixos tal como o resto
+          da ata.
         </p>
       </>
     ),

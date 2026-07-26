@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { membro, ocorrencia } from '@/lib/db/schema'
+import { fornecedor, membro, ocorrencia } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
@@ -11,7 +11,7 @@ import {
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
-import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -40,8 +40,9 @@ export async function getOcorrencias({ page = 1, search = '' }: { page?: number;
 
   const [ocorrencias, [{ total }]] = await Promise.all([
     db
-      .select()
+      .select({ ...getTableColumns(ocorrencia), fornecedorNome: fornecedor.nome })
       .from(ocorrencia)
+      .leftJoin(fornecedor, eq(ocorrencia.fornecedorId, fornecedor.id))
       .where(condicao)
       .orderBy(desc(ocorrencia.createdAt))
       .limit(PAGE_SIZE)
@@ -155,6 +156,40 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
 
   revalidatePath('/ocorrencias')
   revalidatePath('/')
+}
+
+/**
+ * Atribui (ou remove, com fornecedorId null) o fornecedor responsável por
+ * tratar uma ocorrência — só regista "quem está a tratar disto", sem
+ * nenhuma ligação a despesas ou fluxo de aprovação (fica para depois).
+ */
+export async function atribuirFornecedorOcorrencia(id: number, fornecedorId: number | null) {
+  // Mesma guarda de atualizarEstadoOcorrencia — só admin/gestor.
+  const admin = await requireAdmin()
+
+  if (fornecedorId !== null) {
+    const [f] = await db
+      .select({ id: fornecedor.id })
+      .from(fornecedor)
+      .where(and(eq(fornecedor.id, fornecedorId), eq(fornecedor.condominioId, admin.condominioId)))
+      .limit(1)
+    if (!f) throw new Error('Fornecedor inválido')
+  }
+
+  await db
+    .update(ocorrencia)
+    .set({ fornecedorId, updatedAt: new Date() })
+    .where(and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'ocorrencia',
+    entidadeId: id,
+    detalhes: fornecedorId ? 'Fornecedor atribuído' : 'Fornecedor removido',
+  })
+
+  revalidatePath('/ocorrencias')
 }
 
 export async function eliminarOcorrencia(id: number) {

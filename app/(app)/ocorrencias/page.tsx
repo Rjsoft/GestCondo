@@ -1,5 +1,6 @@
 import { requireMembroPagina, podeEscrever, temPermissaoGestao } from '@/lib/session'
 import { getOcorrencias } from '@/app/actions/ocorrencias'
+import { getFornecedores } from '@/app/actions/fornecedores'
 import { PageHeader } from '@/components/page-header'
 import { NovaOcorrenciaDialog } from '@/components/ocorrencias/nova-ocorrencia-dialog'
 import { OcorrenciaActions } from '@/components/ocorrencias/ocorrencia-actions'
@@ -20,7 +21,10 @@ export default async function OcorrenciasPage({
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
-  const { ocorrencias, totalPages } = await getOcorrencias({ page, search })
+  const [{ ocorrencias, totalPages }, fornecedores] = await Promise.all([
+    getOcorrencias({ page, search }),
+    getFornecedores(),
+  ])
 
   return (
     <div>
@@ -77,6 +81,7 @@ export default async function OcorrenciasPage({
                   <p className="mt-3 text-xs text-muted-foreground">
                     {o.reporterNome}
                     {o.local ? ` · ${o.local}` : ''} · {formatData(o.createdAt)}
+                    {o.fornecedorNome ? ` · Atribuída a ${o.fornecedorNome}` : ''}
                   </p>
                 </div>
                 <OcorrenciaActions
@@ -84,6 +89,8 @@ export default async function OcorrenciasPage({
                   estado={o.estado}
                   isAdmin={isAdmin}
                   isOwner={o.userId === membro.userId}
+                  fornecedorId={o.fornecedorId}
+                  fornecedores={fornecedores}
                 />
               </CardContent>
             </Card>
