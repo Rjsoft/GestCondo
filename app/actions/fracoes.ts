@@ -67,6 +67,8 @@ export async function criarFracao(formData: FormData) {
   const permilagem = String(formData.get('permilagem') || '0')
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
   const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
+  const representanteLegal = String(formData.get('representanteLegal') || '').trim()
+  const representanteLegalContacto = String(formData.get('representanteLegalContacto') || '').trim()
   const notas = String(formData.get('notas') || '').trim()
   const isentaElevador = formData.get('isentaElevador') === 'on'
 
@@ -87,6 +89,8 @@ export async function criarFracao(formData: FormData) {
       permilagem,
       contactoEmail: contactoEmail || null,
       contactoTelefone: contactoTelefone || null,
+      representanteLegal: representanteLegal || null,
+      representanteLegalContacto: representanteLegalContacto || null,
       notas: notas || null,
       isentaElevador,
     })
@@ -116,6 +120,8 @@ export async function atualizarFracao(formData: FormData) {
   const permilagem = String(formData.get('permilagem') || '0')
   const contactoEmail = String(formData.get('contactoEmail') || '').trim()
   const contactoTelefone = String(formData.get('contactoTelefone') || '').trim()
+  const representanteLegal = String(formData.get('representanteLegal') || '').trim()
+  const representanteLegalContacto = String(formData.get('representanteLegalContacto') || '').trim()
   const notas = String(formData.get('notas') || '').trim()
 
   if (!identificacao || !proprietario) {
@@ -133,6 +139,8 @@ export async function atualizarFracao(formData: FormData) {
       permilagem,
       contactoEmail: contactoEmail || null,
       contactoTelefone: contactoTelefone || null,
+      representanteLegal: representanteLegal || null,
+      representanteLegalContacto: representanteLegalContacto || null,
       notas: notas || null,
     })
     .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))

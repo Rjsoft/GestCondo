@@ -405,6 +405,13 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           fração não tiver acesso ao elevador (por exemplo, um rés-do-chão),
           assinale a opção de isenção da parcela do elevador.
         </p>
+        <p>
+          Em &ldquo;Mais opções&rdquo; pode ainda preencher o NIF, contactos
+          de email/telefone, notas e, quando o proprietário é uma empresa ou
+          uma herança indivisa, o nome e contacto de um representante legal
+          (procurador, gerente, cabeça-de-casal) — mostrado na listagem por
+          baixo do proprietário.
+        </p>
       </>
     ),
   },

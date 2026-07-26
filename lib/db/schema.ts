@@ -288,6 +288,13 @@ export const fracao = pgTable(
       .default("0"),
     contactoEmail: text("contactoEmail"),
     contactoTelefone: text("contactoTelefone"),
+    // Procurador/representante do proprietário (pessoa coletiva, herança
+    // indivisa, etc. — comum em condomínios PT). Texto livre, um só
+    // representante por fração, sem entidade própria (mesma simplicidade
+    // dos restantes campos de contacto). Não usado nas minutas de
+    // convocatória/procuração/interpelação — só referência administrativa.
+    representanteLegal: text("representanteLegal"),
+    representanteLegalContacto: text("representanteLegalContacto"),
     notas: text("notas"),
     // Frações sem uso do elevador (tipicamente o rés-do-chão) podem ser
     // isentas dessa parcela do orçamento — art. 1424º CC permite repartição

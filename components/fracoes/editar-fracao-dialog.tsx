@@ -33,6 +33,8 @@ export function EditarFracaoDialog({
   permilagem,
   contactoEmail,
   contactoTelefone,
+  representanteLegal,
+  representanteLegalContacto,
   notas,
 }: {
   id: number
@@ -44,6 +46,8 @@ export function EditarFracaoDialog({
   permilagem: number
   contactoEmail: string | null
   contactoTelefone: string | null
+  representanteLegal: string | null
+  representanteLegalContacto: string | null
   notas: string | null
 }) {
   const [open, setOpen] = useState(false)
@@ -128,7 +132,11 @@ export function EditarFracaoDialog({
               </Select>
             </div>
           </div>
-          <Collapsible defaultOpen={Boolean(nif || contactoEmail || contactoTelefone || notas)}>
+          <Collapsible
+            defaultOpen={Boolean(
+              nif || contactoEmail || contactoTelefone || representanteLegal || representanteLegalContacto || notas,
+            )}
+          >
             <CollapsibleTrigger>
               <ChevronDown className="h-3.5 w-3.5" />
               Mais opções
@@ -155,6 +163,26 @@ export function EditarFracaoDialog({
                     id="contactoTelefone"
                     name="contactoTelefone"
                     defaultValue={contactoTelefone ?? ''}
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="representanteLegal">Representante legal</Label>
+                  <Input
+                    id="representanteLegal"
+                    name="representanteLegal"
+                    defaultValue={representanteLegal ?? ''}
+                    placeholder="Opcional — ex: procurador, gerente"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="representanteLegalContacto">Contacto do representante</Label>
+                  <Input
+                    id="representanteLegalContacto"
+                    name="representanteLegalContacto"
+                    defaultValue={representanteLegalContacto ?? ''}
                     placeholder="Opcional"
                   />
                 </div>

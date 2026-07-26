@@ -141,6 +141,24 @@ export function NovaFracaoDialog() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="representanteLegal">Representante legal</Label>
+                  <Input
+                    id="representanteLegal"
+                    name="representanteLegal"
+                    placeholder="Opcional — ex: procurador, gerente"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="representanteLegalContacto">Contacto do representante</Label>
+                  <Input
+                    id="representanteLegalContacto"
+                    name="representanteLegalContacto"
+                    placeholder="Opcional"
+                  />
+                </div>
+              </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="notas">Notas</Label>
                 <Textarea id="notas" name="notas" rows={3} placeholder="Opcional" />

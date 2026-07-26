@@ -135,6 +135,12 @@ export default async function FracoesPage({
                           {f.contactoTelefone}
                         </span>
                       )}
+                      {veContactos && f.representanteLegal && (
+                        <span className="block text-xs text-muted-foreground">
+                          Representante: {f.representanteLegal}
+                          {f.representanteLegalContacto ? ` (${f.representanteLegalContacto})` : ''}
+                        </span>
+                      )}
                     </TableCell>
                     {veContactos && (
                       <TableCell className="hidden text-muted-foreground xl:table-cell">
@@ -163,6 +169,8 @@ export default async function FracoesPage({
                             permilagem={Number(f.permilagem)}
                             contactoEmail={f.contactoEmail}
                             contactoTelefone={f.contactoTelefone}
+                            representanteLegal={f.representanteLegal}
+                            representanteLegalContacto={f.representanteLegalContacto}
                             notas={f.notas}
                           />
                           <FracaoActions id={f.id} isentaElevador={f.isentaElevador} />
