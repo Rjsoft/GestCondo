@@ -234,6 +234,31 @@ export const contactoEmergencia = pgTable(
   (t) => [index("contacto_emergencia_condominio_idx").on(t.condominioId)],
 )
 
+// Registo de bens do condomínio (mobiliário, equipamento, segurança) —
+// informação administrativa, não financeira: não lança movimentos nem
+// altera saldos. `valorAtual` é indicado manualmente, sem fórmula
+// automática de depreciação (mantido simples de propósito). Visível só a
+// quem tem consulta de gestão (ver app/(app)/condominio/page.tsx), tal
+// como o resto dessa página.
+export const patrimonio = pgTable(
+  "patrimonio",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    nome: text("nome").notNull(),
+    categoria: text("categoria"), // ex: "Mobiliário", "Equipamento", "Segurança" — texto livre
+    dataAquisicao: timestamp("dataAquisicao"),
+    valorAquisicao: numeric("valorAquisicao", { precision: 10, scale: 2 }),
+    valorAtual: numeric("valorAtual", { precision: 10, scale: 2 }),
+    notas: text("notas"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("patrimonio_condominio_idx").on(t.condominioId)],
+)
+
 // Frações do condomínio
 export const fracao = pgTable(
   "fracao",

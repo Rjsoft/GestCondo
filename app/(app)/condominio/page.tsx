@@ -1,16 +1,21 @@
 import { notFound } from 'next/navigation'
 import { requireMembroPagina, temPermissaoGestao, getCondominioAtual } from '@/lib/session'
+import { getPatrimonio } from '@/app/actions/patrimonio'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { EditarCondominioForm } from '@/components/condominio/editar-condominio-form'
 import { CodigoConviteCard } from '@/components/condominio/codigo-convite-card'
 import { ExportarDadosCondominioButton } from '@/components/condominio/exportar-dados-button'
+import { PatrimonioCard } from '@/components/condominio/patrimonio-card'
 
 export default async function CondominioPage() {
   const membro = await requireMembroPagina()
   if (!temPermissaoGestao(membro)) notFound()
 
-  const condominio = await getCondominioAtual(membro.condominioId)
+  const [condominio, bens] = await Promise.all([
+    getCondominioAtual(membro.condominioId),
+    getPatrimonio(),
+  ])
   if (!condominio) notFound()
 
   return (
@@ -33,6 +38,7 @@ export default async function CondominioPage() {
           />
         </CardContent>
       </Card>
+      <PatrimonioCard bens={bens} />
       <Card>
         <CardContent className="flex flex-col gap-4 p-5">
           <h2 className="font-serif text-sm font-bold text-foreground">Convidar novos membros</h2>

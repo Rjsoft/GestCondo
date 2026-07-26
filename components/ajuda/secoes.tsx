@@ -442,6 +442,11 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             arquiteto e área de construção. Todos opcionais.
           </li>
           <li>
+            Registar o património do condomínio — bens como mobiliário,
+            equipamento ou sistemas de segurança, com valor de aquisição e
+            valor atual (indicado manualmente).
+          </li>
+          <li>
             Gerar (ou regenerar) o código de convite — um código que
             partilha com novos condóminos para se juntarem a este
             condomínio. Regenerar invalida imediatamente o código anterior.
