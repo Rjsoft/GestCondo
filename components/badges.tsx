@@ -1,5 +1,22 @@
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import type { SituacaoComunicacaoDeliberacao } from '@/lib/comunicacao-deliberacao'
+
+export function SituacaoComunicacaoBadge({ situacao }: { situacao: SituacaoComunicacaoDeliberacao }) {
+  const map: Record<SituacaoComunicacaoDeliberacao, { label: string; className: string }> = {
+    por_comunicar: { label: 'Por comunicar', className: 'bg-red-100 text-red-800 border-red-200' },
+    aguarda_resposta: { label: 'Aguarda resposta', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+    concordancia: { label: 'Concordância', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+    discordancia: { label: 'Discordância', className: 'bg-red-100 text-red-800 border-red-200' },
+    silencio_aprovacao: { label: 'Silêncio (aprovação)', className: 'bg-sky-100 text-sky-800 border-sky-200' },
+  }
+  const cfg = map[situacao]
+  return (
+    <Badge variant="outline" className={cn('border', cfg.className)}>
+      {cfg.label}
+    </Badge>
+  )
+}
 
 export function PrioridadeBadge({ prioridade }: { prioridade: string }) {
   const map: Record<string, { label: string; className: string }> = {

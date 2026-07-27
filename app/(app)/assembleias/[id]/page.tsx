@@ -105,6 +105,15 @@ export default async function AssembleiaDetalhePage({
               Dossier de apoio (PDF)
             </Button>
           )}
+          {isAdmin && pontos.some((p) => p.exigeUnanimidade && p.resultado === 'aprovado') && (
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={`/assembleias/${assembleia.id}/comunicacao-deliberacoes`} />}
+            >
+              Comunicação aos ausentes
+            </Button>
+          )}
           {isAdmin && assembleia.estado === 'realizada' && (
             <AprovarAtaDialog assembleiaId={assembleia.id} textoAtaAtual={assembleia.textoAta} />
           )}

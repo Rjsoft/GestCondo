@@ -290,6 +290,21 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           estiver aprovada; depois de aprovada, ficam fixos tal como o resto
           da ata.
         </p>
+        <Subtitulo>Comunicação de deliberações aos ausentes (para o administrador)</Subtitulo>
+        <p>
+          Quando um ponto da ordem de trabalhos exigia unanimidade e foi
+          aprovado com o voto apenas dos condóminos presentes ou
+          representados (desde que estes representem, pelo menos, dois
+          terços do capital investido), a lei obriga a comunicar essa
+          deliberação às frações que estiveram ausentes, que dispõem depois
+          de 90 dias para responder por escrito — se não responderem, o
+          silêncio conta como aprovação. Nesses casos aparece um botão
+          &ldquo;Comunicação aos ausentes&rdquo; na página de detalhe da
+          assembleia, com a lista de frações a notificar, um botão para
+          imprimir a carta/email a enviar, e botões para registar a data de
+          envio e, mais tarde, a resposta (concordância ou discordância) de
+          cada fração.
+        </p>
         <Subtitulo>Dossier de apoio (para quem tem acesso financeiro)</Subtitulo>
         <p>
           O botão &ldquo;Dossier de apoio (PDF)&rdquo;, na página de detalhe

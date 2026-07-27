@@ -1265,6 +1265,42 @@ export const assembleiaAnexo = pgTable(
   (t) => [index("assembleia_anexo_assembleia_idx").on(t.assembleiaId)],
 )
 
+// Comunicação de uma deliberação que exigiu unanimidade (aprovada
+// provisoriamente por 2/3 do capital investido presente, art. 1432.º/8 CC)
+// a uma fração que esteve ausente da assembleia — distinta da convocatória
+// (essa é antes da assembleia, para todos os membros; esta é depois,
+// dirigida só a quem faltou a um ponto concreto que a exige). Só faz
+// sentido quando `assembleiaPonto.exigeUnanimidade` e `resultado='aprovado'`
+// (ver lib/comunicacao-deliberacao.ts para os prazos legais de 30/90 dias).
+// `unique(pontoId, fracaoId)` — uma comunicação por fração ausente e por
+// ponto, atualizável (registar resposta) mas não duplicável.
+export const comunicacaoDeliberacao = pgTable(
+  "comunicacao_deliberacao",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    pontoId: integer("pontoId")
+      .notNull()
+      .references(() => assembleiaPonto.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    metodo: text("metodo").notNull(), // "email" | "carta"
+    dataEnvio: timestamp("dataEnvio").notNull(),
+    referenciaEnvio: text("referenciaEnvio"), // nº de registo dos CTT, opcional
+    resposta: text("resposta"), // "concordancia" | "discordancia", null = aguarda/silêncio
+    dataResposta: timestamp("dataResposta"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("comunicacao_deliberacao_ponto_idx").on(t.pontoId),
+    unique("comunicacao_deliberacao_ponto_fracao_uq").on(t.pontoId, t.fracaoId),
+  ],
+)
+
 // Registo de auditoria: quem fez o quê, quando, a que entidade. Escrito
 // pelas próprias server actions (ver lib/audit.ts) sempre que uma ação
 // sensível é executada (criar/atualizar/eliminar dados partilhados,

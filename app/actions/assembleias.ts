@@ -7,6 +7,7 @@ import {
   assembleiaPonto,
   assembleiaPresenca,
   assembleiaVoto,
+  comunicacaoDeliberacao,
   fracao,
   membro,
 } from '@/lib/db/schema'
@@ -15,6 +16,7 @@ import { sendEmail } from '@/lib/email'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
 import { confirmarLeitura, getConfirmacoesLeitura, jaConfirmouLeitura } from '@/lib/confirmacao-leitura'
+import { calcularSituacaoComunicacao } from '@/lib/comunicacao-deliberacao'
 import { and, asc, desc, eq, inArray, isNotNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -500,6 +502,195 @@ export async function cancelarAssembleia(assembleiaId: number) {
 
   revalidatePath(`/assembleias/${assembleiaId}`)
   revalidatePath('/assembleias')
+}
+
+/**
+ * Pontos que exigiram unanimidade e foram aprovados provisoriamente por 2/3
+ * do capital investido presente (art. 1432.º/8 CC) e, para cada um, as
+ * frações que estiveram ausentes (sem registo em `assembleia_presenca`) —
+ * são estas que têm de ser notificadas por email ou carta, com o
+ * comprovativo e a resposta (concordância/discordância/silêncio) a
+ * registar (art. 1432.º/9 a 11 CC, ver lib/comunicacao-deliberacao.ts).
+ */
+export async function getComunicacoesDeliberacao(assembleiaId: number) {
+  const m = await requireMembroAprovado()
+  const a = await getAssembleiaOuFalhar(assembleiaId, m.condominioId)
+
+  const dataAssembleia = a.dataSegundaConvocatoria ?? a.dataPrimeiraConvocatoria
+
+  const pontos = await db
+    .select()
+    .from(assembleiaPonto)
+    .where(
+      and(
+        eq(assembleiaPonto.assembleiaId, assembleiaId),
+        eq(assembleiaPonto.exigeUnanimidade, true),
+        eq(assembleiaPonto.resultado, 'aprovado'),
+      ),
+    )
+    .orderBy(asc(assembleiaPonto.ordem))
+  if (pontos.length === 0) return { assembleia: a, pontos: [] }
+
+  const [presencas, fracoes, comunicacoes] = await Promise.all([
+    db.select({ fracaoId: assembleiaPresenca.fracaoId }).from(assembleiaPresenca).where(eq(assembleiaPresenca.assembleiaId, assembleiaId)),
+    db.select().from(fracao).where(eq(fracao.condominioId, m.condominioId)).orderBy(asc(fracao.identificacao)),
+    db
+      .select()
+      .from(comunicacaoDeliberacao)
+      .where(inArray(comunicacaoDeliberacao.pontoId, pontos.map((p) => p.id))),
+  ])
+
+  const fracoesPresentes = new Set(presencas.map((p) => p.fracaoId))
+  const fracoesAusentes = fracoes.filter((f) => !fracoesPresentes.has(f.id))
+
+  const pontosComAusentes = pontos.map((ponto) => {
+    const fracoesDoPonto = fracoesAusentes.map((f) => {
+      const comunicacao = comunicacoes.find((c) => c.pontoId === ponto.id && c.fracaoId === f.id) ?? null
+      const situacao = calcularSituacaoComunicacao({
+        dataAssembleia,
+        dataEnvio: comunicacao?.dataEnvio ?? null,
+        resposta: (comunicacao?.resposta as 'concordancia' | 'discordancia' | null) ?? null,
+      })
+      return {
+        fracaoId: f.id,
+        identificacao: f.identificacao,
+        comunicacao,
+        ...situacao,
+      }
+    })
+    return { ...ponto, fracoesAusentes: fracoesDoPonto }
+  })
+
+  return { assembleia: a, pontos: pontosComAusentes }
+}
+
+/** Regista o envio (email ou carta) da comunicação de uma deliberação a uma fração ausente. */
+export async function registarEnvioComunicacao(pontoId: number, fracaoId: number, formData: FormData) {
+  const admin = await requireAdmin()
+
+  const [ponto] = await db.select().from(assembleiaPonto).where(eq(assembleiaPonto.id, pontoId)).limit(1)
+  if (!ponto) throw new Error('Ponto não encontrado')
+  if (!ponto.exigeUnanimidade || ponto.resultado !== 'aprovado') {
+    throw new Error('Este ponto não exige comunicação aos ausentes')
+  }
+  const a = await getAssembleiaOuFalhar(ponto.assembleiaId, admin.condominioId)
+
+  const [f] = await db
+    .select({ id: fracao.id, identificacao: fracao.identificacao })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!f) throw new Error('Fração inválida')
+
+  const [presenca] = await db
+    .select({ id: assembleiaPresenca.id })
+    .from(assembleiaPresenca)
+    .where(and(eq(assembleiaPresenca.assembleiaId, a.id), eq(assembleiaPresenca.fracaoId, fracaoId)))
+    .limit(1)
+  if (presenca) throw new Error('Esta fração esteve presente/representada — não se aplica')
+
+  const metodo = String(formData.get('metodo') || '')
+  const dataEnvioStr = String(formData.get('dataEnvio') || '')
+  const referenciaEnvio = String(formData.get('referenciaEnvio') || '').trim()
+  if (!['email', 'carta'].includes(metodo)) throw new Error('Método inválido')
+  if (!dataEnvioStr) throw new Error('Indique a data de envio')
+
+  const [antes] = await db
+    .select({ metodo: comunicacaoDeliberacao.metodo, dataEnvio: comunicacaoDeliberacao.dataEnvio, referenciaEnvio: comunicacaoDeliberacao.referenciaEnvio })
+    .from(comunicacaoDeliberacao)
+    .where(and(eq(comunicacaoDeliberacao.pontoId, pontoId), eq(comunicacaoDeliberacao.fracaoId, fracaoId)))
+    .limit(1)
+
+  const dataEnvio = new Date(dataEnvioStr)
+  await db
+    .insert(comunicacaoDeliberacao)
+    .values({
+      condominioId: admin.condominioId,
+      userId: admin.userId,
+      pontoId,
+      fracaoId,
+      metodo,
+      dataEnvio,
+      referenciaEnvio: referenciaEnvio || null,
+    })
+    .onConflictDoUpdate({
+      target: [comunicacaoDeliberacao.pontoId, comunicacaoDeliberacao.fracaoId],
+      set: { metodo, dataEnvio, referenciaEnvio: referenciaEnvio || null },
+    })
+
+  const alteracoes = antes
+    ? compararCampos(antes, { metodo, dataEnvio, referenciaEnvio: referenciaEnvio || null }, { metodo: 'Método', dataEnvio: 'Data de envio', referenciaEnvio: 'Referência' })
+    : []
+  if (!antes || alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'assembleia',
+      entidadeId: a.id,
+      detalhes: `Comunicação da deliberação "${ponto.titulo}" enviada à fração ${f.identificacao} (${metodo})`,
+      alteracoes,
+    })
+  }
+
+  revalidatePath(`/assembleias/${a.id}`)
+  revalidatePath(`/assembleias/${a.id}/comunicacao-deliberacoes`)
+}
+
+/** Regista a resposta (concordância/discordância) de uma fração ausente. */
+export async function registarRespostaComunicacao(comunicacaoId: number, resposta: string) {
+  const admin = await requireAdmin()
+  if (!['concordancia', 'discordancia'].includes(resposta)) throw new Error('Resposta inválida')
+
+  const [c] = await db
+    .select()
+    .from(comunicacaoDeliberacao)
+    .where(and(eq(comunicacaoDeliberacao.id, comunicacaoId), eq(comunicacaoDeliberacao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!c) throw new Error('Comunicação não encontrada')
+
+  const [ponto] = await db.select().from(assembleiaPonto).where(eq(assembleiaPonto.id, c.pontoId)).limit(1)
+  if (!ponto) throw new Error('Ponto não encontrado')
+  const a = await getAssembleiaOuFalhar(ponto.assembleiaId, admin.condominioId)
+
+  const dataResposta = new Date()
+  await db.update(comunicacaoDeliberacao).set({ resposta, dataResposta }).where(eq(comunicacaoDeliberacao.id, comunicacaoId))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'assembleia',
+    entidadeId: a.id,
+    detalhes: `Resposta registada à comunicação da deliberação "${ponto.titulo}"`,
+    alteracoes: [{ campo: 'resposta', label: 'Resposta', antes: c.resposta, depois: resposta }],
+  })
+
+  revalidatePath(`/assembleias/${a.id}`)
+  revalidatePath(`/assembleias/${a.id}/comunicacao-deliberacoes`)
+}
+
+/** Dados para a minuta imprimível da carta/email de comunicação de uma deliberação a uma fração ausente. */
+export async function getDadosCartaComunicacao(pontoId: number, fracaoId: number) {
+  const admin = await requireAdmin()
+
+  const [ponto] = await db.select().from(assembleiaPonto).where(eq(assembleiaPonto.id, pontoId)).limit(1)
+  if (!ponto || !ponto.exigeUnanimidade || ponto.resultado !== 'aprovado') return null
+  const a = await getAssembleiaOuFalhar(ponto.assembleiaId, admin.condominioId)
+
+  const [f] = await db
+    .select({ id: fracao.id, identificacao: fracao.identificacao, proprietario: fracao.proprietario })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!f) return null
+
+  const [presenca] = await db
+    .select({ id: assembleiaPresenca.id })
+    .from(assembleiaPresenca)
+    .where(and(eq(assembleiaPresenca.assembleiaId, a.id), eq(assembleiaPresenca.fracaoId, fracaoId)))
+    .limit(1)
+  if (presenca) return null
+
+  return { assembleia: a, ponto, fracao: f }
 }
 
 /**
