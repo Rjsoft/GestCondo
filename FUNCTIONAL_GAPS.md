@@ -1,6 +1,6 @@
 # Auditoria Funcional — GestCondo
 
-Data: 2026-07-06, **atualizada 2026-07-24, 2026-07-25** (Fase A.2 promovida a produção; Fase B — balanço patrimonial e quotas extraordinárias — implementada em desenvolvimento). Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em falta. Prioridade pensada para o objetivo declarado (produto profissional multi-condomínio para o mercado português): **P0** bloqueador estrutural, **P1** necessário para MVP utilizável, **P2** necessário para venda comercial, **P3** diferenciador/avançado.
+Data: 2026-07-06, **atualizada 2026-07-24, 2026-07-25, 2026-07-27** (controlo de permissões por documento promovido a produção — migração 0040). Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em falta. Prioridade pensada para o objetivo declarado (produto profissional multi-condomínio para o mercado português): **P0** bloqueador estrutural, **P1** necessário para MVP utilizável, **P2** necessário para venda comercial, **P3** diferenciador/avançado.
 
 ## Visão geral honesta
 
