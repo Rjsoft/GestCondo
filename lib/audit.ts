@@ -166,6 +166,7 @@ export async function registarEventoAutenticacao(
           perfil: m.perfil as MembroSessao['perfil'],
           estado: m.estado as MembroSessao['estado'],
           fracaoId: m.fracaoId,
+          fornecedorId: m.fornecedorId,
           isSuperAdmin: false,
           isOperadorPlataforma: false,
           condominioSuspenso: false,

@@ -5,6 +5,7 @@ import {
   temPermissaoGestao,
 } from '@/lib/session'
 import { getFracoes, getMembros } from '@/app/actions/fracoes'
+import { getFornecedores } from '@/app/actions/fornecedores'
 import { PageHeader } from '@/components/page-header'
 import { PerfilSelect } from '@/components/condominos/perfil-select'
 import { EditarMembroDialog } from '@/components/condominos/editar-membro-dialog'
@@ -34,7 +35,11 @@ export default async function CondominosPage({
   const podeGerir = temPermissaoGestao(membro)
   const search = removerAcentos(((await searchParams).q ?? '').trim().toLowerCase())
 
-  const [todos, fracoes] = await Promise.all([getMembros(), getFracoes()])
+  const [todos, fracoes, fornecedores] = await Promise.all([
+    getMembros(),
+    getFracoes(),
+    getFornecedores(),
+  ])
   const pendentes = todos.filter((m) => m.estado === 'pendente')
   const aprovados = todos.filter((m) => m.estado === 'aprovado')
   // Pesquisa em memória: número de condóminos por condomínio é tipicamente
@@ -48,6 +53,7 @@ export default async function CondominosPage({
       )
     : aprovados
   const fracaoPorId = new Map(fracoes.map((f) => [f.id, f.identificacao]))
+  const fornecedorPorId = new Map(fornecedores.map((f) => [f.id, f.nome]))
 
   return (
     <div>
@@ -95,6 +101,7 @@ export default async function CondominosPage({
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden sm:table-cell">Email</TableHead>
                 <TableHead className="hidden sm:table-cell">Fração</TableHead>
+                <TableHead className="hidden sm:table-cell">Fornecedor</TableHead>
                 <TableHead>Perfil</TableHead>
                 <TableHead className="hidden sm:table-cell">
                   Membro desde
@@ -106,7 +113,7 @@ export default async function CondominosPage({
               {membros.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="py-10 text-center text-muted-foreground"
                   >
                     {search ? 'Nenhum condómino encontrado.' : 'Ainda não existem condóminos aprovados.'}
@@ -121,6 +128,9 @@ export default async function CondominosPage({
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {m.fracaoId ? (fracaoPorId.get(m.fracaoId) ?? '—') : '—'}
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {m.fornecedorId ? (fornecedorPorId.get(m.fornecedorId) ?? '—') : '—'}
                   </TableCell>
                   <TableCell>
                     {podeGerir ? (
@@ -139,8 +149,10 @@ export default async function CondominosPage({
                           id={m.id}
                           nome={m.nome}
                           fracaoId={m.fracaoId}
+                          fornecedorId={m.fornecedorId}
                           telefone={m.telefone}
                           fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
+                          fornecedores={fornecedores.map((f) => ({ id: f.id, nome: f.nome }))}
                         />
                       )}
                       {podeGerir && m.id !== membro.id && (

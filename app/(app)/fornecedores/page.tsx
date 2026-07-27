@@ -1,4 +1,4 @@
-import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import { removerAcentos } from '@/lib/format'
 import { getFornecedores } from '@/app/actions/fornecedores'
 import { getOrcamentosObra } from '@/app/actions/orcamentos-obra'
@@ -14,6 +14,12 @@ export default async function FornecedoresPage({
 }) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
+  // Contratos são dados financeiros — um fornecedor (que agora tem acesso
+  // a esta página para as suas próprias "Orçamentos de obra", ver portal
+  // do fornecedor em FUNCTIONAL_GAPS.md) não deve chamar getContratos(),
+  // que rejeitaria o pedido (requireAcessoFinanceiro exclui esse perfil).
+  const podeVerFinanceiro = temAcessoFinanceiro(membro)
+  const isFornecedor = membro.perfil === 'fornecedor' && !!membro.fornecedorId
   const params = await searchParams
   const search = removerAcentos((params.q ?? '').trim().toLowerCase())
   const orcamentosSearch = params.qOrcamentos ?? ''
@@ -24,7 +30,7 @@ export default async function FornecedoresPage({
       getFornecedores(),
       getOrcamentosObra({ page: orcamentosPage, search: orcamentosSearch }),
       getOcorrencias(),
-      getContratos(),
+      podeVerFinanceiro ? getContratos() : Promise.resolve([]),
     ])
 
   // Pesquisa em memória: lista tipicamente pequena por condomínio, mesma
@@ -49,6 +55,8 @@ export default async function FornecedoresPage({
         fornecedoresFiltrados={fornecedoresFiltrados}
         search={search}
         isAdmin={isAdmin}
+        isFornecedor={isFornecedor}
+        podeVerFinanceiro={podeVerFinanceiro}
         orcamentos={orcamentos}
         orcamentosPage={orcamentosPage}
         orcamentosTotalPages={orcamentosTotalPages}

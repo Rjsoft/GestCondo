@@ -215,6 +215,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           O nome do fornecedor atribuído passa a aparecer no cartão da
           ocorrência, visível a todos.
         </p>
+        <Subtitulo>Portal do fornecedor</Subtitulo>
+        <p>
+          Um fornecedor cujo login esteja associado à sua ficha (ver ajuda de
+          &ldquo;Condóminos&rdquo;) só vê, nesta página, as ocorrências que
+          lhe foram atribuídas. Pode &ldquo;Aceitar&rdquo; um trabalho
+          (passa a &ldquo;Em curso&rdquo;), &ldquo;Recusar&rdquo; (indicando
+          o motivo — a ocorrência volta a ficar aberta e sem fornecedor) ou
+          &ldquo;Marcar concluída&rdquo; quando terminar.
+        </p>
       </>
     ),
   },
@@ -495,7 +504,10 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           (ex: pintura da fachada), com o valor e um anexo opcional (PDF ou
           imagem da proposta). Assim que decidir, marque a proposta escolhida
           como &ldquo;Vencedor&rdquo; — fica destacada, para se saber
-          facilmente qual foi a decisão tomada.
+          facilmente qual foi a decisão tomada. Se o fornecedor tiver o seu
+          próprio login associado à ficha (ver ajuda de
+          &ldquo;Condóminos&rdquo;), também pode submeter aqui as suas
+          próprias propostas diretamente.
         </p>
         <Subtitulo>Contratos</Subtitulo>
         <p>
@@ -577,6 +589,14 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           herdeiro cria conta nova com o código de convite, o administrador
           liga-a à fração em &ldquo;Editar&rdquo;, e só depois remove a
           conta antiga. Não é possível remover a própria conta por aqui.
+        </p>
+        <Subtitulo>Portal do fornecedor</Subtitulo>
+        <p>
+          Para uma conta com perfil &ldquo;Fornecedor&rdquo; ver, em
+          &ldquo;Ocorrências&rdquo; e &ldquo;Fornecedores&rdquo;, só o que
+          lhe diz respeito, associe-a à ficha correspondente em
+          &ldquo;Fornecedores&rdquo;: clique em &ldquo;Editar&rdquo; nessa
+          conta e escolha o fornecedor em &ldquo;Fornecedor associado&rdquo;.
         </p>
       </>
     ),

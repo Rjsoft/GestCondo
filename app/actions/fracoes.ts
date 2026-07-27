@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fracao, fracaoTransmissao, membro } from '@/lib/db/schema'
+import { fornecedor, fracao, fracaoTransmissao, membro } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { DECISAO_SALDO_LABEL, DECISOES_SALDO, TIPOS_TITULAR, type DecisaoSaldo } from '@/lib/fracoes'
 import { getMapaSaldos } from '@/app/actions/financas'
@@ -442,6 +442,7 @@ export async function atualizarMembro(formData: FormData) {
   const id = Number(formData.get('id'))
   const nome = String(formData.get('nome') || '').trim()
   const fracaoIdRaw = String(formData.get('fracaoId') || '').trim()
+  const fornecedorIdRaw = String(formData.get('fornecedorId') || '').trim()
   const telefone = String(formData.get('telefone') || '').trim()
 
   if (!id || !nome) throw new Error('Dados inválidos')
@@ -459,16 +460,31 @@ export async function atualizarMembro(formData: FormData) {
     fracaoId = f.id
   }
 
+  let fornecedorId: number | null = null
+  if (fornecedorIdRaw) {
+    // Mesma confirmação de isolamento que fracaoId, acima — liga o login
+    // (perfil "fornecedor") à ficha de fornecedor, para o portal do
+    // fornecedor saber que ocorrências/orçamentos lhe pertencem.
+    const [f] = await db
+      .select({ id: fornecedor.id })
+      .from(fornecedor)
+      .where(and(eq(fornecedor.id, Number(fornecedorIdRaw)), eq(fornecedor.condominioId, admin.condominioId)))
+      .limit(1)
+    if (!f) throw new Error('Fornecedor inválido')
+    fornecedorId = f.id
+  }
+
   const condicao = and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId))
   const [antes] = await db.select().from(membro).where(condicao).limit(1)
   if (!antes) throw new Error('Membro não encontrado')
 
-  const novosValores = { nome, fracaoId, telefone: telefone || null }
+  const novosValores = { nome, fracaoId, fornecedorId, telefone: telefone || null }
   await db.update(membro).set(novosValores).where(condicao)
 
   const alteracoes = compararCampos(antes, novosValores, {
     nome: 'Nome',
     fracaoId: 'Fração',
+    fornecedorId: 'Fornecedor associado',
     telefone: 'Telefone',
   })
   if (alteracoes.length > 0) {

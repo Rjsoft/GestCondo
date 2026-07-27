@@ -74,6 +74,7 @@ export async function alterarEstadoSubscricao(
     perfil: 'admin',
     estado: 'aprovado',
     fracaoId: null,
+    fornecedorId: null,
     isSuperAdmin: false,
     isOperadorPlataforma: true,
     condominioSuspenso: false,

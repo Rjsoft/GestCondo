@@ -77,6 +77,10 @@ export type MembroSessao = {
   /** Fração de que este membro é proprietário (perfil condomino) ou
    * arrendatário (perfil inquilino). `null` se ainda não associado. */
   fracaoId: number | null
+  /** Ficha de fornecedor (tabela `fornecedor`) que este login representa,
+   * quando `perfil: 'fornecedor'`. `null` até o admin associar — sem isto,
+   * o portal do fornecedor (ocorrências/orçamentos atribuídos) fica vazio. */
+  fornecedorId: number | null
   /** Super Admin (empresa gestora multi-condomínio, futuro) — ver comentário acima de `Perfil`. */
   isSuperAdmin: boolean
   /** Operador da plataforma (RJCSI) — controla /plataforma e a subscrição

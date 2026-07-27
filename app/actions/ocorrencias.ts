@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import {
   requireAdmin,
+  requireMembroAprovado,
   requireMembroComEscrita,
   temConsultaGestao,
   temPermissaoGestao,
@@ -18,15 +19,24 @@ const PAGE_SIZE = 20
 
 export async function getOcorrencias({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
   const m = await requireMembroComEscrita()
-  // Admin/gestor/auditor veem todas as do seu condomínio; os restantes
-  // (condómino, inquilino, fornecedor) veem só as suas.
+  // Admin/gestor/auditor veem todas as do seu condomínio. Um fornecedor
+  // com ficha associada (m.fornecedorId, ver "portal do fornecedor" em
+  // FUNCTIONAL_GAPS.md) vê as suas próprias + as que lhe foram atribuídas
+  // (ocorrencia.fornecedorId) — os restantes (condómino, inquilino, e
+  // fornecedor ainda sem ficha associada) veem só as suas.
   const escopo = temConsultaGestao(m)
     ? and(eq(ocorrencia.condominioId, m.condominioId), isNull(ocorrencia.deletedAt))
-    : and(
-        eq(ocorrencia.condominioId, m.condominioId),
-        eq(ocorrencia.userId, m.userId),
-        isNull(ocorrencia.deletedAt),
-      )
+    : m.perfil === 'fornecedor' && m.fornecedorId
+      ? and(
+          eq(ocorrencia.condominioId, m.condominioId),
+          or(eq(ocorrencia.userId, m.userId), eq(ocorrencia.fornecedorId, m.fornecedorId)),
+          isNull(ocorrencia.deletedAt),
+        )
+      : and(
+          eq(ocorrencia.condominioId, m.condominioId),
+          eq(ocorrencia.userId, m.userId),
+          isNull(ocorrencia.deletedAt),
+        )
 
   const condicao = search
     ? and(
@@ -113,55 +123,49 @@ const ESTADO_LABEL: Record<string, string> = {
   resolvida: 'Resolvida',
 }
 
-export async function atualizarEstadoOcorrencia(id: number, estado: string) {
-  // Apenas admin/gestor gerem o estado das ocorrências.
-  const admin = await requireAdmin()
+/**
+ * Núcleo partilhado por `atualizarEstadoOcorrencia` (admin/gestor) e pelas
+ * ações do portal do fornecedor abaixo (aceitar/concluir) — mesma escrita,
+ * mesmo registo de auditoria com a transição completa (De X para Y) e a
+ * mesma notificação a quem reportou, só muda quem pode chamar cada uma.
+ */
+async function aplicarMudancaEstadoOcorrencia(
+  id: number,
+  condicaoBase: ReturnType<typeof and>,
+  estado: string,
+  actor: Awaited<ReturnType<typeof requireAdmin>>,
+) {
   if (!ESTADOS.includes(estado)) throw new Error('Estado inválido')
 
-  // Estado anterior, para o registo de auditoria mostrar a transição
-  // completa (De X para Y) — sem isto não se sabia quando/de onde uma
-  // ocorrência tinha mudado de estado, só o estado atual (FUNCTIONAL_GAPS.md,
-  // "Histórico de intervenções"). Reaproveita o audit_log já existente, sem
-  // tabela nova: a página /auditoria já lista por data/autor/entidade.
-  const [antes] = await db
-    .select({ estado: ocorrencia.estado })
-    .from(ocorrencia)
-    .where(and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)))
-    .limit(1)
-  if (antes && antes.estado === estado) return
+  const [antes] = await db.select({ estado: ocorrencia.estado }).from(ocorrencia).where(condicaoBase).limit(1)
+  if (!antes) throw new Error('Ocorrência não encontrada')
+  if (antes.estado === estado) return
 
   const [atualizada] = await db
     .update(ocorrencia)
     .set({ estado, updatedAt: new Date() })
-    .where(
-      and(
-        eq(ocorrencia.id, id),
-        eq(ocorrencia.condominioId, admin.condominioId),
-      ),
-    )
+    .where(condicaoBase)
     .returning({ userId: ocorrencia.userId, titulo: ocorrencia.titulo })
 
   // Título incluído no detalhe (não só "estado alterado de X para Y") para
   // a pesquisa em /auditoria encontrar o histórico completo de uma
   // ocorrência específica pelo título, tal como já encontra a sua criação.
   await registarAuditoria({
-    actor: admin,
+    actor,
     acao: 'atualizar',
     entidade: 'ocorrencia',
     entidadeId: id,
-    detalhes: antes
-      ? `${atualizada?.titulo ?? ''}: estado alterado de "${ESTADO_LABEL[antes.estado] ?? antes.estado}" para "${ESTADO_LABEL[estado] ?? estado}"`
-      : `${atualizada?.titulo ?? ''}: estado alterado para "${ESTADO_LABEL[estado] ?? estado}"`,
-    alteracoes: [{ campo: 'estado', label: 'Estado', antes: antes?.estado ?? null, depois: estado }],
+    detalhes: `${atualizada?.titulo ?? ''}: estado alterado de "${ESTADO_LABEL[antes.estado] ?? antes.estado}" para "${ESTADO_LABEL[estado] ?? estado}"`,
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: antes.estado, depois: estado }],
   })
 
-  // Notifica quem reportou a ocorrência — não o próprio admin que a
-  // atualizou, que já sabe.
-  if (atualizada && atualizada.userId !== admin.userId) {
+  // Notifica quem reportou a ocorrência — não o próprio autor da mudança,
+  // que já sabe.
+  if (atualizada && atualizada.userId !== actor.userId) {
     const [reporter] = await db
       .select({ email: membro.email })
       .from(membro)
-      .where(and(eq(membro.userId, atualizada.userId), eq(membro.condominioId, admin.condominioId)))
+      .where(and(eq(membro.userId, atualizada.userId), eq(membro.condominioId, actor.condominioId)))
       .limit(1)
 
     if (reporter) {
@@ -175,6 +179,68 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
 
   revalidatePath('/ocorrencias')
   revalidatePath('/')
+}
+
+export async function atualizarEstadoOcorrencia(id: number, estado: string) {
+  // Apenas admin/gestor gerem livremente o estado das ocorrências.
+  const admin = await requireAdmin()
+  await aplicarMudancaEstadoOcorrencia(
+    id,
+    and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)),
+    estado,
+    admin,
+  )
+}
+
+/** Confirma que o chamador é o fornecedor atribuído a esta ocorrência —
+ * partilhado pelas três ações do portal do fornecedor abaixo. */
+async function requireFornecedorAtribuido(id: number) {
+  const m = await requireMembroAprovado()
+  if (m.perfil !== 'fornecedor' || !m.fornecedorId) {
+    throw new Error('Sem permissão para gerir esta ocorrência')
+  }
+  const condicao = and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, m.condominioId))
+  const [oc] = await db.select({ fornecedorId: ocorrencia.fornecedorId, estado: ocorrencia.estado, titulo: ocorrencia.titulo }).from(ocorrencia).where(condicao).limit(1)
+  if (!oc || oc.fornecedorId !== m.fornecedorId) throw new Error('Ocorrência não encontrada')
+  return { m, oc, condicao }
+}
+
+/** Portal do fornecedor: aceitar um trabalho atribuído (aberta → em curso). */
+export async function aceitarOcorrenciaFornecedor(id: number) {
+  const { m, oc, condicao } = await requireFornecedorAtribuido(id)
+  if (oc.estado !== 'aberta') throw new Error('Só é possível aceitar uma ocorrência aberta')
+  await aplicarMudancaEstadoOcorrencia(id, condicao, 'em_curso', m)
+}
+
+/** Portal do fornecedor: marcar como concluído (em curso → resolvida). */
+export async function concluirOcorrenciaFornecedor(id: number) {
+  const { m, oc, condicao } = await requireFornecedorAtribuido(id)
+  if (oc.estado !== 'em_curso') throw new Error('Só é possível concluir uma ocorrência em curso')
+  await aplicarMudancaEstadoOcorrencia(id, condicao, 'resolvida', m)
+}
+
+/** Portal do fornecedor: recusar um trabalho atribuído — devolve a
+ * ocorrência a "aberta" sem fornecedor, com o motivo registado em
+ * auditoria (distinto de `aplicarMudancaEstadoOcorrencia`, que nunca mexe
+ * em `fornecedorId`). */
+export async function recusarOcorrenciaFornecedor(id: number, motivo: string) {
+  const { m, oc, condicao } = await requireFornecedorAtribuido(id)
+  if (oc.estado === 'resolvida') throw new Error('Já está resolvida, não pode ser recusada')
+  const motivoTexto = motivo.trim()
+  if (!motivoTexto) throw new Error('Indique o motivo da recusa')
+
+  await db.update(ocorrencia).set({ fornecedorId: null, estado: 'aberta', updatedAt: new Date() }).where(condicao)
+
+  await registarAuditoria({
+    actor: m,
+    acao: 'atualizar',
+    entidade: 'ocorrencia',
+    entidadeId: id,
+    detalhes: `${oc.titulo}: fornecedor recusou o trabalho — ${motivoTexto}`,
+    alteracoes: [{ campo: 'fornecedorId', label: 'Fornecedor', antes: oc.fornecedorId, depois: null }],
+  })
+
+  revalidatePath('/ocorrencias')
 }
 
 /**

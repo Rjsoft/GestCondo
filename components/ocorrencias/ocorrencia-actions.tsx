@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import {
+  aceitarOcorrenciaFornecedor,
   atualizarEstadoOcorrencia,
   atribuirFornecedorOcorrencia,
+  concluirOcorrenciaFornecedor,
   eliminarOcorrencia,
 } from '@/app/actions/ocorrencias'
 import { Button } from '@/components/ui/button'
@@ -15,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Trash2 } from 'lucide-react'
+import { RecusarOcorrenciaDialog } from '@/components/ocorrencias/recusar-ocorrencia-dialog'
+import { Check, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 const ESTADOS = [
@@ -31,6 +34,7 @@ export function OcorrenciaActions({
   estado,
   isAdmin,
   isOwner,
+  isFornecedorResponsavel,
   fornecedorId,
   fornecedores,
 }: {
@@ -38,11 +42,16 @@ export function OcorrenciaActions({
   estado: string
   isAdmin: boolean
   isOwner: boolean
+  /** O chamador é o fornecedor a quem esta ocorrência está atribuída
+   * (portal do fornecedor) — mostra aceitar/recusar/concluir em vez dos
+   * controlos completos de admin. */
+  isFornecedorResponsavel: boolean
   fornecedorId: number | null
   fornecedores: { id: number; nome: string }[]
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [recusarOpen, setRecusarOpen] = useState(false)
 
   const mudarEstado = (novoEstado: string) => {
     startTransition(async () => {
@@ -79,7 +88,55 @@ export function OcorrenciaActions({
     })
   }
 
-  if (!isAdmin && !isOwner) return null
+  const aceitar = () => {
+    startTransition(async () => {
+      try {
+        await aceitarOcorrenciaFornecedor(id)
+        toast.success('Trabalho aceite')
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro')
+      }
+    })
+  }
+
+  const concluir = () => {
+    startTransition(async () => {
+      try {
+        await concluirOcorrenciaFornecedor(id)
+        toast.success('Marcado como concluído')
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro')
+      }
+    })
+  }
+
+  if (!isAdmin && !isOwner && !isFornecedorResponsavel) return null
+
+  if (isFornecedorResponsavel && !isAdmin) {
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        {estado === 'aberta' && (
+          <Button size="sm" disabled={pending} onClick={aceitar}>
+            <Check className="h-4 w-4" />
+            Aceitar
+          </Button>
+        )}
+        {estado === 'em_curso' && (
+          <Button size="sm" disabled={pending} onClick={concluir}>
+            <Check className="h-4 w-4" />
+            Marcar concluída
+          </Button>
+        )}
+        {estado !== 'resolvida' && (
+          <Button variant="outline" size="sm" disabled={pending} onClick={() => setRecusarOpen(true)}>
+            <X className="h-4 w-4" />
+            Recusar
+          </Button>
+        )}
+        <RecusarOcorrenciaDialog id={id} open={recusarOpen} onOpenChange={setRecusarOpen} />
+      </div>
+    )
+  }
 
   return (
     <div className="flex shrink-0 items-center gap-2">

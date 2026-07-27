@@ -25,25 +25,34 @@ import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 
 type FracaoOpcao = { id: number; identificacao: string }
+type FornecedorOpcao = { id: number; nome: string }
 
 const SEM_FRACAO = '__sem_fracao__'
+const SEM_FORNECEDOR = '__sem_fornecedor__'
 
 export function EditarMembroDialog({
   id,
   nome,
   fracaoId,
+  fornecedorId,
   telefone,
   fracoes,
+  fornecedores,
 }: {
   id: number
   nome: string
   fracaoId: number | null
+  fornecedorId: number | null
   telefone: string | null
   fracoes: FracaoOpcao[]
+  fornecedores: FornecedorOpcao[]
 }) {
   const [open, setOpen] = useState(false)
   const [fracaoSelecionada, setFracaoSelecionada] = useState(
     fracaoId ? String(fracaoId) : SEM_FRACAO,
+  )
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState(
+    fornecedorId ? String(fornecedorId) : SEM_FORNECEDOR,
   )
   const [pending, startTransition] = useTransition()
 
@@ -51,6 +60,10 @@ export function EditarMembroDialog({
     formData.set(
       'fracaoId',
       fracaoSelecionada === SEM_FRACAO ? '' : fracaoSelecionada,
+    )
+    formData.set(
+      'fornecedorId',
+      fornecedorSelecionado === SEM_FORNECEDOR ? '' : fornecedorSelecionado,
     )
     startTransition(async () => {
       try {
@@ -120,6 +133,36 @@ export function EditarMembroDialog({
                 placeholder="Opcional"
               />
             </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Fornecedor associado (só para perfil &ldquo;Fornecedor&rdquo;)</Label>
+            <Select
+              value={fornecedorSelecionado}
+              onValueChange={(value) => value && setFornecedorSelecionado(value)}
+            >
+              <SelectTrigger>
+                <SelectValue>
+                  {(v: string | null) => {
+                    if (v === SEM_FORNECEDOR || v == null) return 'Sem fornecedor associado'
+                    const f = fornecedores.find((f) => String(f.id) === v)
+                    return f ? f.nome : 'Sem fornecedor associado'
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SEM_FORNECEDOR}>Sem fornecedor associado</SelectItem>
+                {fornecedores.map((f) => (
+                  <SelectItem key={f.id} value={String(f.id)}>
+                    {f.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Liga este login à ficha de fornecedor em &ldquo;Fornecedores&rdquo;,
+              para o portal do fornecedor mostrar as ocorrências e orçamentos
+              atribuídos a ele.
+            </p>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending}>

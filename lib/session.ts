@@ -90,6 +90,7 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     perfil: (existente.perfil as Perfil) ?? 'condomino',
     estado: (existente.estado as EstadoMembro) ?? 'aprovado',
     fracaoId: existente.fracaoId,
+    fornecedorId: existente.fornecedorId,
     isSuperAdmin,
     isOperadorPlataforma,
     condominioSuspenso: estadoSubscricao === 'suspenso',

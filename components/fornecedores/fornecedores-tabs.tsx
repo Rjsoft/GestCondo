@@ -69,6 +69,8 @@ export function FornecedoresTabs({
   fornecedoresFiltrados,
   search,
   isAdmin,
+  isFornecedor,
+  podeVerFinanceiro,
   orcamentos,
   orcamentosPage,
   orcamentosTotalPages,
@@ -80,6 +82,12 @@ export function FornecedoresTabs({
   fornecedoresFiltrados: Fornecedor[]
   search: string
   isAdmin: boolean
+  /** Perfil "fornecedor" com ficha associada — vê/submete só as suas
+   * próprias propostas em "Orçamentos de obra" (portal do fornecedor). */
+  isFornecedor: boolean
+  /** Contratos são dados financeiros — escondido para quem não tem
+   * acesso financeiro (inclui o perfil fornecedor). */
+  podeVerFinanceiro: boolean
   orcamentos: OrcamentoObra[]
   orcamentosPage: number
   orcamentosTotalPages: number
@@ -92,7 +100,7 @@ export function FornecedoresTabs({
       <TabsList>
         <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
         <TabsTrigger value="orcamentosObra">Orçamentos de obra</TabsTrigger>
-        <TabsTrigger value="contratos">Contratos</TabsTrigger>
+        {podeVerFinanceiro && <TabsTrigger value="contratos">Contratos</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="fornecedores" className="mt-4">
@@ -179,10 +187,11 @@ export function FornecedoresTabs({
       <TabsContent value="orcamentosObra" className="mt-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <SearchInput placeholder="Pesquisar por assunto ou fornecedor..." paramName="qOrcamentos" />
-          {isAdmin && (
+          {(isAdmin || isFornecedor) && (
             <NovoOrcamentoObraDialog
               fornecedores={fornecedores.map((f) => ({ id: f.id, nome: f.nome }))}
               ocorrencias={ocorrencias}
+              perfilFornecedor={isFornecedor}
             />
           )}
         </div>
@@ -267,6 +276,7 @@ export function FornecedoresTabs({
         />
       </TabsContent>
 
+      {podeVerFinanceiro && (
       <TabsContent value="contratos" className="mt-4">
         <div className="mb-4 flex justify-end">
           {isAdmin && (
@@ -383,6 +393,7 @@ export function FornecedoresTabs({
           </CardContent>
         </Card>
       </TabsContent>
+      )}
     </Tabs>
   )
 }

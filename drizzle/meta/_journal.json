@@ -358,6 +358,13 @@
       "when": 1785152064639,
       "tag": "0050_pretty_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1785154388772,
+      "tag": "0051_bitter_the_leader",
+      "breakpoints": true
     }
   ]
 }

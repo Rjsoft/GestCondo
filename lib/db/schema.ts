@@ -180,6 +180,14 @@ export const membro = pgTable(
     fracaoId: integer("fracaoId").references(() => fracao.id, {
       onDelete: "set null",
     }),
+    // Liga um login com perfil "fornecedor" à ficha de fornecedor já
+    // registada em `/fornecedores` (portal do fornecedor, FUNCTIONAL_GAPS.md
+    // P2) — mesmo padrão de `fracaoId` acima: o admin associa manualmente,
+    // nunca automático. `null` até ser associado (portal fica inacessível
+    // até lá, ver `getOcorrencias`/`getOrcamentosObra`).
+    fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
+      onDelete: "set null",
+    }),
     telefone: text("telefone"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
@@ -189,6 +197,7 @@ export const membro = pgTable(
     uniqueIndex("membro_user_condominio_idx").on(t.userId, t.condominioId),
     index("membro_condominio_idx").on(t.condominioId),
     index("membro_fracao_idx").on(t.fracaoId),
+    index("membro_fornecedor_idx").on(t.fornecedorId),
   ],
 )
 

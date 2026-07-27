@@ -33,9 +33,14 @@ const SEM_OCORRENCIA = '__sem_ocorrencia__'
 export function NovoOrcamentoObraDialog({
   fornecedores,
   ocorrencias,
+  perfilFornecedor = false,
 }: {
   fornecedores: FornecedorOpcao[]
   ocorrencias: OcorrenciaOpcao[]
+  /** Chamado por um fornecedor (portal do fornecedor) a submeter em seu
+   * próprio nome — esconde a escolha de fornecedor (é sempre ele próprio,
+   * decidido no servidor a partir da sessão). */
+  perfilFornecedor?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [fornecedorId, setFornecedorId] = useState('')
@@ -43,7 +48,7 @@ export function NovoOrcamentoObraDialog({
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
-    formData.set('fornecedorId', fornecedorId)
+    if (!perfilFornecedor) formData.set('fornecedorId', fornecedorId)
     if (ocorrenciaId !== SEM_OCORRENCIA) {
       formData.set('ocorrenciaId', ocorrenciaId)
     }
@@ -85,33 +90,35 @@ export function NovoOrcamentoObraDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <Label>Fornecedor</Label>
-              <Select value={fornecedorId} onValueChange={(v) => v && setFornecedorId(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o fornecedor">
-                    {(v: string | null) => {
-                      const f = fornecedores.find((f) => String(f.id) === v)
-                      return f ? f.nome : 'Selecione o fornecedor'
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {fornecedores.map((f) => (
-                    <SelectItem key={f.id} value={String(f.id)}>
-                      {f.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fornecedores.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Ainda não existem fornecedores registados — registe um
-                  antes de lançar um orçamento.
-                </p>
-              )}
-            </div>
+          <div className={perfilFornecedor ? '' : 'grid grid-cols-2 gap-3'}>
+            {!perfilFornecedor && (
+              <div className="flex flex-col gap-2">
+                <Label>Fornecedor</Label>
+                <Select value={fornecedorId} onValueChange={(v) => v && setFornecedorId(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o fornecedor">
+                      {(v: string | null) => {
+                        const f = fornecedores.find((f) => String(f.id) === v)
+                        return f ? f.nome : 'Selecione o fornecedor'
+                      }}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fornecedores.map((f) => (
+                      <SelectItem key={f.id} value={String(f.id)}>
+                        {f.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fornecedores.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Ainda não existem fornecedores registados — registe um
+                    antes de lançar um orçamento.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="valor">Valor (€)</Label>
               <Input
@@ -160,7 +167,7 @@ export function NovoOrcamentoObraDialog({
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={pending || !fornecedorId}>
+            <Button type="submit" disabled={pending || (!perfilFornecedor && !fornecedorId)}>
               {pending ? 'A guardar...' : 'Guardar orçamento'}
             </Button>
           </DialogFooter>

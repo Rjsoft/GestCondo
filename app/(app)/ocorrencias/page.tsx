@@ -89,6 +89,11 @@ export default async function OcorrenciasPage({
                   estado={o.estado}
                   isAdmin={isAdmin}
                   isOwner={o.userId === membro.userId}
+                  isFornecedorResponsavel={
+                    membro.perfil === 'fornecedor' &&
+                    membro.fornecedorId !== null &&
+                    o.fornecedorId === membro.fornecedorId
+                  }
                   fornecedorId={o.fornecedorId}
                   fornecedores={fornecedores}
                 />

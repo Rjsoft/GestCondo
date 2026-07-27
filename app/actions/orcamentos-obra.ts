@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { fornecedor, ocorrencia, orcamentoObra } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
-import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
+import { requireAdmin, requireMembroAprovado, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import { and, desc, eq, getTableColumns, isNull, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -12,13 +12,23 @@ const PAGE_SIZE = 20
 
 /**
  * Lista de orçamentos de obra do condomínio, com o nome do fornecedor —
- * mesmo acesso que documentos de fornecedor (dados financeiros: admin,
- * gestor, condómino ou auditor, nunca inquilino/fornecedor).
+ * acesso financeiro normal (admin, gestor, condómino ou auditor) vê tudo;
+ * um fornecedor com ficha associada (portal do fornecedor,
+ * FUNCTIONAL_GAPS.md) vê só as suas próprias propostas.
  */
 export async function getOrcamentosObra({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
-  const m = await requireAcessoFinanceiro()
+  const m = await requireMembroAprovado()
+  const ehFornecedor = m.perfil === 'fornecedor'
+  if (!ehFornecedor && !temAcessoFinanceiro(m)) throw new Error('Sem permissão para consultar')
+  if (ehFornecedor && !m.fornecedorId) throw new Error('Sem permissão para consultar')
 
-  const base = and(eq(orcamentoObra.condominioId, m.condominioId), isNull(orcamentoObra.deletedAt))
+  const base = ehFornecedor
+    ? and(
+        eq(orcamentoObra.condominioId, m.condominioId),
+        isNull(orcamentoObra.deletedAt),
+        eq(orcamentoObra.fornecedorId, m.fornecedorId as number),
+      )
+    : and(eq(orcamentoObra.condominioId, m.condominioId), isNull(orcamentoObra.deletedAt))
   // leftJoin, não innerJoin: um orçamento sobrevive à eliminação do
   // fornecedor (fornecedorId fica null, ver comentário no schema) — não
   // pode desaparecer da lista por causa disso.
@@ -48,11 +58,20 @@ export async function getOrcamentosObra({ page = 1, search = '' }: { page?: numb
   return { orcamentos: linhas, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
 }
 
+/**
+ * Admin/gestor podem lançar um orçamento em nome de qualquer fornecedor
+ * registado; um fornecedor com ficha associada (portal do fornecedor) só
+ * pode submeter em seu próprio nome — `fornecedorId` nunca vem do
+ * formulário nesse caso, é sempre o da sua própria conta.
+ */
 export async function criarOrcamentoObra(formData: FormData) {
-  const admin = await requireAdmin()
+  const m = await requireMembroAprovado()
+  const ehFornecedor = m.perfil === 'fornecedor'
+  if (!ehFornecedor && !temPermissaoGestao(m)) throw new Error('Sem permissão para registar')
+  if (ehFornecedor && !m.fornecedorId) throw new Error('Sem permissão para registar')
 
   const assunto = String(formData.get('assunto') || '').trim()
-  const fornecedorId = Number(formData.get('fornecedorId'))
+  const fornecedorId = ehFornecedor ? (m.fornecedorId as number) : Number(formData.get('fornecedorId'))
   const valor = String(formData.get('valor') || '').trim()
   const descricao = String(formData.get('descricao') || '').trim()
   const ocorrenciaIdRaw = String(formData.get('ocorrenciaId') || '').trim()
@@ -64,7 +83,7 @@ export async function criarOrcamentoObra(formData: FormData) {
   const [forn] = await db
     .select({ id: fornecedor.id })
     .from(fornecedor)
-    .where(and(eq(fornecedor.id, fornecedorId), eq(fornecedor.condominioId, admin.condominioId)))
+    .where(and(eq(fornecedor.id, fornecedorId), eq(fornecedor.condominioId, m.condominioId)))
     .limit(1)
   if (!forn) throw new Error('Fornecedor não encontrado')
 
@@ -73,7 +92,7 @@ export async function criarOrcamentoObra(formData: FormData) {
     const [oc] = await db
       .select({ id: ocorrencia.id })
       .from(ocorrencia)
-      .where(and(eq(ocorrencia.id, Number(ocorrenciaIdRaw)), eq(ocorrencia.condominioId, admin.condominioId)))
+      .where(and(eq(ocorrencia.id, Number(ocorrenciaIdRaw)), eq(ocorrencia.condominioId, m.condominioId)))
       .limit(1)
     if (!oc) throw new Error('Ocorrência não encontrada')
     ocorrenciaId = oc.id
@@ -91,8 +110,8 @@ export async function criarOrcamentoObra(formData: FormData) {
   const [novo] = await db
     .insert(orcamentoObra)
     .values({
-      condominioId: admin.condominioId,
-      userId: admin.userId,
+      condominioId: m.condominioId,
+      userId: m.userId,
       assunto,
       ocorrenciaId,
       fornecedorId,
@@ -104,7 +123,7 @@ export async function criarOrcamentoObra(formData: FormData) {
     .returning({ id: orcamentoObra.id })
 
   await registarAuditoria({
-    actor: admin,
+    actor: m,
     acao: 'criar',
     entidade: 'orcamentoObra',
     entidadeId: novo.id,
