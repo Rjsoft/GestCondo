@@ -352,7 +352,12 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             um relatório imprimível que mostra há quanto tempo cada dívida
             existe (0–30, 31–60, 61–90, 91–180, 181–365 ou mais de 365
             dias), útil para decidir a quem enviar uma interpelação
-            primeiro.
+            primeiro. Em &ldquo;Lembretes de cobrança&rdquo; pode enviar
+            por email um aviso informal (sem valor legal, ao contrário da
+            interpelação) às frações com dívida há mais de 30 ou 60 dias —
+            um 1º lembrete mais simples, um 2º mais firme já a mencionar a
+            interpelação formal como próximo passo. O envio é sempre uma
+            ação manual do administrador.
           </li>
           <li>
             <strong>Adiantamentos</strong>: quando um condómino paga mais do

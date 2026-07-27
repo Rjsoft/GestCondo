@@ -564,6 +564,28 @@ export const fracaoCredito = pgTable(
   (t) => [index("fracao_credito_fracao_idx").on(t.fracaoId)],
 )
 
+// Lembrete de cobrança informal enviado por email a uma fração com dívida
+// em atraso — distinto da interpelação formal (sem valor legal, sem
+// citação de artigos, só um aviso amigável/firme conforme o escalão, ver
+// lib/lembrete-cobranca.ts). Reenviar o mesmo escalão não é bloqueado —
+// cada envio fica registado como uma linha própria, para histórico.
+export const lembreteCobranca = pgTable(
+  "lembrete_cobranca",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    escalao: text("escalao").notNull(), // "31-60" | "61-90" (lib/lembrete-cobranca.ts)
+    dataEnvio: timestamp("dataEnvio").notNull().defaultNow(),
+    userId: text("userId").notNull(),
+  },
+  (t) => [index("lembrete_cobranca_fracao_idx").on(t.fracaoId)],
+)
+
 // Linha importada de um extrato bancário (CSV), para conciliação com
 // `movimento`. Só cobre a conta corrente (destino "geral") — o fundo de
 // reserva, muitas vezes noutra conta bancária, fica de fora por agora.

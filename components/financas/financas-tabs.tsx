@@ -423,6 +423,10 @@ export function FinancasTabs({
               <FileText className="h-4 w-4" />
               Antiguidade da dívida
             </Button>
+            <Button variant="outline" render={<Link href="/financas/lembretes-cobranca" />}>
+              <FileText className="h-4 w-4" />
+              Lembretes de cobrança
+            </Button>
             <DividirDespesaDialog fracoes={fracoes} pontosAssembleia={pontosAssembleia} />
             <LancarJurosDialog quotasEmAtraso={quotasEmAtraso} fracoes={fracoes} />
           </div>

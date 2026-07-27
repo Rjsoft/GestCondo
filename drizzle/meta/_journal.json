@@ -372,6 +372,13 @@
       "when": 1785163345611,
       "tag": "0052_black_skaar",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1785164977917,
+      "tag": "0053_solid_nova",
+      "breakpoints": true
     }
   ]
 }

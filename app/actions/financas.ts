@@ -1,14 +1,16 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { assembleia, assembleiaPonto, fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
+import { assembleia, assembleiaPonto, fornecedor, fracao, lembreteCobranca, membro, movimento, orcamento } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais, calcularRateioValor } from '@/lib/rateio'
 import { ESCALOES_ANTIGUIDADE, calcularAntiguidadeDivida } from '@/lib/antiguidade-divida'
+import { NIVEIS_LEMBRETE, calcularEstadoLembretes } from '@/lib/lembrete-cobranca'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
+import { sendEmail } from '@/lib/email'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, asc, count, desc, eq, getTableColumns, gte, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, getTableColumns, gte, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
@@ -386,7 +388,10 @@ export async function getAntiguidadeDivida() {
       .map((q) => ({ fracaoId: q.fracaoId, valor: Number(q.valor), data: q.data })),
   )
   const porFracaoId = new Map(antiguidade.map((a) => [a.fracaoId, a]))
-  const escaloesVazios = Object.fromEntries(ESCALOES_ANTIGUIDADE.map((e) => [e.chave, 0]))
+  const escaloesVazios = Object.fromEntries(ESCALOES_ANTIGUIDADE.map((e) => [e.chave, 0])) as Record<
+    (typeof ESCALOES_ANTIGUIDADE)[number]['chave'],
+    number
+  >
 
   return fracoes.map((f) => {
     const a = porFracaoId.get(f.id)
@@ -398,6 +403,112 @@ export async function getAntiguidadeDivida() {
       total: a?.total ?? 0,
     }
   })
+}
+
+const LEMBRETE_ASSUNTO: Record<string, string> = {
+  '31-60': 'Lembrete de quota em atraso',
+  '61-90': '2º lembrete de quota em atraso',
+}
+
+function corpoLembreteCobranca(escalao: string, identificacao: string): string {
+  if (escalao === '61-90') {
+    return `<p>Exmo.(a) Sr.(a),</p>
+<p>A fração <strong>${identificacao}</strong> continua com uma quota em atraso há mais de 60 dias, apesar do aviso anterior.</p>
+<p>Solicitamos a regularização desta situação o mais brevemente possível. Caso a dívida se mantenha, a administração poderá avançar para uma interpelação formal para pagamento.</p>
+<p>Se já procedeu ao pagamento, agradecemos que ignore esta mensagem.</p>
+<p>A Administração do Condomínio</p>`
+  }
+  return `<p>Exmo.(a) Sr.(a),</p>
+<p>Notamos que a fração <strong>${identificacao}</strong> tem uma quota em atraso há mais de 30 dias.</p>
+<p>Se já procedeu ao pagamento, agradecemos que ignore esta mensagem. Caso contrário, agradecemos a regularização brevemente.</p>
+<p>Qualquer dúvida, contacte a administração.</p>
+<p>A Administração do Condomínio</p>`
+}
+
+/**
+ * Lembretes de cobrança informais por fração — para cada fração com
+ * dívida, indica a disponibilidade e o histórico de envio de cada nível
+ * (lib/lembrete-cobranca.ts), a partir dos mesmos escalões de
+ * getAntiguidadeDivida().
+ */
+export async function getLembretesCobranca() {
+  const m = await requireAcessoFinanceiro()
+  const linhas = await getAntiguidadeDivida()
+  const fracaoIds = linhas.map((l) => l.fracaoId)
+
+  const historico = fracaoIds.length
+    ? await db
+        .select({ fracaoId: lembreteCobranca.fracaoId, escalao: lembreteCobranca.escalao, dataEnvio: lembreteCobranca.dataEnvio })
+        .from(lembreteCobranca)
+        .where(and(eq(lembreteCobranca.condominioId, m.condominioId), inArray(lembreteCobranca.fracaoId, fracaoIds)))
+    : []
+
+  return linhas
+    .filter((l) => l.total > 0)
+    .map((l) => ({
+      ...l,
+      niveis: calcularEstadoLembretes(
+        l.escaloes,
+        historico.filter((h) => h.fracaoId === l.fracaoId),
+      ),
+    }))
+}
+
+/**
+ * Envia um lembrete de cobrança informal (sem valor legal, distinto da
+ * interpelação formal) por email à fração indicada, e regista o envio.
+ * Destinatários: contas de membro (condómino/inquilino aprovados) ligadas
+ * à fração; na ausência de qualquer conta, usa o email de contacto da
+ * fração, se existir.
+ */
+export async function enviarLembreteCobranca(fracaoId: number, escalao: string) {
+  const admin = await requireAdmin()
+  const nivel = NIVEIS_LEMBRETE.find((n) => n.chave === escalao)
+  if (!nivel) throw new Error('Escalão de lembrete inválido')
+
+  const [f] = await db
+    .select({ id: fracao.id, identificacao: fracao.identificacao, contactoEmail: fracao.contactoEmail })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!f) throw new Error('Fração inválida')
+
+  const contas = await db
+    .select({ email: membro.email })
+    .from(membro)
+    .where(and(eq(membro.fracaoId, fracaoId), eq(membro.estado, 'aprovado')))
+  const emails = contas.map((c) => c.email)
+  if (emails.length === 0 && f.contactoEmail) emails.push(f.contactoEmail)
+  if (emails.length === 0) {
+    throw new Error('Esta fração não tem nenhuma conta aprovada nem email de contacto registado')
+  }
+
+  await Promise.all(
+    emails.map((email) =>
+      sendEmail({
+        to: email,
+        subject: `${LEMBRETE_ASSUNTO[escalao]} — fração ${f.identificacao}`,
+        html: corpoLembreteCobranca(escalao, f.identificacao),
+      }),
+    ),
+  )
+
+  await db.insert(lembreteCobranca).values({
+    condominioId: admin.condominioId,
+    fracaoId,
+    escalao,
+    userId: admin.userId,
+  })
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'fracao',
+    entidadeId: fracaoId,
+    detalhes: `${nivel.label} de cobrança enviado à fração ${f.identificacao} (${emails.length} destinatário(s))`,
+  })
+
+  revalidatePath('/financas/lembretes-cobranca')
 }
 
 /**
