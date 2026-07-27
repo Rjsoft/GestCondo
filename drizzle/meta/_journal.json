@@ -337,6 +337,13 @@
       "when": 1785147705985,
       "tag": "0047_outgoing_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1785149227486,
+      "tag": "0048_new_wrecking_crew",
+      "breakpoints": true
     }
   ]
 }

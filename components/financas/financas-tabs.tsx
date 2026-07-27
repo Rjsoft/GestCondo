@@ -16,6 +16,9 @@ import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
 import { ExerciciosTab, type ContaComSaldo, type ExercicioLinha } from '@/components/financas/exercicios-tab'
 import { NovoDocumentoFornecedorDialog } from '@/components/financas/novo-documento-fornecedor-dialog'
+import { NovoAdiantamentoDialog } from '@/components/financas/novo-adiantamento-dialog'
+import { CreditoFracaoActions } from '@/components/financas/credito-fracao-actions'
+import { HistoricoCreditoDialog } from '@/components/financas/historico-credito-dialog'
 import { BalancoPatrimonialTab } from '@/components/financas/balanco-patrimonial-tab'
 import type { getBalancoPatrimonial } from '@/app/actions/contas-financeiras'
 import { DocumentoFornecedorActions } from '@/components/financas/documento-fornecedor-actions'
@@ -66,6 +69,13 @@ type SaldoFracao = {
   totalLancado: number
   totalPago: number
   emDivida: number
+}
+
+type SaldoCredito = {
+  id: number
+  identificacao: string
+  proprietario: string
+  saldo: number
 }
 
 type CelulaMapaMensal = {
@@ -156,6 +166,7 @@ export function FinancasTabs({
   totalPaginasMovimentos,
   pesquisaMovimentos,
   mapaSaldos,
+  saldosCredito,
   mapaMensal,
   anoMapaMensal,
   orcamentos,
@@ -180,6 +191,7 @@ export function FinancasTabs({
   totalPaginasMovimentos: number
   pesquisaMovimentos: string
   mapaSaldos: SaldoFracao[]
+  saldosCredito: SaldoCredito[]
   mapaMensal: LinhaMapaMensal[]
   anoMapaMensal: number
   orcamentos: Orcamento[]
@@ -208,6 +220,7 @@ export function FinancasTabs({
       <TabsList>
         <TabsTrigger value="movimentos">Movimentos</TabsTrigger>
         <TabsTrigger value="dividas">Dívidas por fração</TabsTrigger>
+        <TabsTrigger value="adiantamentos">Adiantamentos</TabsTrigger>
         <TabsTrigger value="mapaMensal">Mapa mensal</TabsTrigger>
         <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         <TabsTrigger value="seguro">Seguro</TabsTrigger>
@@ -468,6 +481,60 @@ export function FinancasTabs({
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="adiantamentos" className="mt-4">
+        {isAdmin && (
+          <div className="mb-3 flex justify-end">
+            <NovoAdiantamentoDialog fracoes={fracoes} />
+          </div>
+        )}
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fração</TableHead>
+                  <TableHead>Proprietário</TableHead>
+                  <TableHead className="text-right">Crédito disponível</TableHead>
+                  <TableHead className="w-10" />
+                  {isAdmin && <TableHead className="w-10" />}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {saldosCredito.filter((s) => s.saldo !== 0).length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={isAdmin ? 5 : 4}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Nenhuma fração tem crédito disponível.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {saldosCredito
+                  .filter((s) => s.saldo !== 0)
+                  .map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">{s.identificacao}</TableCell>
+                      <TableCell className="text-muted-foreground">{s.proprietario}</TableCell>
+                      <TableCell className="text-right font-medium text-emerald-600">
+                        {formatEuro(s.saldo)}
+                      </TableCell>
+                      <TableCell>
+                        <HistoricoCreditoDialog fracaoId={s.id} />
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <CreditoFracaoActions fracaoId={s.id} saldo={s.saldo} />
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </CardContent>

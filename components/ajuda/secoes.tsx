@@ -321,6 +321,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             deve.
           </li>
           <li>
+            <strong>Adiantamentos</strong>: quando um condómino paga mais do
+            que devia, registe esse valor como crédito disponível
+            (&ldquo;Registar adiantamento&rdquo;). Esse crédito pode depois
+            ser aplicado a uma quota futura pendente (&ldquo;Aplicar a quota
+            pendente&rdquo;, marca-a automaticamente como paga) ou devolvido
+            (&ldquo;Devolver&rdquo;). Cada fração com crédito mostra o
+            histórico completo destes movimentos.
+          </li>
+          <li>
             <strong>Orçamentos</strong>: o orçamento anual do condomínio, a
             partir do qual as quotas mensais são calculadas automaticamente
             (divididas por permilagem, com isenção do elevador quando

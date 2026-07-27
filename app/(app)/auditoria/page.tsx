@@ -47,6 +47,7 @@ const ENTIDADE_LABEL: Record<string, string> = {
   patrimonio: 'Património',
   mensagem: 'Mensagem',
   orcamentoObra: 'Orçamento de obra',
+  fracaoCredito: 'Crédito de fração',
 }
 
 type CampoAlterado = { campo: string; label: string; antes: unknown; depois: unknown }

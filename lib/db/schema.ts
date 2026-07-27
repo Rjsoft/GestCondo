@@ -476,6 +476,41 @@ export const movimento = pgTable(
   ],
 )
 
+// Livro-razão do crédito disponível de uma fração (adiantamentos, aplicações
+// a quotas futuras, devoluções) — cada linha é uma entrada assinada, nunca
+// um saldo guardado à parte (mesmo princípio de `movimento`/fundo de
+// reserva): o saldo disponível é sempre a soma das entradas dessa fração,
+// nunca recalculado por outra via. Sem `condominioId` próprio nem FK
+// composta — mesmo padrão de `fracaoTransmissao`/`documentoVersao`:
+// isolamento validado contra a fração pai. `autorNome` denormalizado pelo
+// mesmo motivo de `fracaoTransmissao` (removerMembro pode apagar `membro`).
+export const fracaoCredito = pgTable(
+  "fracao_credito",
+  {
+    id: serial("id").primaryKey(),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    // "adiantamento" (valor positivo, cria crédito) | "aplicacao" (valor
+    // negativo, consome crédito para pagar uma quota) | "devolucao" (valor
+    // negativo, devolve dinheiro ao condómino)
+    tipo: text("tipo").notNull(),
+    valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
+    // Só preenchido em tipo="aplicacao" — a quota que este crédito pagou.
+    // `set null`: eliminar o movimento nunca pode apagar o registo do
+    // crédito (obrigação de retenção, mesmo critério de movimento.*Id).
+    movimentoId: integer("movimentoId").references(() => movimento.id, {
+      onDelete: "set null",
+    }),
+    notas: text("notas"),
+    data: timestamp("data").notNull().defaultNow(),
+    userId: text("userId").notNull(),
+    autorNome: text("autorNome").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("fracao_credito_fracao_idx").on(t.fracaoId)],
+)
+
 // Linha importada de um extrato bancário (CSV), para conciliação com
 // `movimento`. Só cobre a conta corrente (destino "geral") — o fundo de
 // reserva, muitas vezes noutra conta bancária, fica de fora por agora.

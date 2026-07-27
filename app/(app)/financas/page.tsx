@@ -22,6 +22,7 @@ import {
 import { getExercicios } from '@/app/actions/exercicios'
 import { getBalancoPatrimonial, getSaldosContas } from '@/app/actions/contas-financeiras'
 import { getDocumentosFornecedor } from '@/app/actions/documentos-fornecedor'
+import { getSaldosCredito } from '@/app/actions/creditos'
 import { PageHeader } from '@/components/page-header'
 import { FinancasTabs } from '@/components/financas/financas-tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -45,6 +46,7 @@ export default async function FinancasPage({
     movimentos,
     movimentosPaginado,
     mapaSaldos,
+    saldosCredito,
     mapaMensal,
     orcamentos,
     seguros,
@@ -63,6 +65,7 @@ export default async function FinancasPage({
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
     getMapaSaldos(),
+    getSaldosCredito(),
     getMapaMensalQuotas(anoMapaMensal),
     getOrcamentos(),
     getSeguros(),
@@ -157,6 +160,7 @@ export default async function FinancasPage({
         totalPaginasMovimentos={movimentosPaginado.totalPages}
         pesquisaMovimentos={search}
         mapaSaldos={mapaSaldos}
+        saldosCredito={saldosCredito}
         mapaMensal={mapaMensal}
         anoMapaMensal={anoMapaMensal}
         orcamentos={orcamentos}
