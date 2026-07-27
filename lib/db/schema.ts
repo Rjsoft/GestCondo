@@ -1245,6 +1245,22 @@ export const auditLog = pgTable(
   ],
 )
 
+// Registo de ações ao nível da plataforma (promover/remover operador) — não
+// cabem em `audit_log` porque essa tabela exige `condominioId` (NOT NULL) e
+// estas ações não pertencem a nenhum condomínio específico. Sem FK a `user`:
+// mesma razão de `mensagem`/`ocorrencia.userId` — uma conta pode ser
+// eliminada (ver "Os meus dados") sem que isso deva apagar o histórico de
+// quem a promoveu/removeu como operador.
+export const logPlataforma = pgTable("log_plataforma", {
+  id: serial("id").primaryKey(),
+  acao: text("acao").notNull(), // "promover" | "remover"
+  operadorUserId: text("operadorUserId").notNull(),
+  operadorEmail: text("operadorEmail").notNull(),
+  autorUserId: text("autorUserId").notNull(),
+  autorEmail: text("autorEmail").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+})
+
 // Confirmação de leitura de um aviso ou de uma convocatória de assembleia
 // por um membro — accountability perante a assembleia/administração
 // ("provar" que um condómino teve acesso a uma comunicação). Registada por

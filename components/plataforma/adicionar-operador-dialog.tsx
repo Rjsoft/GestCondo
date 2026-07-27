@@ -45,8 +45,7 @@ export function AdicionarOperadorDialog() {
           <DialogTitle>Adicionar operador da plataforma</DialogTitle>
           <DialogDescription>
             A conta tem de já existir na aplicação (a pessoa cria a sua própria conta primeiro).
-            Passa a ter acesso a suspender/reativar qualquer condomínio — só é possível adicionar
-            por aqui, nunca remover; para remover, contacta quem tem acesso à base de dados.
+            Passa a ter acesso a suspender/reativar qualquer condomínio.
           </DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="flex flex-col gap-4">

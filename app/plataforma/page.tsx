@@ -1,6 +1,10 @@
 import { redirect } from 'next/navigation'
 import { getSession, getOperadorPlataforma } from '@/lib/session'
-import { listarCondominiosPlataforma, listarOperadoresPlataforma } from '@/app/actions/plataforma'
+import {
+  getLogPlataforma,
+  listarCondominiosPlataforma,
+  listarOperadoresPlataforma,
+} from '@/app/actions/plataforma'
 import { PlataformaTabela } from '@/components/plataforma/plataforma-tabela'
 import { OperadoresSecao } from '@/components/plataforma/operadores-secao'
 import { SairButton } from '@/components/plataforma/sair-button'
@@ -26,9 +30,10 @@ export default async function PlataformaPage() {
     return <MfaObrigatorioScreen />
   }
 
-  const [condominios, operadores] = await Promise.all([
+  const [condominios, operadores, log] = await Promise.all([
     listarCondominiosPlataforma(),
     listarOperadoresPlataforma(),
+    getLogPlataforma(),
   ])
 
   return (
@@ -48,7 +53,7 @@ export default async function PlataformaPage() {
         <SairButton />
       </div>
 
-      <OperadoresSecao operadores={operadores} />
+      <OperadoresSecao operadores={operadores} currentUserId={operador.userId} log={log} />
       <PlataformaTabela condominios={condominios} />
     </div>
   )

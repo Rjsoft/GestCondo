@@ -1,11 +1,11 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { condominio, membro, user } from '@/lib/db/schema'
+import { condominio, logPlataforma, membro, user } from '@/lib/db/schema'
 import { compararCampos, registarAuditoria } from '@/lib/audit'
 import { requireOperadorPlataforma } from '@/lib/session'
 import type { MembroSessao } from '@/lib/perfis'
-import { count, eq, ilike } from 'drizzle-orm'
+import { count, desc, eq, ilike } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -111,14 +111,9 @@ export async function listarOperadoresPlataforma() {
 
 /**
  * Promove uma conta já existente (por email) a operador da plataforma.
- * Nunca cria contas novas nem remove/despromove — remoção continua manual
- * (decisão registada em FUNCTIONAL_GAPS.md: evita o risco de um operador se
- * auto-remover ou remover o último operador restante).
- *
- * Sem entrada em audit_log: essa tabela exige um condominioId (NOT NULL,
- * FK) e esta ação não pertence a nenhum condomínio — forçar um id sem
- * sentido seria mais enganador do que não registar nada. Fica só o log do
- * servidor (visível nos runtime logs da Vercel).
+ * Nunca cria contas novas. Regista em `logPlataforma` — não em `audit_log`,
+ * que exige um `condominioId` (NOT NULL) e esta ação não pertence a nenhum
+ * condomínio.
  */
 export async function promoverOperadorPlataforma(email: string) {
   const operador = await requireOperadorPlataforma()
@@ -135,9 +130,59 @@ export async function promoverOperadorPlataforma(email: string) {
 
   await db.update(user).set({ operadorPlataforma: true }).where(eq(user.id, alvo.id))
 
-  console.log(
-    `[plataforma] ${operador.email} promoveu ${alvo.email} a operador da plataforma em ${new Date().toISOString()}`,
-  )
+  await db.insert(logPlataforma).values({
+    acao: 'promover',
+    operadorUserId: alvo.id,
+    operadorEmail: alvo.email,
+    autorUserId: operador.userId,
+    autorEmail: operador.email,
+  })
 
   revalidatePath('/plataforma')
+}
+
+/**
+ * Remove o acesso de um operador à plataforma — com duas salvaguardas
+ * (FUNCTIONAL_GAPS.md, "Gestão segura de operadores da plataforma"): nunca
+ * permite remover a própria conta (evita ficar sem acesso por engano) nem
+ * remover o último operador restante (evita ninguém ficar com acesso à
+ * plataforma). Regista em `logPlataforma`, mesmo critério de
+ * promoverOperadorPlataforma.
+ */
+export async function removerOperadorPlataforma(userId: string) {
+  const operador = await requireOperadorPlataforma()
+
+  if (userId === operador.userId) {
+    throw new Error('Não pode remover o seu próprio acesso à plataforma')
+  }
+
+  const [alvo] = await db
+    .select({ id: user.id, email: user.email, operadorPlataforma: user.operadorPlataforma })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+  if (!alvo?.operadorPlataforma) throw new Error('Esta conta não é operador da plataforma')
+
+  const [{ total }] = await db.select({ total: count() }).from(user).where(eq(user.operadorPlataforma, true))
+  if (total <= 1) {
+    throw new Error('Não é possível remover o último operador da plataforma')
+  }
+
+  await db.update(user).set({ operadorPlataforma: false }).where(eq(user.id, userId))
+
+  await db.insert(logPlataforma).values({
+    acao: 'remover',
+    operadorUserId: alvo.id,
+    operadorEmail: alvo.email,
+    autorUserId: operador.userId,
+    autorEmail: operador.email,
+  })
+
+  revalidatePath('/plataforma')
+}
+
+/** Histórico de promoções/remoções de operadores, mais recente primeiro. */
+export async function getLogPlataforma() {
+  await requireOperadorPlataforma()
+  return db.select().from(logPlataforma).orderBy(desc(logPlataforma.createdAt))
 }
