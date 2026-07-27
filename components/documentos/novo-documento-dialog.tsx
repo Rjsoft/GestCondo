@@ -112,6 +112,18 @@ export function NovoDocumentoDialog() {
             <Label htmlFor="url">Ou cole um link</Label>
             <Input id="url" name="url" type="url" placeholder="https://..." />
           </div>
+          <div className="flex items-start gap-2">
+            <input
+              id="confidencial"
+              name="confidencial"
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="confidencial" className="font-normal text-xs text-muted-foreground">
+              Confidencial — só visível a quem gere ou audita o condomínio,
+              não aos restantes condóminos/inquilinos
+            </Label>
+          </div>
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? 'A guardar...' : 'Guardar documento'}

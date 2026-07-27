@@ -63,6 +63,11 @@ export default async function DocumentosPage({
                     <Badge variant="outline">
                       {CATEGORIA_LABEL[d.categoria] ?? d.categoria}
                     </Badge>
+                    {d.confidencial && (
+                      <Badge variant="outline" className="border-amber-200 bg-amber-100 text-amber-800">
+                        Confidencial
+                      </Badge>
+                    )}
                   </div>
                   {d.descricao && (
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -88,7 +93,7 @@ export default async function DocumentosPage({
                     <ConfirmacoesDocumentoDialog documentoId={d.id} total={d.totalConfirmacoes} />
                   </div>
                 </div>
-                {isAdmin && <DocumentoActions id={d.id} />}
+                {isAdmin && <DocumentoActions id={d.id} confidencial={d.confidencial} />}
               </CardContent>
             </Card>
           ))}

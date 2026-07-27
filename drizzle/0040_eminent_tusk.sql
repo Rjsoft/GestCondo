@@ -1,0 +1,1 @@
+ALTER TABLE "documento" ADD COLUMN "confidencial" boolean DEFAULT false NOT NULL;

@@ -390,6 +390,13 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           há um botão para confirmar que o leu — fica registado com data e
           hora, e qualquer membro pode ver quantas confirmações já existem.
         </p>
+        <Subtitulo>Marcar como confidencial</Subtitulo>
+        <p>
+          Ao adicionar um documento, ou depois no menu &ldquo;...&rdquo; junto
+          dele, pode marcá-lo como confidencial. Um documento confidencial só
+          fica visível a quem gere ou audita o condomínio — não aparece para
+          os restantes condóminos nem inquilinos.
+        </p>
       </>
     ),
   },

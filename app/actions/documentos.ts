@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { confirmacaoLeitura, documento } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
-import { requireAdmin, requireMembroAprovado } from '@/lib/session'
+import { requireAdmin, requireMembroAprovado, temConsultaGestao } from '@/lib/session'
 import { confirmarLeitura, getConfirmacoesLeitura } from '@/lib/confirmacao-leitura'
 import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -13,7 +13,16 @@ const PAGE_SIZE = 20
 
 export async function getDocumentos({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
   const m = await requireMembroAprovado()
-  const base = and(eq(documento.condominioId, m.condominioId), isNull(documento.deletedAt))
+  // Documentos confidenciais só são devolvidos a quem já gere/audita o
+  // condomínio — filtrado aqui, nunca só na UI, mesmo critério de
+  // minimização já usado para IBAN/contactos pessoais.
+  const base = temConsultaGestao(m)
+    ? and(eq(documento.condominioId, m.condominioId), isNull(documento.deletedAt))
+    : and(
+        eq(documento.condominioId, m.condominioId),
+        isNull(documento.deletedAt),
+        eq(documento.confidencial, false),
+      )
   const condicao = search
     ? and(
         base,
@@ -101,6 +110,7 @@ export async function criarDocumento(formData: FormData) {
   const titulo = String(formData.get('titulo') || '').trim()
   const categoria = String(formData.get('categoria') || 'ata')
   const descricao = String(formData.get('descricao') || '').trim()
+  const confidencial = formData.get('confidencial') === 'on'
   let url = String(formData.get('url') || '').trim()
   let nomeFicheiro: string | null = null
 
@@ -128,6 +138,7 @@ export async function criarDocumento(formData: FormData) {
       descricao: descricao || null,
       url: url || null,
       nomeFicheiro,
+      confidencial,
     })
     .returning({ id: documento.id })
 
@@ -137,6 +148,30 @@ export async function criarDocumento(formData: FormData) {
     entidade: 'documento',
     entidadeId: novo.id,
     detalhes: titulo,
+  })
+
+  revalidatePath('/documentos')
+}
+
+/**
+ * Marca ou desmarca um documento como confidencial — só admin/gestor, com
+ * efeito imediato na visibilidade (ver getDocumentos()).
+ */
+export async function alternarConfidencialidadeDocumento(id: number, confidencial: boolean) {
+  const admin = await requireAdmin()
+  const [d] = await db
+    .update(documento)
+    .set({ confidencial })
+    .where(and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId)))
+    .returning({ titulo: documento.titulo })
+  if (!d) throw new Error('Documento não encontrado')
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'documento',
+    entidadeId: id,
+    detalhes: confidencial ? `${d.titulo}: marcado como confidencial` : `${d.titulo}: tornado público`,
   })
 
   revalidatePath('/documentos')

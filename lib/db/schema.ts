@@ -891,6 +891,12 @@ export const documento = pgTable(
     // utilizador um nome aleatório gerado pelo armazenamento.
     url: text("url"), // link para o ficheiro
     nomeFicheiro: text("nomeFicheiro"),
+    // Controlo de permissões por documento (FUNCTIONAL_GAPS.md): por
+    // omissão todos os documentos são visíveis a qualquer membro aprovado;
+    // marcado como confidencial, só fica visível a quem já gere/audita o
+    // condomínio (temConsultaGestao) — mesmo critério de minimização já
+    // usado para IBAN/contactos, não uma lista de permissões por pessoa.
+    confidencial: boolean("confidencial").notNull().default(false),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01) — mesmo
     // padrão de movimento/seguro.deletedAt.
