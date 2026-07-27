@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { confirmacaoLeitura, documento } from '@/lib/db/schema'
+import { confirmacaoLeitura, documento, documentoVersao } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado, temConsultaGestao } from '@/lib/session'
@@ -45,23 +45,32 @@ export async function getDocumentos({ page = 1, search = '' }: { page?: number; 
   ])
 
   const documentoIds = documentosPagina.map((d) => d.id)
-  const confirmacoes = documentoIds.length
-    ? await db
-        .select({ entidadeId: confirmacaoLeitura.entidadeId, membroId: confirmacaoLeitura.membroId })
-        .from(confirmacaoLeitura)
-        .where(
-          and(
-            eq(confirmacaoLeitura.condominioId, m.condominioId),
-            eq(confirmacaoLeitura.entidade, 'documento'),
-            inArray(confirmacaoLeitura.entidadeId, documentoIds),
-          ),
-        )
-    : []
+  const [confirmacoes, versoes] = await Promise.all([
+    documentoIds.length
+      ? db
+          .select({ entidadeId: confirmacaoLeitura.entidadeId, membroId: confirmacaoLeitura.membroId })
+          .from(confirmacaoLeitura)
+          .where(
+            and(
+              eq(confirmacaoLeitura.condominioId, m.condominioId),
+              eq(confirmacaoLeitura.entidade, 'documento'),
+              inArray(confirmacaoLeitura.entidadeId, documentoIds),
+            ),
+          )
+      : Promise.resolve([]),
+    documentoIds.length
+      ? db
+          .select({ documentoId: documentoVersao.documentoId })
+          .from(documentoVersao)
+          .where(inArray(documentoVersao.documentoId, documentoIds))
+      : Promise.resolve([]),
+  ])
 
   const documentos = documentosPagina.map((d) => ({
     ...d,
     totalConfirmacoes: confirmacoes.filter((c) => c.entidadeId === d.id).length,
     jaConfirmei: confirmacoes.some((c) => c.entidadeId === d.id && c.membroId === m.id),
+    totalVersoes: versoes.filter((v) => v.documentoId === d.id).length,
   }))
 
   return { documentos, total, page, totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
@@ -183,6 +192,10 @@ export async function eliminarDocumento(id: number) {
   const condicao = and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId))
 
   const [existente] = await db.select({ url: documento.url }).from(documento).where(condicao).limit(1)
+  const versoes = await db
+    .select({ url: documentoVersao.url })
+    .from(documentoVersao)
+    .where(eq(documentoVersao.documentoId, id))
 
   await db.update(documento).set({ deletedAt: new Date() }).where(condicao)
 
@@ -193,7 +206,98 @@ export async function eliminarDocumento(id: number) {
     entidadeId: id,
   })
 
+  // As linhas de documentoVersao ficam (auditoria/histórico), só os
+  // ficheiros são removidos do armazenamento — mesmo critério já usado para
+  // o ficheiro atual do documento.
   await apagarFicheiro(existente?.url)
+  await Promise.all(versoes.map((v) => apagarFicheiro(v.url)))
 
   revalidatePath('/documentos')
+}
+
+/**
+ * Substitui o ficheiro/link de um documento, arquivando o estado anterior em
+ * documentoVersao antes de o sobrescrever — resolve "substituir um
+ * documento perde a versão anterior" (FUNCTIONAL_GAPS.md, "Versionamento").
+ * Mesma validação de ficheiro/link de criarDocumento; o ficheiro anterior
+ * não é apagado do armazenamento (fica acessível através da versão
+ * arquivada) — só é removido quando o documento em si é eliminado.
+ */
+export async function substituirFicheiroDocumento(id: number, formData: FormData) {
+  const admin = await requireAdmin()
+  const condicao = and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId))
+
+  const [atual] = await db
+    .select({ titulo: documento.titulo, url: documento.url, nomeFicheiro: documento.nomeFicheiro })
+    .from(documento)
+    .where(condicao)
+    .limit(1)
+  if (!atual) throw new Error('Documento não encontrado')
+
+  const motivo = String(formData.get('motivo') || '').trim()
+  let url = String(formData.get('url') || '').trim()
+  let nomeFicheiro: string | null = null
+
+  const ficheiro = formData.get('ficheiro')
+  if (ficheiro instanceof File && ficheiro.size > 0) {
+    const guardado = await guardarFicheiro(ficheiro, 'documentos')
+    url = guardado.url
+    nomeFicheiro = guardado.nomeFicheiro
+  } else if (url && !/^https?:\/\//i.test(url)) {
+    throw new Error('O link deve começar por http:// ou https://')
+  }
+
+  if (!url) {
+    throw new Error('Selecione um ficheiro ou cole um link para o novo documento')
+  }
+
+  await db.insert(documentoVersao).values({
+    documentoId: id,
+    userId: admin.userId,
+    autorNome: admin.nome,
+    titulo: atual.titulo,
+    url: atual.url,
+    nomeFicheiro: atual.nomeFicheiro,
+    motivo: motivo || null,
+  })
+
+  await db.update(documento).set({ url, nomeFicheiro }).where(condicao)
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'documento',
+    entidadeId: id,
+    detalhes: `${atual.titulo}: ficheiro substituído${motivo ? ` — motivo: ${motivo}` : ''}`,
+    alteracoes: [
+      {
+        campo: 'nomeFicheiro',
+        label: 'Ficheiro',
+        antes: atual.nomeFicheiro ?? atual.url ?? null,
+        depois: nomeFicheiro ?? url,
+      },
+    ],
+  })
+
+  revalidatePath('/documentos')
+}
+
+/**
+ * Lista de versões anteriores de um documento, mais recente primeiro —
+ * mesma regra de confidencialidade do documento atual (getDocumentos): quem
+ * não vê o documento por ser confidencial, também não vê o seu histórico.
+ */
+export async function getVersoesDocumento(id: number) {
+  const m = await requireMembroAprovado()
+  const condicao = temConsultaGestao(m)
+    ? and(eq(documento.id, id), eq(documento.condominioId, m.condominioId))
+    : and(eq(documento.id, id), eq(documento.condominioId, m.condominioId), eq(documento.confidencial, false))
+  const [d] = await db.select({ id: documento.id }).from(documento).where(condicao).limit(1)
+  if (!d) throw new Error('Documento não encontrado')
+
+  return db
+    .select()
+    .from(documentoVersao)
+    .where(eq(documentoVersao.documentoId, id))
+    .orderBy(desc(documentoVersao.createdAt))
 }

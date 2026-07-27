@@ -10,12 +10,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { MoreHorizontal, Trash2, EyeOff, Eye } from 'lucide-react'
+import { SubstituirFicheiroDialog } from '@/components/documentos/substituir-ficheiro-dialog'
+import { MoreHorizontal, Trash2, EyeOff, Eye, FileUp } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function DocumentoActions({ id, confidencial }: { id: number; confidencial: boolean }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [substituirOpen, setSubstituirOpen] = useState(false)
 
   const remover = () => {
     startTransition(async () => {
@@ -61,6 +63,10 @@ export function DocumentoActions({ id, confidencial }: { id: number; confidencia
               </>
             )}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSubstituirOpen(true)}>
+            <FileUp className="h-4 w-4" />
+            Substituir ficheiro
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
@@ -70,6 +76,7 @@ export function DocumentoActions({ id, confidencial }: { id: number; confidencia
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <SubstituirFicheiroDialog id={id} open={substituirOpen} onOpenChange={setSubstituirOpen} />
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}

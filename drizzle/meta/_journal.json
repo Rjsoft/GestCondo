@@ -323,6 +323,13 @@
       "when": 1785144985307,
       "tag": "0045_lonely_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1785146374733,
+      "tag": "0046_neat_sunspot",
+      "breakpoints": true
     }
   ]
 }

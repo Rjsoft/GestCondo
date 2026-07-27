@@ -420,6 +420,14 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           fica visível a quem gere ou audita o condomínio — não aparece para
           os restantes condóminos nem inquilinos.
         </p>
+        <Subtitulo>Substituir um ficheiro</Subtitulo>
+        <p>
+          No menu &ldquo;...&rdquo; junto de cada documento, &ldquo;Substituir
+          ficheiro&rdquo; permite carregar uma versão nova sem perder a
+          anterior — a versão antiga fica guardada e pode ser consultada a
+          qualquer momento em &ldquo;versões anteriores&rdquo;, junto do
+          documento, com data, quem a substituiu e o motivo (se indicado).
+        </p>
       </>
     ),
   },

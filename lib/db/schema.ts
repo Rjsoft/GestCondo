@@ -993,6 +993,32 @@ export const documento = pgTable(
   (t) => [index("documento_condominio_idx").on(t.condominioId)],
 )
 
+// Versão arquivada de um documento, guardada no momento em que o ficheiro é
+// substituído (o estado atual continua a viver em `documento`, tal como
+// antes desta funcionalidade). Sem `condominioId` próprio nem FK composta —
+// mesmo padrão de `orcamentoRubrica`: só se relaciona com o seu próprio
+// documento, isolamento garantido validando `documentoId` contra o
+// `condominioId` do documento pai. `autorNome` denormalizado (mesmo padrão
+// de `mensagem`/`ocorrencia.reporterNome`) porque `removerMembro` pode
+// apagar a linha `membro` de quem substituiu o ficheiro.
+export const documentoVersao = pgTable(
+  "documento_versao",
+  {
+    id: serial("id").primaryKey(),
+    documentoId: integer("documentoId")
+      .notNull()
+      .references(() => documento.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    autorNome: text("autorNome").notNull(),
+    titulo: text("titulo").notNull(),
+    url: text("url"),
+    nomeFicheiro: text("nomeFicheiro"),
+    motivo: text("motivo"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("documento_versao_documento_idx").on(t.documentoId)],
+)
+
 // Assembleias: convocatória, ordem de trabalhos, presenças/procurações e
 // votação por permilagem. `estado` governa o ciclo de vida: "convocada"
 // (agendada) → "realizada" (aconteceu, ata em rascunho, ainda editável) →
