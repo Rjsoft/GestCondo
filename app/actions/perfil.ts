@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { assembleiaPresenca, assembleiaVoto, membro, movimento, ocorrencia } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, registarAuditoria } from '@/lib/audit'
 import { temAcessoFinanceiro } from '@/lib/perfis'
 import { requireMembroAprovado } from '@/lib/session'
 import { and, eq, isNull } from 'drizzle-orm'
@@ -33,10 +33,12 @@ export async function atualizarMeuPerfil(formData: FormData) {
 
   if (!nome) throw new Error('Preencha o nome')
 
-  await db
-    .update(membro)
-    .set({ nome, telefone: telefone || null })
-    .where(eq(membro.id, m.id))
+  const [antes] = await db.select({ nome: membro.nome, telefone: membro.telefone }).from(membro).where(eq(membro.id, m.id)).limit(1)
+  const novosValores = { nome, telefone: telefone || null }
+  const alteracoes = antes ? compararCampos(antes, novosValores, { nome: 'Nome', telefone: 'Telefone' }) : []
+  if (alteracoes.length === 0) return
+
+  await db.update(membro).set(novosValores).where(eq(membro.id, m.id))
 
   await registarAuditoria({
     actor: m,
@@ -44,6 +46,7 @@ export async function atualizarMeuPerfil(formData: FormData) {
     entidade: 'membro',
     entidadeId: m.id,
     detalhes: 'Autoedição de dados pessoais',
+    alteracoes,
   })
 
   revalidatePath('/os-meus-dados')

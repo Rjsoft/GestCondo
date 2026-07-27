@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { fracao, membro } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { TIPOS_TITULAR } from '@/lib/fracoes'
 import {
   PERFIS,
@@ -134,48 +134,58 @@ export async function atualizarFracao(formData: FormData) {
     throw new Error('Preencha a identificação e o proprietário')
   }
 
-  // Proprietário anterior, para o registo de auditoria mostrar a transição
-  // completa (De X para Y) quando muda — sem isto perdia-se o registo de
-  // quem era o proprietário antes de uma venda/sucessão, relevante para
-  // apurar responsabilidade por dívidas (FUNCTIONAL_GAPS.md, "Histórico de
-  // titularidade"). Reaproveita o audit_log já existente, sem tabela nova
-  // — mesmo padrão já usado para o histórico de estado das ocorrências.
-  const [antes] = await db
-    .select({ proprietario: fracao.proprietario })
-    .from(fracao)
-    .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
-    .limit(1)
+  // Estado completo antes do update — importante sobretudo para o
+  // proprietário: sem isto perdia-se o registo de quem era o proprietário
+  // antes de uma venda/sucessão, relevante para apurar responsabilidade por
+  // dívidas (FUNCTIONAL_GAPS.md, "Histórico de titularidade"). Reaproveita
+  // o audit_log já existente, sem tabela nova.
+  const condicao = and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId))
+  const [antes] = await db.select().from(fracao).where(condicao).limit(1)
   if (!antes) throw new Error('Fração não encontrada')
 
-  await db
-    .update(fracao)
-    .set({
-      letra: letra || null,
-      identificacao,
-      proprietario,
-      tipoTitular,
-      nif: nif || null,
-      permilagem,
-      areaPrivativa: areaPrivativaRaw || null,
-      areaComum: areaComumRaw || null,
-      contactoEmail: contactoEmail || null,
-      contactoTelefone: contactoTelefone || null,
-      representanteLegal: representanteLegal || null,
-      representanteLegalContacto: representanteLegalContacto || null,
-      notas: notas || null,
-    })
-    .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
+  const novosValores = {
+    letra: letra || null,
+    identificacao,
+    proprietario,
+    tipoTitular,
+    nif: nif || null,
+    permilagem,
+    areaPrivativa: areaPrivativaRaw || null,
+    areaComum: areaComumRaw || null,
+    contactoEmail: contactoEmail || null,
+    contactoTelefone: contactoTelefone || null,
+    representanteLegal: representanteLegal || null,
+    representanteLegalContacto: representanteLegalContacto || null,
+    notas: notas || null,
+  }
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'fracao',
-    entidadeId: id,
-    detalhes:
-      antes.proprietario !== proprietario
-        ? `${identificacao}: proprietário alterado de "${antes.proprietario}" para "${proprietario}"`
-        : `${identificacao} — ${proprietario}`,
+  await db.update(fracao).set(novosValores).where(condicao)
+
+  const alteracoes = compararCampos(antes, novosValores, {
+    letra: 'Letra',
+    identificacao: 'Identificação',
+    proprietario: 'Proprietário',
+    tipoTitular: 'Tipo de titular',
+    nif: 'NIF',
+    permilagem: 'Permilagem',
+    areaPrivativa: 'Área privativa',
+    areaComum: 'Área comum',
+    contactoEmail: 'Email',
+    contactoTelefone: 'Telefone',
+    representanteLegal: 'Representante legal',
+    representanteLegalContacto: 'Contacto do representante legal',
+    notas: 'Notas',
   })
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'fracao',
+      entidadeId: id,
+      detalhes: `${identificacao}: ${gerarResumoAlteracoes(alteracoes)}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath('/fracoes')
   revalidatePath('/')
@@ -183,17 +193,20 @@ export async function atualizarFracao(formData: FormData) {
 
 export async function alternarIsencaoElevador(id: number, isento: boolean) {
   const admin = await requireAdmin()
-  await db
-    .update(fracao)
-    .set({ isentaElevador: isento })
-    .where(and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId)))
+  const condicao = and(eq(fracao.id, id), eq(fracao.condominioId, admin.condominioId))
+  const [antes] = await db.select({ identificacao: fracao.identificacao, isentaElevador: fracao.isentaElevador }).from(fracao).where(condicao).limit(1)
+  if (!antes) throw new Error('Fração não encontrada')
+  if (antes.isentaElevador === isento) return
+
+  await db.update(fracao).set({ isentaElevador: isento }).where(condicao)
 
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'fracao',
     entidadeId: id,
-    detalhes: isento ? 'Marcada como isenta de elevador' : 'Deixou de estar isenta de elevador',
+    detalhes: `${antes.identificacao}: ${isento ? 'marcada como isenta de elevador' : 'deixou de estar isenta de elevador'}`,
+    alteracoes: [{ campo: 'isentaElevador', label: 'Isenção de elevador', antes: antes.isentaElevador, depois: isento }],
   })
 
   revalidatePath('/fracoes')
@@ -234,17 +247,20 @@ export async function atualizarPerfilMembro(id: number, perfil: string) {
   if (!PERFIS.includes(perfil as (typeof PERFIS)[number])) {
     throw new Error('Perfil inválido')
   }
-  await db
-    .update(membro)
-    .set({ perfil })
-    .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+  const condicao = and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId))
+  const [antes] = await db.select({ nome: membro.nome, perfil: membro.perfil }).from(membro).where(condicao).limit(1)
+  if (!antes) throw new Error('Membro não encontrado')
+  if (antes.perfil === perfil) return
+
+  await db.update(membro).set({ perfil }).where(condicao)
 
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'membro',
     entidadeId: id,
-    detalhes: `Perfil alterado para "${perfil}"`,
+    detalhes: `${antes.nome}: Perfil alterado de "${antes.perfil}" para "${perfil}"`,
+    alteracoes: [{ campo: 'perfil', label: 'Perfil', antes: antes.perfil, depois: perfil }],
   })
 
   revalidatePath('/condominos')
@@ -343,17 +359,28 @@ export async function atualizarMembro(formData: FormData) {
     fracaoId = f.id
   }
 
-  await db
-    .update(membro)
-    .set({ nome, fracaoId, telefone: telefone || null })
-    .where(and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId)))
+  const condicao = and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId))
+  const [antes] = await db.select().from(membro).where(condicao).limit(1)
+  if (!antes) throw new Error('Membro não encontrado')
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'membro',
-    entidadeId: id,
+  const novosValores = { nome, fracaoId, telefone: telefone || null }
+  await db.update(membro).set(novosValores).where(condicao)
+
+  const alteracoes = compararCampos(antes, novosValores, {
+    nome: 'Nome',
+    fracaoId: 'Fração',
+    telefone: 'Telefone',
   })
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'membro',
+      entidadeId: id,
+      detalhes: `${antes.nome}: ${gerarResumoAlteracoes(alteracoes)}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath('/condominos')
 }

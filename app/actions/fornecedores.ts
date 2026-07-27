@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { fornecedor } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { requireAdmin, requireMembroPagina } from '@/lib/session'
 import { and, asc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -66,25 +66,39 @@ export async function atualizarFornecedor(formData: FormData) {
 
   if (!nome) throw new Error('Indique o nome do fornecedor')
 
-  await db
-    .update(fornecedor)
-    .set({
-      nome,
-      nif: nif || null,
-      categoria: categoria || null,
-      contactoEmail: contactoEmail || null,
-      contactoTelefone: contactoTelefone || null,
-      notas: notas || null,
-    })
-    .where(and(eq(fornecedor.id, id), eq(fornecedor.condominioId, admin.condominioId)))
+  const condicao = and(eq(fornecedor.id, id), eq(fornecedor.condominioId, admin.condominioId))
+  const [antes] = await db.select().from(fornecedor).where(condicao).limit(1)
+  if (!antes) throw new Error('Fornecedor não encontrado')
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'fornecedor',
-    entidadeId: id,
-    detalhes: nome,
+  const novosValores = {
+    nome,
+    nif: nif || null,
+    categoria: categoria || null,
+    contactoEmail: contactoEmail || null,
+    contactoTelefone: contactoTelefone || null,
+    notas: notas || null,
+  }
+
+  await db.update(fornecedor).set(novosValores).where(condicao)
+
+  const alteracoes = compararCampos(antes, novosValores, {
+    nome: 'Nome',
+    nif: 'NIF',
+    categoria: 'Categoria',
+    contactoEmail: 'Email',
+    contactoTelefone: 'Telefone',
+    notas: 'Notas',
   })
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'fornecedor',
+      entidadeId: id,
+      detalhes: `${nome}: ${gerarResumoAlteracoes(alteracoes)}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath('/fornecedores')
 }

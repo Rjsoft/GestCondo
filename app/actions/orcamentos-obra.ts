@@ -120,8 +120,9 @@ export async function marcarVencedorOrcamentoObra(id: number, vencedor: boolean)
   const admin = await requireAdmin()
   const condicao = and(eq(orcamentoObra.id, id), eq(orcamentoObra.condominioId, admin.condominioId))
 
-  const [atual] = await db.select({ assunto: orcamentoObra.assunto }).from(orcamentoObra).where(condicao).limit(1)
+  const [atual] = await db.select({ assunto: orcamentoObra.assunto, vencedor: orcamentoObra.vencedor }).from(orcamentoObra).where(condicao).limit(1)
   if (!atual) throw new Error('Orçamento não encontrado')
+  if (atual.vencedor === vencedor) return
 
   await db.update(orcamentoObra).set({ vencedor }).where(condicao)
 
@@ -131,6 +132,7 @@ export async function marcarVencedorOrcamentoObra(id: number, vencedor: boolean)
     entidade: 'orcamentoObra',
     entidadeId: id,
     detalhes: `${atual.assunto}: ${vencedor ? 'marcado como vencedor' : 'desmarcado como vencedor'}`,
+    alteracoes: [{ campo: 'vencedor', label: 'Vencedor', antes: atual.vencedor, depois: vencedor }],
   })
 
   revalidatePath('/fornecedores')

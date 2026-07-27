@@ -36,6 +36,25 @@ const ENTIDADE_LABEL: Record<string, string> = {
   ocorrencia: 'Ocorrência',
   orcamento: 'Orçamento',
   seguro: 'Seguro',
+  assembleia: 'Assembleia',
+  extratoBancario: 'Extrato bancário',
+  condominio: 'Condomínio',
+  fornecedor: 'Fornecedor',
+  exercicioFinanceiro: 'Exercício financeiro',
+  contaFinanceira: 'Conta financeira',
+  documentoFornecedor: 'Documento de fornecedor',
+  contactoEmergencia: 'Contacto de emergência',
+  patrimonio: 'Património',
+  mensagem: 'Mensagem',
+  orcamentoObra: 'Orçamento de obra',
+}
+
+type CampoAlterado = { campo: string; label: string; antes: unknown; depois: unknown }
+
+function formatarValor(v: unknown) {
+  if (v === null || v === undefined || v === '') return '—'
+  if (typeof v === 'boolean') return v ? 'Sim' : 'Não'
+  return String(v)
 }
 
 export default async function AuditoriaPage({
@@ -99,8 +118,17 @@ export default async function AuditoriaPage({
                   <TableCell className="text-muted-foreground">
                     {ENTIDADE_LABEL[r.entidade] ?? r.entidade} #{r.entidadeId}
                   </TableCell>
-                  <TableCell className="hidden max-w-sm truncate text-muted-foreground sm:table-cell">
-                    {r.detalhes || '—'}
+                  <TableCell className="hidden max-w-sm text-muted-foreground sm:table-cell">
+                    <span className="block truncate">{r.detalhes || '—'}</span>
+                    {Array.isArray(r.alteracoes) && r.alteracoes.length > 0 && (
+                      <ul className="mt-1 list-disc pl-4 text-xs">
+                        {(r.alteracoes as CampoAlterado[]).map((a) => (
+                          <li key={a.campo}>
+                            {a.label}: de &ldquo;{formatarValor(a.antes)}&rdquo; para &ldquo;{formatarValor(a.depois)}&rdquo;
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

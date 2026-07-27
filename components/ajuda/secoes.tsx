@@ -584,6 +584,13 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           alterado nem apagado por ninguém. Visível a quem tem permissão de
           gestão ou consulta.
         </p>
+        <p>
+          Quando uma edição altera dados existentes (por exemplo, corrigir o
+          valor de um movimento ou a categoria de um fornecedor), o registo
+          mostra também exatamente que campos mudaram, com o valor anterior e
+          o novo. Uma edição gravada sem qualquer alteração real (ex: abrir e
+          voltar a guardar sem mudar nada) não cria uma entrada nova.
+        </p>
       </>
     ),
   },

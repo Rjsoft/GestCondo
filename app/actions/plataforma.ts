@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { condominio, membro, user } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, registarAuditoria } from '@/lib/audit'
 import { requireOperadorPlataforma } from '@/lib/session'
 import type { MembroSessao } from '@/lib/perfis'
 import { count, eq, ilike } from 'drizzle-orm'
@@ -46,13 +46,20 @@ export async function alterarEstadoSubscricao(
 ) {
   const operador = await requireOperadorPlataforma()
 
+  const [antes] = await db
+    .select({ estadoSubscricao: condominio.estadoSubscricao, notaSubscricao: condominio.notaSubscricao })
+    .from(condominio)
+    .where(eq(condominio.id, condominioId))
+    .limit(1)
+  if (!antes) throw new Error('Condomínio não encontrado')
+
+  const novosValores = { estadoSubscricao: novoEstado, notaSubscricao: nota?.trim() || null }
+  const alteracoes = compararCampos(antes, novosValores, { estadoSubscricao: 'Estado da subscrição', notaSubscricao: 'Nota' })
+  if (alteracoes.length === 0) return
+
   await db
     .update(condominio)
-    .set({
-      estadoSubscricao: novoEstado,
-      notaSubscricao: nota?.trim() || null,
-      subscricaoAtualizadaEm: new Date(),
-    })
+    .set({ ...novosValores, subscricaoAtualizadaEm: new Date() })
     .where(eq(condominio.id, condominioId))
 
   // Ator sintético: o operador da plataforma não é necessariamente membro
@@ -81,6 +88,7 @@ export async function alterarEstadoSubscricao(
       novoEstado === 'suspenso'
         ? `Subscrição suspensa pelo operador da plataforma${nota ? `: ${nota.trim()}` : ''}`
         : 'Subscrição reativada pelo operador da plataforma',
+    alteracoes,
   })
 
   revalidatePath('/plataforma')

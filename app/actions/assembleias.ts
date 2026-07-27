@@ -10,7 +10,7 @@ import {
   fracao,
   membro,
 } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import { requireAdmin, requireMembroAprovado } from '@/lib/session'
@@ -304,6 +304,12 @@ export async function registarPresenca(assembleiaId: number, formData: FormData)
     .limit(1)
   if (!f) throw new Error('Fração inválida')
 
+  const [antes] = await db
+    .select({ tipo: assembleiaPresenca.tipo, representante: assembleiaPresenca.representante })
+    .from(assembleiaPresenca)
+    .where(and(eq(assembleiaPresenca.assembleiaId, assembleiaId), eq(assembleiaPresenca.fracaoId, fracaoId)))
+    .limit(1)
+
   await db
     .insert(assembleiaPresenca)
     .values({ assembleiaId, fracaoId, tipo, representante: representante || null })
@@ -312,13 +318,19 @@ export async function registarPresenca(assembleiaId: number, formData: FormData)
       set: { tipo, representante: representante || null },
     })
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'assembleia',
-    entidadeId: assembleiaId,
-    detalhes: `Presença registada para a fração #${fracaoId}`,
-  })
+  const alteracoes = antes
+    ? compararCampos(antes, { tipo, representante: representante || null }, { tipo: 'Tipo', representante: 'Representante' })
+    : []
+  if (!antes || alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'assembleia',
+      entidadeId: assembleiaId,
+      detalhes: `Presença registada para a fração #${fracaoId}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath(`/assembleias/${assembleiaId}`)
 }
@@ -350,6 +362,12 @@ export async function registarVoto(pontoId: number, formData: FormData) {
     .limit(1)
   if (!f) throw new Error('Fração inválida')
 
+  const [antes] = await db
+    .select({ voto: assembleiaVoto.voto })
+    .from(assembleiaVoto)
+    .where(and(eq(assembleiaVoto.pontoId, pontoId), eq(assembleiaVoto.fracaoId, fracaoId)))
+    .limit(1)
+
   await db
     .insert(assembleiaVoto)
     .values({ pontoId, fracaoId, voto })
@@ -358,13 +376,17 @@ export async function registarVoto(pontoId: number, formData: FormData) {
       set: { voto },
     })
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'assembleia',
-    entidadeId: a.id,
-    detalhes: `Voto registado no ponto "${ponto.titulo}" pela fração #${fracaoId}: ${voto}`,
-  })
+  const alteracoes = antes ? compararCampos(antes, { voto }, { voto: 'Voto' }) : []
+  if (!antes || alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'assembleia',
+      entidadeId: a.id,
+      detalhes: `Voto registado no ponto "${ponto.titulo}" pela fração #${fracaoId}: ${voto}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath(`/assembleias/${a.id}`)
 }
@@ -383,6 +405,7 @@ export async function definirResultadoPonto(pontoId: number, resultado: string) 
   if (!ponto) throw new Error('Ponto não encontrado')
   const a = await getAssembleiaOuFalhar(ponto.assembleiaId, admin.condominioId)
   assertEditavel(a.estado)
+  if (ponto.resultado === resultado) return
 
   await db.update(assembleiaPonto).set({ resultado }).where(eq(assembleiaPonto.id, pontoId))
 
@@ -392,6 +415,7 @@ export async function definirResultadoPonto(pontoId: number, resultado: string) 
     entidade: 'assembleia',
     entidadeId: a.id,
     detalhes: `Deliberação do ponto "${ponto.titulo}": ${resultado}`,
+    alteracoes: [{ campo: 'resultado', label: 'Resultado', antes: ponto.resultado, depois: resultado }],
   })
 
   revalidatePath(`/assembleias/${a.id}`)
@@ -412,6 +436,7 @@ export async function marcarRealizada(assembleiaId: number) {
     entidade: 'assembleia',
     entidadeId: assembleiaId,
     detalhes: 'Assembleia marcada como realizada',
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: a.estado, depois: 'realizada' }],
   })
 
   revalidatePath(`/assembleias/${assembleiaId}`)
@@ -470,6 +495,7 @@ export async function cancelarAssembleia(assembleiaId: number) {
     entidade: 'assembleia',
     entidadeId: assembleiaId,
     detalhes: 'Assembleia cancelada',
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: a.estado, depois: 'cancelada' }],
   })
 
   revalidatePath(`/assembleias/${assembleiaId}`)

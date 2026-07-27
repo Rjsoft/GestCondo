@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { assembleia, assembleiaPonto, fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
@@ -11,6 +11,29 @@ import { and, asc, count, desc, eq, getTableColumns, gte, isNotNull, isNull, lt,
 import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
+
+const MOVIMENTO_LABELS = {
+  categoria: 'Categoria',
+  descricao: 'Descrição',
+  valor: 'Valor',
+  data: 'Data',
+  destino: 'Destino',
+  fracaoId: 'Fração',
+  fornecedorId: 'Fornecedor',
+  assembleiaPontoId: 'Ponto de assembleia',
+  pagadorNome: 'Nome do pagador',
+  pagadorNif: 'NIF do pagador',
+  requerAprovacao: 'Requer aprovação',
+  urgente: 'Urgente',
+  justificacaoUrgencia: 'Justificação da urgência',
+}
+
+const MOVIMENTO_PAGAMENTO_LABELS = {
+  pago: 'Pago',
+  meioPagamento: 'Meio de pagamento',
+  referenciaMb: 'Referência Multibanco',
+  dataLiquidacao: 'Data de liquidação',
+}
 
 export async function getMovimentos() {
   // Dados financeiros: admin, gestor, condómino ou auditor — não
@@ -630,32 +653,38 @@ export async function atualizarMovimento(formData: FormData) {
   await garantirExercicioAberto(admin.condominioId, novaData)
   const requerAprovacao = atual.tipo === 'despesa' && requerAprovacaoRaw
 
+  const novosValores = {
+    categoria,
+    descricao,
+    valor,
+    data: novaData,
+    destino,
+    fracaoId: atual.tipo === 'receita' ? fracaoId : null,
+    fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
+    assembleiaPontoId,
+    pagadorNome: atual.tipo === 'receita' && pagadorNome ? pagadorNome : null,
+    pagadorNif: atual.tipo === 'receita' && pagadorNif ? pagadorNif : null,
+    requerAprovacao,
+    urgente: atual.tipo === 'despesa' && urgente,
+    justificacaoUrgencia: atual.tipo === 'despesa' && urgente ? justificacaoUrgencia : null,
+  }
+
   await db
     .update(movimento)
-    .set({
-      categoria,
-      descricao,
-      valor,
-      data: novaData,
-      destino,
-      fracaoId: atual.tipo === 'receita' ? fracaoId : null,
-      fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
-      assembleiaPontoId,
-      pagadorNome: atual.tipo === 'receita' && pagadorNome ? pagadorNome : null,
-      pagadorNif: atual.tipo === 'receita' && pagadorNif ? pagadorNif : null,
-      requerAprovacao,
-      urgente: atual.tipo === 'despesa' && urgente,
-      justificacaoUrgencia: atual.tipo === 'despesa' && urgente ? justificacaoUrgencia : null,
-    })
+    .set(novosValores)
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'movimento',
-    entidadeId: id,
-    detalhes: `De "${atual.categoria} — ${atual.descricao} (${atual.valor} €)" para "${categoria} — ${descricao} (${valor} €)"`,
-  })
+  const alteracoes = compararCampos(atual, novosValores, MOVIMENTO_LABELS)
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'movimento',
+      entidadeId: id,
+      detalhes: `${atual.categoria} — ${atual.descricao}: ${gerarResumoAlteracoes(alteracoes)}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath('/financas')
 }
@@ -705,21 +734,26 @@ export async function alternarPago(id: number, pago: boolean) {
   if (!atual) throw new Error('Movimento não encontrado')
   await garantirExercicioAberto(admin.condominioId, atual.data)
 
+  const novosValores = pago
+    ? { pago }
+    : { pago, meioPagamento: null, referenciaMb: null, dataLiquidacao: null }
+
   await db
     .update(movimento)
-    .set({
-      pago,
-      ...(pago ? {} : { meioPagamento: null, referenciaMb: null, dataLiquidacao: null }),
-    })
+    .set(novosValores)
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'movimento',
-    entidadeId: id,
-    detalhes: pago ? 'Marcado como pago' : 'Marcado como pendente',
-  })
+  const alteracoes = compararCampos(atual, novosValores, MOVIMENTO_PAGAMENTO_LABELS)
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'movimento',
+      entidadeId: id,
+      detalhes: pago ? 'Marcado como pago' : 'Marcado como pendente',
+      alteracoes,
+    })
+  }
 
   revalidatePath('/financas')
 }
@@ -743,23 +777,29 @@ export async function marcarComoPago(
   if (!atual) throw new Error('Movimento não encontrado')
   await garantirExercicioAberto(admin.condominioId, atual.data)
 
+  const novosValores = {
+    pago: true,
+    meioPagamento: detalhe.meioPagamento || null,
+    referenciaMb: detalhe.referenciaMb || null,
+    dataLiquidacao: detalhe.dataLiquidacao ? new Date(detalhe.dataLiquidacao) : null,
+  }
+
   await db
     .update(movimento)
-    .set({
-      pago: true,
-      meioPagamento: detalhe.meioPagamento || null,
-      referenciaMb: detalhe.referenciaMb || null,
-      dataLiquidacao: detalhe.dataLiquidacao ? new Date(detalhe.dataLiquidacao) : null,
-    })
+    .set(novosValores)
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'movimento',
-    entidadeId: id,
-    detalhes: `Marcado como pago${detalhe.meioPagamento ? ` (${detalhe.meioPagamento})` : ''}`,
-  })
+  const alteracoes = compararCampos(atual, novosValores, MOVIMENTO_PAGAMENTO_LABELS)
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'movimento',
+      entidadeId: id,
+      detalhes: `Marcado como pago${detalhe.meioPagamento ? ` (${detalhe.meioPagamento})` : ''}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath('/financas')
 }

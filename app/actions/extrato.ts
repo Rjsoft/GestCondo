@@ -216,6 +216,9 @@ export async function conciliarLinha(linhaId: number, movimentoId: number) {
     detalhes:
       `Conciliada com movimento #${movimentoId}` +
       (contaFinanceiraId ? ` — conta financeira ID ${contaFinanceiraId}` : ''),
+    alteracoes: [
+      { campo: 'conciliadoMovimentoId', label: 'Movimento conciliado', antes: linha.conciliadoMovimentoId, depois: movimentoId },
+    ],
   })
 
   revalidatePath('/financas')
@@ -263,6 +266,9 @@ export async function desfazerConciliacao(linhaId: number) {
     entidade: 'extratoBancario',
     entidadeId: linhaId,
     detalhes: 'Conciliação desfeita' + (contaFinanceiraId ? ` — conta financeira ID ${contaFinanceiraId}` : ''),
+    alteracoes: [
+      { campo: 'conciliadoMovimentoId', label: 'Movimento conciliado', antes: linha.conciliadoMovimentoId, depois: null },
+    ],
   })
 
   revalidatePath('/financas')
@@ -270,16 +276,13 @@ export async function desfazerConciliacao(linhaId: number) {
 
 export async function ignorarLinha(linhaId: number, ignorado: boolean) {
   const admin = await requireAdmin()
+  const condicao = and(eq(extratoBancario.id, linhaId), eq(extratoBancario.condominioId, admin.condominioId))
 
-  await db
-    .update(extratoBancario)
-    .set({ ignorado })
-    .where(
-      and(
-        eq(extratoBancario.id, linhaId),
-        eq(extratoBancario.condominioId, admin.condominioId),
-      ),
-    )
+  const [antes] = await db.select({ ignorado: extratoBancario.ignorado }).from(extratoBancario).where(condicao).limit(1)
+  if (!antes) throw new Error('Linha de extrato não encontrada')
+  if (antes.ignorado === ignorado) return
+
+  await db.update(extratoBancario).set({ ignorado }).where(condicao)
 
   await registarAuditoria({
     actor: admin,
@@ -287,6 +290,7 @@ export async function ignorarLinha(linhaId: number, ignorado: boolean) {
     entidade: 'extratoBancario',
     entidadeId: linhaId,
     detalhes: ignorado ? 'Linha marcada como ignorada' : 'Linha reposta como por conciliar',
+    alteracoes: [{ campo: 'ignorado', label: 'Ignorada', antes: antes.ignorado, depois: ignorado }],
   })
 
   revalidatePath('/financas')

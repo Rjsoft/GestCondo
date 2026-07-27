@@ -7,6 +7,7 @@ import {
   serial,
   integer,
   numeric,
+  jsonb,
   index,
   uniqueIndex,
   unique,
@@ -1130,6 +1131,12 @@ export const auditLog = pgTable(
     entidade: text("entidade").notNull(), // "movimento" | "aviso" | "documento" | "fracao" | "membro" | "ocorrencia"
     entidadeId: integer("entidadeId").notNull(),
     detalhes: text("detalhes"), // resumo legível opcional, texto livre
+    // Diff estruturado campo a campo (CampoAlterado[] — ver lib/audit.ts),
+    // só preenchido em acao='atualizar'. `detalhes` continua a existir como
+    // resumo curto/pesquisável; `alteracoes` é o detalhe completo para a UI
+    // de /auditoria mostrar "campo: de X para Y". Registos antigos (antes
+    // desta coluna existir) ficam null, mostram só `detalhes` como sempre.
+    alteracoes: jsonb("alteracoes"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (t) => [

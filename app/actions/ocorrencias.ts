@@ -128,6 +128,7 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
     .from(ocorrencia)
     .where(and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)))
     .limit(1)
+  if (antes && antes.estado === estado) return
 
   const [atualizada] = await db
     .update(ocorrencia)
@@ -151,6 +152,7 @@ export async function atualizarEstadoOcorrencia(id: number, estado: string) {
     detalhes: antes
       ? `${atualizada?.titulo ?? ''}: estado alterado de "${ESTADO_LABEL[antes.estado] ?? antes.estado}" para "${ESTADO_LABEL[estado] ?? estado}"`
       : `${atualizada?.titulo ?? ''}: estado alterado para "${ESTADO_LABEL[estado] ?? estado}"`,
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: antes?.estado ?? null, depois: estado }],
   })
 
   // Notifica quem reportou a ocorrência — não o próprio admin que a
@@ -184,26 +186,35 @@ export async function atribuirFornecedorOcorrencia(id: number, fornecedorId: num
   // Mesma guarda de atualizarEstadoOcorrencia — só admin/gestor.
   const admin = await requireAdmin()
 
+  let fornecedorNome: string | null = null
   if (fornecedorId !== null) {
     const [f] = await db
-      .select({ id: fornecedor.id })
+      .select({ id: fornecedor.id, nome: fornecedor.nome })
       .from(fornecedor)
       .where(and(eq(fornecedor.id, fornecedorId), eq(fornecedor.condominioId, admin.condominioId)))
       .limit(1)
     if (!f) throw new Error('Fornecedor inválido')
+    fornecedorNome = f.nome
   }
 
-  await db
-    .update(ocorrencia)
-    .set({ fornecedorId, updatedAt: new Date() })
-    .where(and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)))
+  const condicao = and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId))
+  const [antes] = await db
+    .select({ titulo: ocorrencia.titulo, fornecedorId: ocorrencia.fornecedorId })
+    .from(ocorrencia)
+    .where(condicao)
+    .limit(1)
+  if (!antes) throw new Error('Ocorrência não encontrada')
+  if (antes.fornecedorId === fornecedorId) return
+
+  await db.update(ocorrencia).set({ fornecedorId, updatedAt: new Date() }).where(condicao)
 
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'ocorrencia',
     entidadeId: id,
-    detalhes: fornecedorId ? 'Fornecedor atribuído' : 'Fornecedor removido',
+    detalhes: `${antes.titulo}: ${fornecedorId ? `fornecedor atribuído (${fornecedorNome})` : 'fornecedor removido'}`,
+    alteracoes: [{ campo: 'fornecedorId', label: 'Fornecedor', antes: antes.fornecedorId, depois: fornecedorId }],
   })
 
   revalidatePath('/ocorrencias')

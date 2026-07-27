@@ -10,7 +10,7 @@ import {
   movimento,
   saldoInicialConta,
 } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, registarAuditoria } from '@/lib/audit'
 import {
   calcularSaldoConta,
   formatarLogOperacaoMassa,
@@ -43,6 +43,17 @@ const CAMPO_CONTA_LABEL: Record<keyof CamposEditaveisConta, string> = {
   tipo: 'tipo',
   moeda: 'moeda',
   notaTransitoria: 'nota',
+}
+
+// Sem `iban`, de propósito: o diff estruturado de /auditoria mostraria o
+// valor antes/depois do campo, o que anularia a decisão já existente de
+// nunca registar o valor do IBAN alterado (só o facto de ter mudado).
+const CAMPO_CONTA_LABEL_DIFF: Partial<Record<keyof CamposEditaveisConta, string>> = {
+  nome: 'Nome',
+  banco: 'Banco',
+  tipo: 'Tipo',
+  moeda: 'Moeda',
+  notaTransitoria: 'Nota',
 }
 
 function validarDadosConta({
@@ -186,7 +197,7 @@ export async function atualizarContaFinanceira(formData: FormData) {
   // Uma transação simples confina, mas não elimina totalmente, a janela
   // entre leitura e escrita de duas edições concorrentes na mesma conta —
   // aceitável aqui; não introduz bloqueio explícito nem controlo de versão.
-  const camposAlterados = await db.transaction(async (tx) => {
+  const { camposAlterados, anterior } = await db.transaction(async (tx) => {
     const [anterior] = await tx
       .select({
         nome: contaFinanceira.nome,
@@ -204,14 +215,14 @@ export async function atualizarContaFinanceira(formData: FormData) {
     const alterados = (Object.keys(novosValores) as (keyof CamposEditaveisConta)[]).filter(
       (campo) => anterior[campo] !== novosValores[campo],
     )
-    if (alterados.length === 0) return alterados
+    if (alterados.length === 0) return { camposAlterados: alterados, anterior }
 
     await tx
       .update(contaFinanceira)
       .set({ ...novosValores, updatedAt: new Date() })
       .where(and(eq(contaFinanceira.id, id), eq(contaFinanceira.condominioId, admin.condominioId)))
 
-    return alterados
+    return { camposAlterados: alterados, anterior }
   })
 
   if (camposAlterados.length > 0) {
@@ -224,6 +235,7 @@ export async function atualizarContaFinanceira(formData: FormData) {
       detalhes:
         `Campos alterados: ${camposAlterados.map((c) => CAMPO_CONTA_LABEL[c]).join(', ')}` +
         (ibanAlterado ? '. IBAN alterado; valor não registado.' : '.'),
+      alteracoes: compararCampos(anterior, novosValores, CAMPO_CONTA_LABEL_DIFF),
     })
   }
 
@@ -268,6 +280,7 @@ export async function encerrarContaFinanceira(id: number, exercicioId: number) {
     entidade: 'contaFinanceira',
     entidadeId: id,
     detalhes: 'Conta encerrada com saldo zero',
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: conta.estado, depois: 'encerrada' }],
   })
 
   revalidatePath('/financas')
@@ -457,6 +470,9 @@ export async function definirSaldoInicial(formData: FormData) {
 
   if (existente) {
     const valorAnterior = existente.valor
+    const alteracoes = compararCampos({ valor: valorAnterior }, { valor }, { valor: 'Saldo inicial' })
+    if (alteracoes.length === 0) return
+
     await db
       .update(saldoInicialConta)
       .set({ valor, origem: 'manual', definidoPorUserId: admin.userId, updatedAt: new Date() })
@@ -467,6 +483,7 @@ export async function definirSaldoInicial(formData: FormData) {
       entidade: 'contaFinanceira',
       entidadeId: contaFinanceiraId,
       detalhes: `Saldo inicial (${ex.designacao}) corrigido: de ${valorAnterior} € para ${valor} €`,
+      alteracoes,
     })
   } else {
     await db.insert(saldoInicialConta).values({

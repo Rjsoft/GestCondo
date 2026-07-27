@@ -341,6 +341,7 @@ export async function fecharExercicio(exercicioId: number, avisosConfirmados: bo
       (situacao.avisos.length > 0
         ? `. Avisos confirmados pelo administrador: ${situacao.avisos.join(' | ')}`
         : ''),
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: ex.estado, depois: 'fechado' }],
   })
 
   revalidatePath('/financas')
@@ -369,6 +370,7 @@ export async function reabrirExercicio(exercicioId: number, motivo: string) {
     entidade: 'exercicioFinanceiro',
     entidadeId: exercicioId,
     detalhes: `Exercício "${ex.designacao}" reaberto — motivo: ${motivo.trim()}`,
+    alteracoes: [{ campo: 'estado', label: 'Estado', antes: ex.estado, depois: 'aberto' }],
   })
 
   revalidatePath('/financas')

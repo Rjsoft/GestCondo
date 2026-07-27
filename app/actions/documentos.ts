@@ -159,19 +159,20 @@ export async function criarDocumento(formData: FormData) {
  */
 export async function alternarConfidencialidadeDocumento(id: number, confidencial: boolean) {
   const admin = await requireAdmin()
-  const [d] = await db
-    .update(documento)
-    .set({ confidencial })
-    .where(and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId)))
-    .returning({ titulo: documento.titulo })
-  if (!d) throw new Error('Documento não encontrado')
+  const condicao = and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId))
+  const [antes] = await db.select({ titulo: documento.titulo, confidencial: documento.confidencial }).from(documento).where(condicao).limit(1)
+  if (!antes) throw new Error('Documento não encontrado')
+  if (antes.confidencial === confidencial) return
+
+  await db.update(documento).set({ confidencial }).where(condicao)
 
   await registarAuditoria({
     actor: admin,
     acao: 'atualizar',
     entidade: 'documento',
     entidadeId: id,
-    detalhes: confidencial ? `${d.titulo}: marcado como confidencial` : `${d.titulo}: tornado público`,
+    detalhes: confidencial ? `${antes.titulo}: marcado como confidencial` : `${antes.titulo}: tornado público`,
+    alteracoes: [{ campo: 'confidencial', label: 'Confidencial', antes: antes.confidencial, depois: confidencial }],
   })
 
   revalidatePath('/documentos')

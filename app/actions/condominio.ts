@@ -26,7 +26,7 @@ import {
   ocorrencia,
   documento,
 } from '@/lib/db/schema'
-import { registarAuditoria } from '@/lib/audit'
+import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { requireAdmin, getSession } from '@/lib/session'
 import type { MembroSessao } from '@/lib/perfis'
 import { paraData, paraDataOuNula, remapear, remapearOpcional } from '@/lib/importacao-condominio'
@@ -67,27 +67,42 @@ export async function atualizarCondominio(formData: FormData) {
     if (Number.isNaN(valor) || valor < 0) throw new Error('Área de construção inválida')
   }
 
-  await db
-    .update(condominio)
-    .set({
-      nome,
-      morada: morada || null,
-      nif: nif || null,
-      numeroMatricial: numeroMatricial || null,
-      conservatoriaRegistoPredial: conservatoriaRegistoPredial || null,
-      licencaHabitacao: licencaHabitacao || null,
-      projetoArquiteto: projetoArquiteto || null,
-      areaConstrucao: areaConstrucaoTexto || null,
-    })
-    .where(eq(condominio.id, admin.condominioId))
+  const [antes] = await db.select().from(condominio).where(eq(condominio.id, admin.condominioId)).limit(1)
+  if (!antes) throw new Error('Condomínio não encontrado')
 
-  await registarAuditoria({
-    actor: admin,
-    acao: 'atualizar',
-    entidade: 'condominio',
-    entidadeId: admin.condominioId,
-    detalhes: 'Dados do condomínio atualizados',
+  const novosValores = {
+    nome,
+    morada: morada || null,
+    nif: nif || null,
+    numeroMatricial: numeroMatricial || null,
+    conservatoriaRegistoPredial: conservatoriaRegistoPredial || null,
+    licencaHabitacao: licencaHabitacao || null,
+    projetoArquiteto: projetoArquiteto || null,
+    areaConstrucao: areaConstrucaoTexto || null,
+  }
+
+  await db.update(condominio).set(novosValores).where(eq(condominio.id, admin.condominioId))
+
+  const alteracoes = compararCampos(antes, novosValores, {
+    nome: 'Nome',
+    morada: 'Morada',
+    nif: 'NIF',
+    numeroMatricial: 'Número matricial',
+    conservatoriaRegistoPredial: 'Conservatória do registo predial',
+    licencaHabitacao: 'Licença de habitação',
+    projetoArquiteto: 'Projeto/arquiteto',
+    areaConstrucao: 'Área de construção',
   })
+  if (alteracoes.length > 0) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'atualizar',
+      entidade: 'condominio',
+      entidadeId: admin.condominioId,
+      detalhes: `Dados do condomínio: ${gerarResumoAlteracoes(alteracoes)}`,
+      alteracoes,
+    })
+  }
 
   revalidatePath('/condominio')
   revalidatePath('/')
