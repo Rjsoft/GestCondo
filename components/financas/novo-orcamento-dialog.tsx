@@ -92,6 +92,26 @@ export function NovoOrcamentoDialog() {
             </p>
           </div>
           <div className="flex flex-col gap-2">
+            <Label htmlFor="percentagemFundoReserva">
+              Percentagem para o fundo de reserva (%)
+            </Label>
+            <Input
+              id="percentagemFundoReserva"
+              name="percentagemFundoReserva"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              defaultValue="10"
+              placeholder="10"
+            />
+            <p className="text-xs text-muted-foreground">
+              Sugestão: 10%, o mínimo legal (DL n.º 268/94, art. 4.º). Pode aumentar se uma
+              percentagem superior tiver sido deliberada em assembleia, ou colocar 0 para não
+              dividir automaticamente (mantém a segregação manual por lançamento).
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
             <Label htmlFor="notas">Notas</Label>
             <Textarea
               id="notas"

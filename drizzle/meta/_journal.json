@@ -316,6 +316,13 @@
       "when": 1785143216216,
       "tag": "0044_overrated_mantis",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1785144985307,
+      "tag": "0045_lonely_zombie",
+      "breakpoints": true
     }
   ]
 }

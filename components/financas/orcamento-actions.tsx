@@ -20,12 +20,14 @@ export function OrcamentoActions({
   ano,
   valorAnual,
   valorAnualElevador,
+  percentagemFundoReserva,
   fracoes,
 }: {
   id: number
   ano: number
   valorAnual: number
   valorAnualElevador: number
+  percentagemFundoReserva: number
   fracoes: {
     id: number
     identificacao: string
@@ -82,6 +84,7 @@ export function OrcamentoActions({
         ano={ano}
         valorAnual={valorAnual}
         valorAnualElevador={valorAnualElevador}
+        percentagemFundoReserva={percentagemFundoReserva}
         fracoes={fracoes}
       />
       <GerirRubricasDialog

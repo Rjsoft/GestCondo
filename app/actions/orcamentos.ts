@@ -3,7 +3,7 @@
 import { db } from '@/lib/db'
 import { fracao, movimento, orcamento, orcamentoRubrica } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
-import { calcularQuotasMensais } from '@/lib/rateio'
+import { aplicarPercentagemReserva, calcularQuotasMensais } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, desc, eq, gte, isNull, lt } from 'drizzle-orm'
@@ -24,6 +24,7 @@ export async function criarOrcamento(formData: FormData) {
   const ano = Number(formData.get('ano'))
   const valorAnual = String(formData.get('valorAnual') || '0')
   const valorAnualElevadorRaw = String(formData.get('valorAnualElevador') || '').trim()
+  const percentagemFundoReservaRaw = String(formData.get('percentagemFundoReserva') || '').trim()
   const notas = String(formData.get('notas') || '').trim()
 
   if (!ano || !Number.isInteger(ano) || ano < 2000 || ano > 2200) {
@@ -35,7 +36,16 @@ export async function criarOrcamento(formData: FormData) {
   if (valorAnualElevadorRaw && Number(valorAnualElevadorRaw) < 0) {
     throw new Error('O valor do elevador não pode ser negativo')
   }
+  if (
+    percentagemFundoReservaRaw &&
+    (Number.isNaN(Number(percentagemFundoReservaRaw)) ||
+      Number(percentagemFundoReservaRaw) < 0 ||
+      Number(percentagemFundoReservaRaw) > 100)
+  ) {
+    throw new Error('A percentagem do fundo de reserva tem de estar entre 0 e 100')
+  }
   const valorAnualElevador = valorAnualElevadorRaw || null
+  const percentagemFundoReserva = percentagemFundoReservaRaw || null
 
   const [novo] = await db
     .insert(orcamento)
@@ -45,12 +55,13 @@ export async function criarOrcamento(formData: FormData) {
       ano,
       valorAnual,
       valorAnualElevador,
+      percentagemFundoReserva,
       notas: notas || null,
     })
     .returning({ id: orcamento.id })
     .onConflictDoUpdate({
       target: [orcamento.condominioId, orcamento.ano],
-      set: { valorAnual, valorAnualElevador, notas: notas || null },
+      set: { valorAnual, valorAnualElevador, percentagemFundoReserva, notas: notas || null },
     })
 
   await registarAuditoria({
@@ -107,6 +118,8 @@ export async function gerarQuotasOrcamento(orcamentoId: number) {
     orc.valorAnualElevador ? Number(orc.valorAnualElevador) : 0,
   )
   const totalPermilagem = fracoes.reduce((s, f) => s + Number(f.permilagem), 0)
+  const percentagemReserva = orc.percentagemFundoReserva ? Number(orc.percentagemFundoReserva) : 0
+  const quotasComReserva = aplicarPercentagemReserva(quotasMensais, percentagemReserva)
 
   // As 12 quotas cobrem o ano inteiro do orçamento — verifica os 12 meses
   // antes de inserir qualquer coisa, para nunca gerar quotas parcialmente
@@ -115,20 +128,41 @@ export async function gerarQuotasOrcamento(orcamentoId: number) {
     await garantirExercicioAberto(admin.condominioId, new Date(orc.ano, mes, 1))
   }
 
-  const linhas = quotasMensais.flatMap(({ fracaoId, valorMensal }) =>
-    Array.from({ length: 12 }, (_, mes) => ({
-      condominioId: admin.condominioId,
-      userId: admin.userId,
-      tipo: 'receita' as const,
-      categoria: 'Quota mensal',
-      descricao: `Quota ${mes + 1}/${orc.ano}`,
-      valor: valorMensal.toFixed(2),
-      fracaoId,
-      data: new Date(orc.ano, mes, 1),
-      pago: false,
-      destino: 'geral' as const,
-      orcamentoId,
-    })),
+  // Sem percentagem de fundo de reserva: um único movimento por fração/mês,
+  // exatamente como antes desta funcionalidade. Com percentagem: dois
+  // movimentos por fração/mês (quota corrente + fundo de reserva), ambos
+  // ligados ao mesmo orcamentoId — a proteção contra gerar em duplicado
+  // (jaGerada, acima) continua a funcionar sem alteração.
+  const linhas = quotasComReserva.flatMap(({ fracaoId, valorGeral, valorReserva }) =>
+    Array.from({ length: 12 }, (_, mes) => mes).flatMap((mes) => {
+      const data = new Date(orc.ano, mes, 1)
+      const base = {
+        condominioId: admin.condominioId,
+        userId: admin.userId,
+        tipo: 'receita' as const,
+        categoria: 'Quota mensal',
+        fracaoId,
+        data,
+        pago: false,
+        orcamentoId,
+      }
+      const linhaGeral = {
+        ...base,
+        descricao: `Quota ${mes + 1}/${orc.ano}`,
+        valor: valorGeral.toFixed(2),
+        destino: 'geral' as const,
+      }
+      if (valorReserva <= 0) return [linhaGeral]
+      return [
+        linhaGeral,
+        {
+          ...base,
+          descricao: `Quota ${mes + 1}/${orc.ano} — fundo de reserva`,
+          valor: valorReserva.toFixed(2),
+          destino: 'reserva' as const,
+        },
+      ]
+    }),
   )
 
   await db.insert(movimento).values(linhas)
@@ -138,7 +172,7 @@ export async function gerarQuotasOrcamento(orcamentoId: number) {
     acao: 'criar',
     entidade: 'orcamento',
     entidadeId: orcamentoId,
-    detalhes: `Quotas mensais geradas para ${orc.ano}: ${fracoes.length} frações × 12 meses = ${linhas.length} quotas (permilagem total apurada: ${totalPermilagem.toFixed(2)}‰)`,
+    detalhes: `Quotas mensais geradas para ${orc.ano}: ${fracoes.length} frações × 12 meses = ${linhas.length} quotas (permilagem total apurada: ${totalPermilagem.toFixed(2)}‰)${percentagemReserva > 0 ? `, ${percentagemReserva}% destinados ao fundo de reserva` : ''}`,
   })
 
   revalidatePath('/financas')

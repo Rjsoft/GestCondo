@@ -90,6 +90,7 @@ type Orcamento = {
   ano: number
   valorAnual: string
   valorAnualElevador: string | null
+  percentagemFundoReserva: string | null
   notas: string | null
 }
 
@@ -540,6 +541,9 @@ export function FinancasTabs({
                           valorAnual={Number(o.valorAnual)}
                           valorAnualElevador={
                             o.valorAnualElevador ? Number(o.valorAnualElevador) : 0
+                          }
+                          percentagemFundoReserva={
+                            o.percentagemFundoReserva ? Number(o.percentagemFundoReserva) : 0
                           }
                           fracoes={fracoes}
                         />

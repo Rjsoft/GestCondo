@@ -324,7 +324,10 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             <strong>Orçamentos</strong>: o orçamento anual do condomínio, a
             partir do qual as quotas mensais são calculadas automaticamente
             (divididas por permilagem, com isenção do elevador quando
-            aplicável).
+            aplicável). Pode indicar uma percentagem para o fundo de reserva
+            (sugestão de 10%, o mínimo exigido por lei) — ao gerar as quotas,
+            essa percentagem é separada automaticamente num movimento próprio
+            para o fundo de reserva, em vez de ter de o fazer à mão.
           </li>
           <li>
             <strong>Conciliação bancária</strong>: importar o extrato do

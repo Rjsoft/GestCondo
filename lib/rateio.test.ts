@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calcularQuotasMensais } from './rateio'
+import { aplicarPercentagemReserva, calcularQuotasMensais } from './rateio'
 
 describe('calcularQuotasMensais', () => {
   it('rateia proporcionalmente por permilagem quando a soma é 1000‰', () => {
@@ -87,5 +87,38 @@ describe('calcularQuotasMensais', () => {
       { fracaoId: 1, valorMensal: 50 },
       { fracaoId: 2, valorMensal: 50 },
     ])
+  })
+})
+
+describe('aplicarPercentagemReserva', () => {
+  it('divide 10% para o fundo de reserva, resto na quota corrente', () => {
+    const quotas = [
+      { fracaoId: 1, valorMensal: 100 },
+      { fracaoId: 2, valorMensal: 50 },
+    ]
+    expect(aplicarPercentagemReserva(quotas, 10)).toEqual([
+      { fracaoId: 1, valorGeral: 90, valorReserva: 10 },
+      { fracaoId: 2, valorGeral: 45, valorReserva: 5 },
+    ])
+  })
+
+  it('sem percentagem (null/undefined/0), tudo fica na quota corrente', () => {
+    const quotas = [{ fracaoId: 1, valorMensal: 100 }]
+    expect(aplicarPercentagemReserva(quotas, null)).toEqual([
+      { fracaoId: 1, valorGeral: 100, valorReserva: 0 },
+    ])
+    expect(aplicarPercentagemReserva(quotas, undefined)).toEqual([
+      { fracaoId: 1, valorGeral: 100, valorReserva: 0 },
+    ])
+    expect(aplicarPercentagemReserva(quotas, 0)).toEqual([
+      { fracaoId: 1, valorGeral: 100, valorReserva: 0 },
+    ])
+  })
+
+  it('arredonda a 2 casas decimais', () => {
+    const quotas = [{ fracaoId: 1, valorMensal: 33.33 }]
+    const [resultado] = aplicarPercentagemReserva(quotas, 10)
+    expect(resultado.valorReserva).toBeCloseTo(3.33, 2)
+    expect(resultado.valorGeral).toBeCloseTo(30, 2)
   })
 })

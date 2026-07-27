@@ -1,0 +1,1 @@
+ALTER TABLE "orcamento" ADD COLUMN "percentagemFundoReserva" numeric(5, 2);

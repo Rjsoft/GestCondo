@@ -507,6 +507,13 @@ export const orcamento = pgTable(
     // resto (rateado por permilagem entre todas). Null/0 = sem parcela de
     // elevador distinta; comporta-se como antes desta funcionalidade.
     valorAnualElevador: numeric("valorAnualElevador", { precision: 12, scale: 2 }),
+    // Percentagem da quota mensal destinada ao fundo de reserva, aplicada ao
+    // gerar as quotas (ver gerarQuotasOrcamento). Null/0 = sem divisão
+    // automática — comporta-se como antes desta funcionalidade (segregação
+    // só manual, por lançamento com destino: "reserva"). DL n.º 268/94, art.
+    // 4.º, fixa 10% como mínimo legal; o campo aceita qualquer valor entre 0
+    // e 100 para permitir uma percentagem superior deliberada em assembleia.
+    percentagemFundoReserva: numeric("percentagemFundoReserva", { precision: 5, scale: 2 }),
     notas: text("notas"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },

@@ -2,7 +2,7 @@
 
 import { useMemo, useTransition } from 'react'
 import { gerarQuotasOrcamento } from '@/app/actions/orcamentos'
-import { calcularQuotasMensais } from '@/lib/rateio'
+import { aplicarPercentagemReserva, calcularQuotasMensais } from '@/lib/rateio'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,6 +30,7 @@ export function GerarQuotasDialog({
   ano,
   valorAnual,
   valorAnualElevador,
+  percentagemFundoReserva,
   fracoes,
 }: {
   open: boolean
@@ -38,6 +39,7 @@ export function GerarQuotasDialog({
   ano: number
   valorAnual: number
   valorAnualElevador: number
+  percentagemFundoReserva: number
   fracoes: {
     id: number
     identificacao: string
@@ -54,11 +56,12 @@ export function GerarQuotasDialog({
 
   const preview = useMemo(() => {
     try {
-      return calcularQuotasMensais(fracoes, valorAnual, valorAnualElevador)
+      const quotas = calcularQuotasMensais(fracoes, valorAnual, valorAnualElevador)
+      return aplicarPercentagemReserva(quotas, percentagemFundoReserva)
     } catch (e) {
       return e instanceof Error ? e.message : 'Erro ao calcular o rateio'
     }
-  }, [fracoes, valorAnual, valorAnualElevador])
+  }, [fracoes, valorAnual, valorAnualElevador, percentagemFundoReserva])
 
   const confirmar = () => {
     startTransition(async () => {
@@ -85,6 +88,8 @@ export function GerarQuotasDialog({
             partir do orçamento anual de {formatEuro(valorAnual)}
             {valorAnualElevador > 0 &&
               ` (incluindo ${formatEuro(valorAnualElevador)} de elevador, rateado só pelas frações não isentas)`}
+            {percentagemFundoReserva > 0 &&
+              ` — ${percentagemFundoReserva}% de cada quota gerada como movimento separado para o fundo de reserva`}
             . Confirme os valores antes de gerar — esta ação não pode ser desfeita pela
             aplicação (as quotas geradas têm de ser eliminadas uma a uma, se necessário).
           </DialogDescription>
@@ -100,7 +105,14 @@ export function GerarQuotasDialog({
                   <TableRow>
                     <TableHead>Fração</TableHead>
                     <TableHead className="text-right">Permilagem</TableHead>
-                    <TableHead className="text-right">Quota/mês</TableHead>
+                    {percentagemFundoReserva > 0 ? (
+                      <>
+                        <TableHead className="text-right">Quota corrente</TableHead>
+                        <TableHead className="text-right">Fundo de reserva</TableHead>
+                      </>
+                    ) : (
+                      <TableHead className="text-right">Quota/mês</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -117,9 +129,20 @@ export function GerarQuotasDialog({
                           )}
                         </TableCell>
                         <TableCell className="text-right">{f.permilagem.toFixed(2)}‰</TableCell>
-                        <TableCell className="text-right">
-                          {quota ? formatEuro(quota.valorMensal) : '—'}
-                        </TableCell>
+                        {percentagemFundoReserva > 0 ? (
+                          <>
+                            <TableCell className="text-right">
+                              {quota ? formatEuro(quota.valorGeral) : '—'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {quota ? formatEuro(quota.valorReserva) : '—'}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <TableCell className="text-right">
+                            {quota ? formatEuro(quota.valorGeral) : '—'}
+                          </TableCell>
+                        )}
                       </TableRow>
                     )
                   })}

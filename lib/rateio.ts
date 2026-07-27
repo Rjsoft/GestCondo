@@ -42,3 +42,23 @@ export function calcularQuotasMensais(
     }
   })
 }
+
+/**
+ * Divide cada quota mensal em parcela corrente e parcela do fundo de reserva,
+ * segundo uma percentagem (0–100). `percentagem` nula ou 0 devolve tudo como
+ * `valorGeral`, sem `valorReserva` — mesmo comportamento de antes desta
+ * funcionalidade (segregação só manual). Ver `orcamento.percentagemFundoReserva`.
+ */
+export function aplicarPercentagemReserva(
+  quotas: { fracaoId: number; valorMensal: number }[],
+  percentagem: number | null | undefined,
+): { fracaoId: number; valorGeral: number; valorReserva: number }[] {
+  if (!percentagem || percentagem <= 0) {
+    return quotas.map((q) => ({ fracaoId: q.fracaoId, valorGeral: q.valorMensal, valorReserva: 0 }))
+  }
+  return quotas.map((q) => {
+    const valorReserva = Math.round(q.valorMensal * (percentagem / 100) * 100) / 100
+    const valorGeral = Math.round((q.valorMensal - valorReserva) * 100) / 100
+    return { fracaoId: q.fracaoId, valorGeral, valorReserva }
+  })
+}
