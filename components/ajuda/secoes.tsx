@@ -61,6 +61,12 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             exemplo, só administradores e gestores veem &ldquo;Condomínio&rdquo;.
             Não é um erro se não vir uma secção que outra pessoa vê.
           </li>
+          <li>
+            Se não souber onde uma coisa está guardada, use
+            &ldquo;Pesquisa&rdquo; no menu lateral — procura ao mesmo tempo
+            em avisos, documentos, ocorrências, condóminos e movimentos
+            financeiros.
+          </li>
         </ul>
 
         <Subtitulo>Algumas palavras que vai encontrar</Subtitulo>

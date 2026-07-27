@@ -26,6 +26,7 @@ import {
   HelpCircle,
   Landmark,
   MessageSquare,
+  Search,
 } from 'lucide-react'
 import {
   PERFIL_LABEL,
@@ -44,6 +45,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: '/', label: 'Painel', icon: LayoutDashboard },
+  { href: '/pesquisa', label: 'Pesquisa', icon: Search },
   {
     href: '/financas',
     label: 'Finanças',
