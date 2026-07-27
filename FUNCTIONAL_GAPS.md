@@ -1,6 +1,6 @@
 # Auditoria Funcional — GestCondo
 
-Data: 2026-07-06, **atualizada 2026-07-24, 2026-07-25, 2026-07-27** (controlo de permissões por documento promovido a produção — migração 0040). Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em falta. Prioridade pensada para o objetivo declarado (produto profissional multi-condomínio para o mercado português): **P0** bloqueador estrutural, **P1** necessário para MVP utilizável, **P2** necessário para venda comercial, **P3** diferenciador/avançado.
+Data: 2026-07-06, **atualizada 2026-07-24, 2026-07-25, 2026-07-27** (controlo de permissões por documento e mensagens internas condómino↔admin implementados). Legenda: ✅ Implementado · 🟡 Parcial/básico · ❌ Em falta. Prioridade pensada para o objetivo declarado (produto profissional multi-condomínio para o mercado português): **P0** bloqueador estrutural, **P1** necessário para MVP utilizável, **P2** necessário para venda comercial, **P3** diferenciador/avançado.
 
 ## Visão geral honesta
 
@@ -107,7 +107,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 |---|---|---|---|
 | Avisos aos condóminos | ✅ Implementado | `app/(app)/avisos/page.tsx`, com prioridade. | — |
 | Notificações (push/email) | ✅ Implementado 2026-07-09 — email enviado quando um aviso `importante`/`urgente` é publicado (a todos os membros aprovados) e quando o estado de uma ocorrência é atualizado (a quem a reportou). Avisos `normal` não geram email, para não sobrecarregar a caixa de entrada. Sem notificação push (só email). | — |
-| Mensagens internas (condómino ↔ admin) | ❌ Em falta | Sem qualquer canal de mensagem direta/privada. | P2 |
+| Mensagens internas (condómino ↔ admin) | ✅ Implementado 2026-07-27 | `/mensagens`: conversa privada entre cada membro (condómino/inquilino/fornecedor) e a administração (admin/gestor) — tabela `mensagem` (sem FK para `membro.id`, sobrevive a `removerMembro`), badge de não lidas na sidebar. Auditor deliberadamente excluído por completo (canal privado). Verificado em runtime (dev) com um membro de teste inserido diretamente na BD e removido no fim. | — |
 | Histórico de comunicações | ✅ **Resolvido 2026-07-26, em produção desde 2026-07-26** | Confirmação de leitura por membro (ver linha abaixo) mostra quem já viu cada aviso, além da listagem indefinida já existente. | — |
 | Confirmação de leitura | ✅ **Resolvido 2026-07-26, em produção desde 2026-07-26** — botão "Confirmar leitura" em avisos e na convocatória de assembleia, registado em `confirmacao_leitura` (membro, data/hora, `unique(membroId, entidade, entidadeId)`); administrador vê contagem/lista de quem confirmou | — |
 | Regras contra exposição de emails entre condóminos | ✅ Resolvido 2026-07-07 | Ver `SECURITY_AUDIT.md` S13. | — |

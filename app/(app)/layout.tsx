@@ -3,6 +3,7 @@ import { AppShell } from '@/components/app-shell'
 import { PendingScreen } from '@/components/pending-screen'
 import { SuspensoScreen } from '@/components/suspenso-screen'
 import { ehOperadorPlataforma, getCondominioAtual, getMembroAtual, getSession } from '@/lib/session'
+import { getContagemMensagensNaoLidas } from '@/app/actions/mensagens'
 import { Toaster } from '@/components/ui/sonner'
 
 export default async function AppLayout({
@@ -40,6 +41,12 @@ export default async function AppLayout({
   }
 
   const condominio = await getCondominioAtual(membro.condominioId)
+  // Auditor fica de fora do canal de mensagens por completo — evita chamar
+  // a action (que rejeitaria) só para saber que a contagem é sempre 0.
+  const contagemMensagens =
+    membro.perfil === 'auditor' && !membro.isSuperAdmin
+      ? 0
+      : await getContagemMensagensNaoLidas()
 
   return (
     <AppShell
@@ -48,6 +55,7 @@ export default async function AppLayout({
       isSuperAdmin={membro.isSuperAdmin}
       isOperadorPlataforma={membro.isOperadorPlataforma}
       condominioNome={condominio?.nome ?? 'Condomínio'}
+      contagensNav={{ '/mensagens': contagemMensagens }}
     >
       {children}
       <Toaster />

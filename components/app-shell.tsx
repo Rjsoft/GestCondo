@@ -25,6 +25,7 @@ import {
   Truck,
   HelpCircle,
   Landmark,
+  MessageSquare,
 } from 'lucide-react'
 import {
   PERFIL_LABEL,
@@ -54,6 +55,14 @@ const NAV: NavItem[] = [
   { href: '/assembleias', label: 'Assembleias', icon: Gavel },
   { href: '/ocorrencias', label: 'Ocorrências', icon: Wrench },
   { href: '/documentos', label: 'Documentos', icon: FileText },
+  {
+    href: '/mensagens',
+    label: 'Mensagens',
+    icon: MessageSquare,
+    // Canal de correspondência privada — o auditor (consulta apenas) fica
+    // deliberadamente de fora por completo.
+    visivel: (perfil, isSuperAdmin) => isSuperAdmin || perfil !== 'auditor',
+  },
   { href: '/fornecedores', label: 'Fornecedores', icon: Truck },
   {
     href: '/fracoes',
@@ -99,6 +108,7 @@ export function AppShell({
   isSuperAdmin,
   isOperadorPlataforma,
   condominioNome,
+  contagensNav,
 }: {
   children: React.ReactNode
   nome: string
@@ -106,6 +116,10 @@ export function AppShell({
   isSuperAdmin: boolean
   isOperadorPlataforma: boolean
   condominioNome: string
+  /** Contagens para um badge junto à entrada de navegação, indexadas por
+   * `href` (ex. não lidas em "Mensagens") — opcional, não obriga as
+   * restantes entradas de NAV a mudar de forma. */
+  contagensNav?: Partial<Record<string, number>>
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -163,7 +177,12 @@ export function AppShell({
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {!!contagensNav?.[item.href] && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-semibold text-white">
+                      {contagensNav[item.href]}
+                    </span>
+                  )}
                 </Link>
               </li>
             )

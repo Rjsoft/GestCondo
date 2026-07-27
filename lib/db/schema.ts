@@ -1083,3 +1083,39 @@ export const confirmacaoLeitura = pgTable(
     unique("confirmacao_leitura_membro_entidade_uq").on(t.membroId, t.entidade, t.entidadeId),
   ],
 )
+
+// Mensagens internas — canal de correspondência privada entre um membro
+// (condómino/inquilino/fornecedor) e a administração (admin/gestor) do seu
+// condomínio (FUNCTIONAL_GAPS.md, "Mensagens internas"). Sem tabela de
+// "conversa" separada: o fio é implícito — todas as linhas com o mesmo
+// `userId`, mesmo espírito de reaproveitar em vez de multiplicar entidades
+// já usado no histórico de estado de ocorrências (audit_log).
+// `userId`/`autorUserId` são texto sem FK para `membro.id`, tal como
+// `ocorrencia.userId`/`audit_log.actorUserId` — porque a linha `membro` pode
+// sofrer hard delete (removerMembro/rejeitarMembro em fracoes.ts, ex.
+// sucessão por óbito); uma FK apagaria em cascata toda a correspondência,
+// incluindo as respostas da administração. `autorNome`/`autorEhGestao` são
+// denormalizados no momento do envio (a partir de quem escreve), para as
+// queries de não lidas não dependerem de um join que pode falhar depois de
+// o membro ser removido.
+// Sem eliminação/edição na v1 — mensagens não se apagam nem editam.
+export const mensagem = pgTable(
+  "mensagem",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(), // dono da conversa (lado não-gestão)
+    autorUserId: text("autorUserId").notNull(), // quem escreveu esta mensagem
+    autorNome: text("autorNome").notNull(),
+    autorEhGestao: boolean("autorEhGestao").notNull(),
+    conteudo: text("conteudo").notNull(),
+    lida: boolean("lida").notNull().default(false),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("mensagem_condominio_idx").on(t.condominioId),
+    index("mensagem_user_idx").on(t.userId),
+  ],
+)

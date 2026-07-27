@@ -401,6 +401,37 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
     ),
   },
   {
+    value: 'mensagens',
+    label: 'Mensagens',
+    conteudo: (
+      <>
+        <Titulo>Mensagens</Titulo>
+        <p>
+          Um canal de conversa privada com a administração do condomínio.
+          Condóminos, inquilinos e fornecedores têm cada um a sua própria
+          conversa, visível só a eles próprios e à administração — os
+          restantes condóminos nunca veem estas mensagens.
+        </p>
+        <Subtitulo>Como enviar uma mensagem</Subtitulo>
+        <p>
+          Abra &ldquo;Mensagens&rdquo; no menu lateral, escreva a mensagem na
+          caixa no fundo da conversa e clique em &ldquo;Enviar&rdquo;.
+        </p>
+        <Subtitulo>Do lado da administração</Subtitulo>
+        <p>
+          Um administrador ou empresa gestora vê a lista de todas as
+          conversas do condomínio, com um aviso junto ao nome de quem tem
+          mensagens novas por ler. Ao abrir uma conversa, responde da mesma
+          forma.
+        </p>
+        <p>
+          Um número junto a &ldquo;Mensagens&rdquo; no menu lateral indica
+          quantas mensagens novas ainda não foram lidas.
+        </p>
+      </>
+    ),
+  },
+  {
     value: 'fornecedores',
     label: 'Fornecedores',
     conteudo: (
