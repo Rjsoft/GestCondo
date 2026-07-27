@@ -468,6 +468,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           &ldquo;Novo fornecedor&rdquo;, preencha o nome e o contacto, e
           clique em &ldquo;Guardar&rdquo;.
         </p>
+        <Subtitulo>Orçamentos de obra</Subtitulo>
+        <p>
+          Na tab &ldquo;Orçamentos de obra&rdquo;, registe as propostas de
+          preço de diferentes fornecedores para a mesma obra ou intervenção
+          (ex: pintura da fachada), com o valor e um anexo opcional (PDF ou
+          imagem da proposta). Assim que decidir, marque a proposta escolhida
+          como &ldquo;Vencedor&rdquo; — fica destacada, para se saber
+          facilmente qual foi a decisão tomada.
+        </p>
       </>
     ),
   },

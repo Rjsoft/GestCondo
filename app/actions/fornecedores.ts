@@ -91,6 +91,7 @@ export async function atualizarFornecedor(formData: FormData) {
 
 export async function eliminarFornecedor(id: number) {
   const admin = await requireAdmin()
+
   await db
     .delete(fornecedor)
     .where(and(eq(fornecedor.id, id), eq(fornecedor.condominioId, admin.condominioId)))

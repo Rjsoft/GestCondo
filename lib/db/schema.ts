@@ -770,6 +770,66 @@ export const pagamentoDocumentoFornecedor = pgTable(
   ],
 )
 
+// Orçamento de obra — proposta de um fornecedor para uma intervenção
+// (FUNCTIONAL_GAPS.md, "Orçamentos (de obra)"; achado LEGAL-05 da auditoria
+// jurídica: prática comum de pedir várias propostas antes de decidir uma
+// obra extraordinária). Nome distinto de `orcamento` (o orçamento ANUAL do
+// condomínio, usado para gerar quotas) para não colidir — são entidades
+// completamente diferentes, apesar do nome parecido em português.
+// Diferente de `documentoFornecedor`: uma proposta ainda não é uma dívida
+// liquidável (sem `dataVencimento`/pagamentos parciais); pode haver várias
+// propostas concorrentes para o mesmo caso, comparadas por `assunto`/
+// `ocorrenciaId`, não por uma estrutura rígida de agrupamento.
+// `fornecedorId` obrigatório na criação (decisão do utilizador — sempre um
+// fornecedor já registado, validado em `criarOrcamentoObra`), mas nullable
+// no schema com `onDelete: "set null"`, igual a `movimento.fornecedorId`:
+// eliminar o fornecedor nunca pode ficar bloqueado por um orçamento antigo
+// (mesmo já soft-deleted) — a linha soft-deleted continua a existir
+// fisicamente, por isso uma FK `restrict` bloquearia para sempre.
+// `vencedor`: toggle simples e independente por linha, sem lógica de
+// desmarcar outras propostas do mesmo caso (não há uma chave de
+// agrupamento fiável sem inventar uma entidade "intervenção" nova).
+// Sem ligação a `movimento` — decidir um vencedor não cria nem pré-enche
+// uma despesa no servidor, só um atalho do lado cliente.
+// `deletedAt`: soft-delete, evidência de due diligence (LEGAL-05), mesmo
+// padrão de `documento`/`ocorrencia`/`seguro`.
+export const orcamentoObra = pgTable(
+  "orcamento_obra",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    assunto: text("assunto").notNull(),
+    ocorrenciaId: integer("ocorrenciaId").references(() => ocorrencia.id, {
+      onDelete: "set null",
+    }),
+    // Nullable + `set null` (não `restrict`): incompatível com o soft-delete
+    // de `orcamentoObra` — a linha soft-deleted continua a existir
+    // fisicamente e uma FK `restrict` bloquearia a eliminação do fornecedor
+    // para sempre, mesmo depois do orçamento já "eliminado". A
+    // obrigatoriedade do utilizador (sempre escolher um fornecedor já
+    // registado) é garantida na validação de `criarOrcamentoObra`, não ao
+    // nível do schema — mesmo padrão de `movimento.fornecedorId`.
+    fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
+      onDelete: "set null",
+    }),
+    valor: numeric("valor", { precision: 12, scale: 2 }).notNull(),
+    descricao: text("descricao"),
+    anexoUrl: text("anexoUrl"),
+    anexoNomeFicheiro: text("anexoNomeFicheiro"),
+    vencedor: boolean("vencedor").notNull().default(false),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    deletedAt: timestamp("deletedAt"),
+  },
+  (t) => [
+    index("orcamento_obra_condominio_idx").on(t.condominioId),
+    index("orcamento_obra_ocorrencia_idx").on(t.ocorrenciaId),
+    index("orcamento_obra_fornecedor_idx").on(t.fornecedorId),
+  ],
+)
+
 // Apólices de seguro do condomínio. O seguro contra incêndio/multirriscos
 // do edifício é obrigatório por lei (art. 1429º Código Civil) — antes só
 // podia ser registado como texto livre num "documento"; agora é uma

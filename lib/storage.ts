@@ -1,6 +1,12 @@
 import { del, put } from '@vercel/blob'
 
-export type PastaFicheiro = 'documentos' | 'ocorrencias' | 'seguros' | 'documentos-fornecedor' | 'assembleias'
+export type PastaFicheiro =
+  | 'documentos'
+  | 'ocorrencias'
+  | 'seguros'
+  | 'documentos-fornecedor'
+  | 'assembleias'
+  | 'orcamentos-obra'
 
 const REGRAS: Record<PastaFicheiro, { tipos: string[]; tamanhoMaximo: number }> = {
   documentos: {
@@ -20,6 +26,10 @@ const REGRAS: Record<PastaFicheiro, { tipos: string[]; tamanhoMaximo: number }> 
     tamanhoMaximo: 15 * 1024 * 1024,
   },
   'documentos-fornecedor': {
+    tipos: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
+    tamanhoMaximo: 15 * 1024 * 1024,
+  },
+  'orcamentos-obra': {
     tipos: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
     tamanhoMaximo: 15 * 1024 * 1024,
   },

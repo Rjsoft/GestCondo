@@ -1,126 +1,57 @@
 import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
 import { removerAcentos } from '@/lib/format'
 import { getFornecedores } from '@/app/actions/fornecedores'
+import { getOrcamentosObra } from '@/app/actions/orcamentos-obra'
+import { getOcorrencias } from '@/app/actions/ocorrencias'
 import { PageHeader } from '@/components/page-header'
-import { NovoFornecedorDialog } from '@/components/fornecedores/novo-fornecedor-dialog'
-import { EditarFornecedorDialog } from '@/components/fornecedores/editar-fornecedor-dialog'
-import { FornecedorActions } from '@/components/fornecedores/fornecedor-actions'
-import { Card, CardContent } from '@/components/ui/card'
-import { SearchInput } from '@/components/ui/search-input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { FornecedoresTabs } from '@/components/fornecedores/fornecedores-tabs'
 
 export default async function FornecedoresPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; qOrcamentos?: string; page?: string }>
 }) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
-  const search = removerAcentos(((await searchParams).q ?? '').trim().toLowerCase())
+  const params = await searchParams
+  const search = removerAcentos((params.q ?? '').trim().toLowerCase())
+  const orcamentosSearch = params.qOrcamentos ?? ''
+  const orcamentosPage = Math.max(1, Number(params.page) || 1)
 
-  const todos = await getFornecedores()
+  const [todosFornecedores, { orcamentos, totalPages: orcamentosTotalPages }, { ocorrencias }] = await Promise.all([
+    getFornecedores(),
+    getOrcamentosObra({ page: orcamentosPage, search: orcamentosSearch }),
+    getOcorrencias(),
+  ])
+
   // Pesquisa em memória: lista tipicamente pequena por condomínio, mesma
   // decisão já tomada para /fracoes/condominos.
-  const fornecedores = search
-    ? todos.filter(
+  const fornecedoresFiltrados = search
+    ? todosFornecedores.filter(
         (f) =>
           removerAcentos(f.nome.toLowerCase()).includes(search) ||
           removerAcentos((f.categoria ?? '').toLowerCase()).includes(search),
       )
-    : todos
+    : todosFornecedores
 
   return (
     <div>
       <PageHeader
         title="Fornecedores"
-        description="Contactos de fornecedores e prestadores de serviços do condomínio."
-      >
-        {isAdmin && <NovoFornecedorDialog />}
-      </PageHeader>
+        description="Contactos de fornecedores e orçamentos de obra do condomínio."
+      />
 
-      <div className="mb-4">
-        <SearchInput placeholder="Pesquisar por nome ou categoria..." />
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead className="hidden sm:table-cell">Categoria</TableHead>
-                <TableHead className="hidden md:table-cell">Contacto</TableHead>
-                <TableHead className="hidden sm:table-cell">NIF</TableHead>
-                {isAdmin && <TableHead className="w-10" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fornecedores.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4 + (isAdmin ? 1 : 0)}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    {search
-                      ? 'Nenhum fornecedor encontrado.'
-                      : 'Ainda não existem fornecedores registados.'}
-                  </TableCell>
-                </TableRow>
-              )}
-              {fornecedores.map((f) => (
-                <TableRow key={f.id}>
-                  <TableCell className="font-medium">
-                    {f.nome}
-                    {f.notas && (
-                      <span className="block text-xs text-muted-foreground">{f.notas}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {f.categoria || '—'}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground md:table-cell">
-                    {f.contactoEmail || f.contactoTelefone ? (
-                      <span>
-                        {f.contactoEmail}
-                        {f.contactoEmail && f.contactoTelefone ? ' · ' : ''}
-                        {f.contactoTelefone}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {f.nif || '—'}
-                  </TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <EditarFornecedorDialog
-                          id={f.id}
-                          nome={f.nome}
-                          nif={f.nif}
-                          categoria={f.categoria}
-                          contactoEmail={f.contactoEmail}
-                          contactoTelefone={f.contactoTelefone}
-                          notas={f.notas}
-                        />
-                        <FornecedorActions id={f.id} />
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <FornecedoresTabs
+        fornecedores={todosFornecedores}
+        fornecedoresFiltrados={fornecedoresFiltrados}
+        search={search}
+        isAdmin={isAdmin}
+        orcamentos={orcamentos}
+        orcamentosPage={orcamentosPage}
+        orcamentosTotalPages={orcamentosTotalPages}
+        orcamentosSearch={orcamentosSearch}
+        ocorrencias={ocorrencias.map((o) => ({ id: o.id, titulo: o.titulo }))}
+      />
     </div>
   )
 }
