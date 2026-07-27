@@ -12,6 +12,7 @@ import { OrcamentoActions } from '@/components/financas/orcamento-actions'
 import { NovoSeguroDialog } from '@/components/financas/novo-seguro-dialog'
 import { SeguroActions } from '@/components/financas/seguro-actions'
 import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
+import { DividirDespesaDialog } from '@/components/financas/dividir-despesa-dialog'
 import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
 import { ExerciciosTab, type ContaComSaldo, type ExercicioLinha } from '@/components/financas/exercicios-tab'
@@ -417,7 +418,8 @@ export function FinancasTabs({
 
       <TabsContent value="dividas" className="mt-4">
         {isAdmin && (
-          <div className="mb-3 flex justify-end">
+          <div className="mb-3 flex flex-wrap justify-end gap-2">
+            <DividirDespesaDialog fracoes={fracoes} pontosAssembleia={pontosAssembleia} />
             <LancarJurosDialog quotasEmAtraso={quotasEmAtraso} fracoes={fracoes} />
           </div>
         )}

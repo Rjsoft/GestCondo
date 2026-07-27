@@ -327,7 +327,13 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           </li>
           <li>
             <strong>Dívidas por fração</strong>: quanto cada fração ainda
-            deve.
+            deve. O administrador pode &ldquo;Lançar juros de mora&rdquo;
+            sobre quotas em atraso, ou &ldquo;Dividir despesa por
+            frações&rdquo; para ratear uma despesa extraordinária (ex:
+            pintura da fachada) pelas frações por permilagem, criando a
+            dívida correspondente em cada uma — com opção de excluir as
+            frações isentas do elevador e de ligar a uma deliberação de
+            assembleia.
           </li>
           <li>
             <strong>Adiantamentos</strong>: quando um condómino paga mais do

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarPercentagemReserva, calcularQuotasMensais } from './rateio'
+import { aplicarPercentagemReserva, calcularQuotasMensais, calcularRateioValor } from './rateio'
 
 describe('calcularQuotasMensais', () => {
   it('rateia proporcionalmente por permilagem quando a soma é 1000‰', () => {
@@ -86,6 +86,80 @@ describe('calcularQuotasMensais', () => {
     expect(resultado).toEqual([
       { fracaoId: 1, valorMensal: 50 },
       { fracaoId: 2, valorMensal: 50 },
+    ])
+  })
+})
+
+describe('calcularRateioValor', () => {
+  it('rateia proporcionalmente por permilagem', () => {
+    const fracoes = [
+      { id: 1, permilagem: 600 },
+      { id: 2, permilagem: 400 },
+    ]
+    expect(calcularRateioValor(fracoes, 1000)).toEqual([
+      { fracaoId: 1, valor: 600 },
+      { fracaoId: 2, valor: 400 },
+    ])
+  })
+
+  it('usa a soma real das permilagens quando não totaliza 1000‰', () => {
+    const fracoes = [
+      { id: 1, permilagem: 300 },
+      { id: 2, permilagem: 300 },
+    ]
+    expect(calcularRateioValor(fracoes, 1000)).toEqual([
+      { fracaoId: 1, valor: 500 },
+      { fracaoId: 2, valor: 500 },
+    ])
+  })
+
+  it('arredonda a 2 casas decimais', () => {
+    const fracoes = [
+      { id: 1, permilagem: 1 },
+      { id: 2, permilagem: 2 },
+    ]
+    const resultado = calcularRateioValor(fracoes, 100)
+    expect(resultado[0].valor).toBeCloseTo(33.33, 2)
+    expect(resultado[1].valor).toBeCloseTo(66.67, 2)
+  })
+
+  it('lança erro quando nenhuma fração tem permilagem', () => {
+    const fracoes = [
+      { id: 1, permilagem: 0 },
+      { id: 2, permilagem: 0 },
+    ]
+    expect(() => calcularRateioValor(fracoes, 1000)).toThrow(/não é possível ratear/)
+  })
+
+  it('com isentarElevador, exclui as frações isentas do rateio', () => {
+    const fracoes = [
+      { id: 1, permilagem: 300, isentaElevador: true }, // R/C
+      { id: 2, permilagem: 350, isentaElevador: false },
+      { id: 3, permilagem: 350, isentaElevador: false },
+    ]
+    const resultado = calcularRateioValor(fracoes, 700, true)
+    expect(resultado).toEqual([
+      { fracaoId: 2, valor: 350 },
+      { fracaoId: 3, valor: 350 },
+    ])
+  })
+
+  it('lança erro se todas as frações estiverem isentas do elevador', () => {
+    const fracoes = [
+      { id: 1, permilagem: 500, isentaElevador: true },
+      { id: 2, permilagem: 500, isentaElevador: true },
+    ]
+    expect(() => calcularRateioValor(fracoes, 1000, true)).toThrow(/todas as frações estão isentas/i)
+  })
+
+  it('sem isentarElevador, inclui todas as frações mesmo com isentaElevador marcado', () => {
+    const fracoes = [
+      { id: 1, permilagem: 500, isentaElevador: true },
+      { id: 2, permilagem: 500, isentaElevador: false },
+    ]
+    expect(calcularRateioValor(fracoes, 1000)).toEqual([
+      { fracaoId: 1, valor: 500 },
+      { fracaoId: 2, valor: 500 },
     ])
   })
 })

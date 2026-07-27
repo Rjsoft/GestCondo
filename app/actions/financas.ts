@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { assembleia, assembleiaPonto, fornecedor, fracao, movimento, orcamento } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
-import { calcularQuotasMensais } from '@/lib/rateio'
+import { calcularQuotasMensais, calcularRateioValor } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, getTableColumns, gte, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
@@ -428,6 +428,78 @@ export async function lancarJurosMora(taxaAnualPercent: number) {
     quantidade: aLancar.length,
     total: aLancar.reduce((s, f) => s + f.valorJuros, 0),
   }
+}
+
+/**
+ * Divide uma despesa comum extraordinária (ex: pintura da fachada) pelas
+ * frações por permilagem (lib/rateio.ts:calcularRateioValor), gerando um
+ * movimento de receita (dívida) por fração — mesmo padrão de
+ * lancarJurosMora, mas o valor a dividir é indicado pelo admin em vez de
+ * calculado a partir de quotas em atraso. Não lança a despesa em si
+ * (pagamento ao fornecedor); isso continua a fazer-se à parte, como hoje.
+ */
+export async function ratearDespesaComum(formData: FormData) {
+  const admin = await requireAdmin()
+
+  const categoria = String(formData.get('categoria') || '').trim()
+  const descricao = String(formData.get('descricao') || '').trim()
+  const valorTotal = Number(formData.get('valorTotal') || '0')
+  const dataStr = String(formData.get('data') || '').trim()
+  const isentarElevador = formData.get('isentarElevador') === 'true'
+  const assembleiaPontoIdRaw = String(formData.get('assembleiaPontoId') || '').trim()
+  const assembleiaPontoId = assembleiaPontoIdRaw ? Number(assembleiaPontoIdRaw) : null
+
+  if (!categoria || !descricao) throw new Error('Preencha a categoria e a descrição')
+  if (!valorTotal || valorTotal <= 0) throw new Error('Indique um valor total válido')
+  if (assembleiaPontoId) {
+    await validarAssembleiaPonto(admin.condominioId, assembleiaPontoId)
+  }
+
+  const fracoes = await db
+    .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
+    .from(fracao)
+    .where(eq(fracao.condominioId, admin.condominioId))
+
+  const rateio = calcularRateioValor(
+    fracoes.map((f) => ({ id: f.id, permilagem: Number(f.permilagem), isentaElevador: f.isentaElevador })),
+    valorTotal,
+    isentarElevador,
+  )
+
+  const dataMovimento = dataStr ? new Date(dataStr) : new Date()
+  await garantirExercicioAberto(admin.condominioId, dataMovimento)
+
+  for (const f of rateio) {
+    const [novo] = await db
+      .insert(movimento)
+      .values({
+        condominioId: admin.condominioId,
+        userId: admin.userId,
+        tipo: 'receita',
+        categoria,
+        descricao,
+        valor: f.valor.toFixed(2),
+        fracaoId: f.fracaoId,
+        pago: false,
+        destino: 'geral',
+        assembleiaPontoId,
+        data: dataMovimento,
+      })
+      .returning({ id: movimento.id })
+
+    await registarAuditoria({
+      actor: admin,
+      acao: 'criar',
+      entidade: 'movimento',
+      entidadeId: novo.id,
+      detalhes: `${categoria}: ${descricao} — rateio de ${valorTotal.toFixed(2)} € (${f.valor.toFixed(2)} €)${assembleiaPontoId ? ' [quota extraordinária]' : ''}`,
+    })
+  }
+
+  revalidatePath('/financas')
+  revalidatePath('/')
+
+  return { quantidade: rateio.length, total: rateio.reduce((s, f) => s + f.valor, 0) }
 }
 
 // Pontos de assembleia elegíveis para originar uma quota extraordinária

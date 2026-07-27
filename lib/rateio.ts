@@ -44,6 +44,38 @@ export function calcularQuotasMensais(
 }
 
 /**
+ * Rateio de um valor único (não mensal) pelas frações, por permilagem — para
+ * dividir uma despesa comum extraordinária (ex: pintura da fachada) pelos
+ * condóminos, gerando uma dívida (receita) por fração em vez de um único
+ * lançamento avulso. Ver app/actions/financas.ts:ratearDespesaComum.
+ *
+ * `isentarElevador`: quando a despesa diz respeito ao elevador, exclui do
+ * rateio as frações marcadas como isentas (`fracao.isentaElevador`), mesma
+ * regra já usada em `calcularQuotasMensais`. Sem isenção, todas as frações
+ * entram no rateio, isentas ou não.
+ */
+export function calcularRateioValor(
+  fracoes: { id: number; permilagem: number; isentaElevador?: boolean }[],
+  valorTotal: number,
+  isentarElevador = false,
+): { fracaoId: number; valor: number }[] {
+  const base = isentarElevador ? fracoes.filter((f) => !f.isentaElevador) : fracoes
+  const totalPermilagem = base.reduce((s, f) => s + f.permilagem, 0)
+  if (totalPermilagem <= 0) {
+    throw new Error(
+      isentarElevador && fracoes.length > 0
+        ? 'Todas as frações estão isentas do elevador — não é possível ratear esta despesa'
+        : 'Nenhuma fração tem permilagem definida — não é possível ratear esta despesa',
+    )
+  }
+
+  return base.map((f) => ({
+    fracaoId: f.id,
+    valor: Math.round(valorTotal * (f.permilagem / totalPermilagem) * 100) / 100,
+  }))
+}
+
+/**
  * Divide cada quota mensal em parcela corrente e parcela do fundo de reserva,
  * segundo uma percentagem (0–100). `percentagem` nula ou 0 devolve tudo como
  * `valorGeral`, sem `valorReserva` — mesmo comportamento de antes desta
