@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -51,6 +52,9 @@ export function EditarMovimentoDialog({
   assembleiaPontoId,
   pagadorNome,
   pagadorNif,
+  requerAprovacao,
+  urgente,
+  justificacaoUrgencia,
   fracoes,
   fornecedores,
   pontosAssembleia,
@@ -69,6 +73,9 @@ export function EditarMovimentoDialog({
   assembleiaPontoId: number | null
   pagadorNome: string | null
   pagadorNif: string | null
+  requerAprovacao: boolean
+  urgente: boolean
+  justificacaoUrgencia: string | null
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
@@ -81,6 +88,11 @@ export function EditarMovimentoDialog({
     assembleiaPontoId ? String(assembleiaPontoId) : SEM_DELIBERACAO,
   )
   const [destinoValor, setDestinoValor] = useState(destino)
+  const [requerAprovacaoValor, setRequerAprovacaoValor] = useState(requerAprovacao)
+  const [urgenteValor, setUrgenteValor] = useState(urgente)
+  const [justificacaoUrgenciaValor, setJustificacaoUrgenciaValor] = useState(
+    justificacaoUrgencia ?? '',
+  )
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
@@ -88,12 +100,17 @@ export function EditarMovimentoDialog({
     formData.set('destino', destinoValor)
     if (tipo === 'receita') {
       formData.set('fracaoId', fracaoIdValor)
-      if (assembleiaPontoIdValor !== SEM_DELIBERACAO) {
-        formData.set('assembleiaPontoId', assembleiaPontoIdValor)
-      }
     }
     if (tipo === 'despesa' && fornecedorIdValor !== SEM_FORNECEDOR) {
       formData.set('fornecedorId', fornecedorIdValor)
+    }
+    if (assembleiaPontoIdValor !== SEM_DELIBERACAO) {
+      formData.set('assembleiaPontoId', assembleiaPontoIdValor)
+    }
+    if (tipo === 'despesa' && requerAprovacaoValor) formData.set('requerAprovacao', 'on')
+    if (tipo === 'despesa' && urgenteValor) {
+      formData.set('urgente', 'on')
+      formData.set('justificacaoUrgencia', justificacaoUrgenciaValor)
     }
     startTransition(async () => {
       try {
@@ -185,7 +202,13 @@ export function EditarMovimentoDialog({
           )}
 
           <Collapsible
-            defaultOpen={destino === 'reserva' || assembleiaPontoId != null || Boolean(pagadorNome)}
+            defaultOpen={
+              destino === 'reserva' ||
+              assembleiaPontoId != null ||
+              Boolean(pagadorNome) ||
+              requerAprovacao ||
+              urgente
+            }
           >
             <CollapsibleTrigger>
               <ChevronDown className="h-3.5 w-3.5" />
@@ -205,10 +228,12 @@ export function EditarMovimentoDialog({
                 </Select>
               </div>
 
-              {tipo === 'receita' && (
+              {(tipo === 'receita' || (tipo === 'despesa' && requerAprovacaoValor)) && (
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="assembleiaPontoIdEdit">
-                    Quota extraordinária? Ligue a uma decisão de assembleia
+                    {tipo === 'receita'
+                      ? 'Quota extraordinária? Ligue a uma decisão de assembleia'
+                      : 'Ligue à decisão de assembleia que aprovou esta despesa'}
                   </Label>
                   <Select
                     value={assembleiaPontoIdValor}
@@ -217,14 +242,14 @@ export function EditarMovimentoDialog({
                     <SelectTrigger id="assembleiaPontoIdEdit">
                       <SelectValue>
                         {(v: string | null) => {
-                          if (v === SEM_DELIBERACAO || v == null) return 'Quota normal (sem ligação)'
+                          if (v === SEM_DELIBERACAO || v == null) return 'Sem ligação'
                           const p = pontosAssembleia.find((p) => String(p.id) === v)
-                          return p ? p.titulo : 'Quota normal (sem ligação)'
+                          return p ? p.titulo : 'Sem ligação'
                         }}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={SEM_DELIBERACAO}>Quota normal (sem ligação)</SelectItem>
+                      <SelectItem value={SEM_DELIBERACAO}>Sem ligação</SelectItem>
                       {pontosAssembleia.map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>
                           {p.titulo}
@@ -232,6 +257,49 @@ export function EditarMovimentoDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {tipo === 'despesa' && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="requerAprovacaoEdit"
+                      type="checkbox"
+                      checked={requerAprovacaoValor}
+                      onChange={(e) => setRequerAprovacaoValor(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor="requerAprovacaoEdit" className="font-normal text-xs text-muted-foreground">
+                      Requer aprovação da assembleia — fica visível como
+                      pendente até ser ligada a uma decisão aprovada
+                    </Label>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="urgenteEdit"
+                      type="checkbox"
+                      checked={urgenteValor}
+                      onChange={(e) => setUrgenteValor(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor="urgenteEdit" className="font-normal text-xs text-muted-foreground">
+                      Obra urgente (art. 1427.º CC) — decidida pelo
+                      administrador sem esperar por assembleia
+                    </Label>
+                  </div>
+                  {urgenteValor && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="justificacaoUrgenciaEdit">Justificação da urgência</Label>
+                      <Textarea
+                        id="justificacaoUrgenciaEdit"
+                        value={justificacaoUrgenciaValor}
+                        onChange={(e) => setJustificacaoUrgenciaValor(e.target.value)}
+                        rows={2}
+                        placeholder="Ex: rotura de água na coluna, risco para a segurança do edifício"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -278,7 +346,14 @@ export function EditarMovimentoDialog({
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={pending || (tipo === 'receita' && !fracaoIdValor)}>
+            <Button
+              type="submit"
+              disabled={
+                pending ||
+                (tipo === 'receita' && !fracaoIdValor) ||
+                (urgenteValor && !justificacaoUrgenciaValor.trim())
+              }
+            >
               {pending ? 'A guardar...' : 'Guardar alterações'}
             </Button>
           </DialogFooter>

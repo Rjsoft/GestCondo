@@ -43,6 +43,9 @@ type Movimento = {
   assembleiaPontoId: number | null
   pagadorNome: string | null
   pagadorNif: string | null
+  requerAprovacao: boolean
+  urgente: boolean
+  justificacaoUrgencia: string | null
   fornecedorNome?: string | null
 }
 
@@ -232,6 +235,9 @@ export function MapaMensalTab({
                       assembleiaPontoId={mv.assembleiaPontoId}
                       pagadorNome={mv.pagadorNome}
                       pagadorNif={mv.pagadorNif}
+                      requerAprovacao={mv.requerAprovacao}
+                      urgente={mv.urgente}
+                      justificacaoUrgencia={mv.justificacaoUrgencia}
                       fracoes={fracoes}
                       fornecedores={fornecedores}
                       pontosAssembleia={pontosAssembleia}

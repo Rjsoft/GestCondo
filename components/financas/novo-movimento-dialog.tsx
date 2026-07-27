@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -50,6 +51,9 @@ export function NovoMovimentoDialog({
   const [destino, setDestino] = useState('geral')
   const [pago, setPago] = useState(true)
   const [meioPagamento, setMeioPagamento] = useState('')
+  const [requerAprovacao, setRequerAprovacao] = useState(false)
+  const [urgente, setUrgente] = useState(false)
+  const [justificacaoUrgencia, setJustificacaoUrgencia] = useState('')
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
@@ -57,12 +61,17 @@ export function NovoMovimentoDialog({
     formData.set('destino', destino)
     if (tipo === 'receita') {
       formData.set('fracaoId', fracaoId)
-      if (assembleiaPontoId !== SEM_DELIBERACAO) {
-        formData.set('assembleiaPontoId', assembleiaPontoId)
-      }
     }
     if (tipo === 'despesa' && fornecedorId !== SEM_FORNECEDOR) {
       formData.set('fornecedorId', fornecedorId)
+    }
+    if (assembleiaPontoId !== SEM_DELIBERACAO) {
+      formData.set('assembleiaPontoId', assembleiaPontoId)
+    }
+    if (tipo === 'despesa' && requerAprovacao) formData.set('requerAprovacao', 'on')
+    if (tipo === 'despesa' && urgente) {
+      formData.set('urgente', 'on')
+      formData.set('justificacaoUrgencia', justificacaoUrgencia)
     }
     if (pago) formData.set('meioPagamento', meioPagamento)
     startTransition(async () => {
@@ -76,6 +85,9 @@ export function NovoMovimentoDialog({
         setDestino('geral')
         setPago(true)
         setMeioPagamento('')
+        setRequerAprovacao(false)
+        setUrgente(false)
+        setJustificacaoUrgencia('')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao registar')
       }
@@ -212,10 +224,12 @@ export function NovoMovimentoDialog({
                 </p>
               </div>
 
-              {tipo === 'receita' && (
+              {(tipo === 'receita' || (tipo === 'despesa' && requerAprovacao)) && (
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="assembleiaPontoId">
-                    Quota extraordinária? Ligue a uma decisão de assembleia
+                    {tipo === 'receita'
+                      ? 'Quota extraordinária? Ligue a uma decisão de assembleia'
+                      : 'Ligue à decisão de assembleia que aprovou esta despesa'}
                   </Label>
                   <Select
                     value={assembleiaPontoId}
@@ -224,14 +238,14 @@ export function NovoMovimentoDialog({
                     <SelectTrigger id="assembleiaPontoId">
                       <SelectValue>
                         {(v: string | null) => {
-                          if (v === SEM_DELIBERACAO || v == null) return 'Quota normal (sem ligação)'
+                          if (v === SEM_DELIBERACAO || v == null) return 'Sem ligação'
                           const p = pontosAssembleia.find((p) => String(p.id) === v)
-                          return p ? p.titulo : 'Quota normal (sem ligação)'
+                          return p ? p.titulo : 'Sem ligação'
                         }}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={SEM_DELIBERACAO}>Quota normal (sem ligação)</SelectItem>
+                      <SelectItem value={SEM_DELIBERACAO}>Sem ligação</SelectItem>
                       {pontosAssembleia.map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>
                           {p.titulo}
@@ -240,9 +254,51 @@ export function NovoMovimentoDialog({
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Só aparecem aqui decisões já aprovadas em assembleia. Se
-                    esta quota vier de uma dessas decisões, escolha-a.
+                    Só aparecem aqui decisões já aprovadas em assembleia.
                   </p>
+                </div>
+              )}
+
+              {tipo === 'despesa' && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="requerAprovacao"
+                      type="checkbox"
+                      checked={requerAprovacao}
+                      onChange={(e) => setRequerAprovacao(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor="requerAprovacao" className="font-normal text-xs text-muted-foreground">
+                      Requer aprovação da assembleia — fica visível como
+                      pendente até ser ligada a uma decisão aprovada
+                    </Label>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="urgente"
+                      type="checkbox"
+                      checked={urgente}
+                      onChange={(e) => setUrgente(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor="urgente" className="font-normal text-xs text-muted-foreground">
+                      Obra urgente (art. 1427.º CC) — decidida pelo
+                      administrador sem esperar por assembleia
+                    </Label>
+                  </div>
+                  {urgente && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="justificacaoUrgencia">Justificação da urgência</Label>
+                      <Textarea
+                        id="justificacaoUrgencia"
+                        value={justificacaoUrgencia}
+                        onChange={(e) => setJustificacaoUrgencia(e.target.value)}
+                        rows={2}
+                        placeholder="Ex: rotura de água na coluna, risco para a segurança do edifício"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -357,7 +413,11 @@ export function NovoMovimentoDialog({
           <DialogFooter>
             <Button
               type="submit"
-              disabled={pending || (tipo === 'receita' && !fracaoId)}
+              disabled={
+                pending ||
+                (tipo === 'receita' && !fracaoId) ||
+                (urgente && !justificacaoUrgencia.trim())
+              }
             >
               {pending ? 'A guardar...' : 'Guardar movimento'}
             </Button>

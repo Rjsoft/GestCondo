@@ -430,6 +430,32 @@ export async function getPontosAprovadosParaQuota() {
     .orderBy(desc(assembleia.dataPrimeiraConvocatoria))
 }
 
+/**
+ * Despesas ainda pendentes de aprovação formal (marcadas `requerAprovacao`
+ * mas sem ponto de assembleia ligado) ou urgentes (art. 1427º CC, com
+ * justificação) — usada tanto no dossier de apoio à assembleia como para
+ * um aviso na lista de despesas. Nunca bloqueia nada, só torna visível.
+ */
+export async function getDespesasParaRatificar() {
+  const m = await requireAcessoFinanceiro()
+  return db
+    .select({ ...getTableColumns(movimento), fornecedorNome: fornecedor.nome })
+    .from(movimento)
+    .leftJoin(fornecedor, eq(movimento.fornecedorId, fornecedor.id))
+    .where(
+      and(
+        eq(movimento.condominioId, m.condominioId),
+        eq(movimento.tipo, 'despesa'),
+        isNull(movimento.deletedAt),
+        or(
+          and(eq(movimento.requerAprovacao, true), isNull(movimento.assembleiaPontoId)),
+          eq(movimento.urgente, true),
+        ),
+      ),
+    )
+    .orderBy(desc(movimento.data))
+}
+
 // Confirma que um ponto de assembleia pode originar uma quota extraordinária
 // (G05): tem de pertencer a uma assembleia do próprio condomínio, com ata já
 // aprovada (imutável), e o ponto em si tem de ter sido aprovado — nunca
@@ -478,6 +504,9 @@ export async function criarMovimento(formData: FormData) {
   const dataLiquidacaoRaw = String(formData.get('dataLiquidacao') || '').trim()
   const pagadorNome = String(formData.get('pagadorNome') || '').trim()
   const pagadorNif = String(formData.get('pagadorNif') || '').trim()
+  const requerAprovacao = tipo === 'despesa' && formData.get('requerAprovacao') === 'on'
+  const urgente = tipo === 'despesa' && formData.get('urgente') === 'on'
+  const justificacaoUrgencia = String(formData.get('justificacaoUrgencia') || '').trim()
 
   if (!categoria || !descricao || !valor) {
     throw new Error('Preencha todos os campos obrigatórios')
@@ -491,8 +520,12 @@ export async function criarMovimento(formData: FormData) {
   if (destino !== 'geral' && destino !== 'reserva') {
     throw new Error('Destino inválido')
   }
-  // Quota extraordinária (G05): só faz sentido numa receita.
-  if (tipo === 'receita' && assembleiaPontoId) {
+  if (urgente && !justificacaoUrgencia) {
+    throw new Error('Indique a justificação da obra urgente')
+  }
+  // Quota extraordinária (receita) ou despesa aprovada em assembleia —
+  // mesmo ponto, mesma validação para os dois tipos.
+  if (assembleiaPontoId) {
     await validarAssembleiaPonto(admin.condominioId, assembleiaPontoId)
   }
   const dataMovimento = dataStr ? new Date(dataStr) : new Date()
@@ -510,10 +543,13 @@ export async function criarMovimento(formData: FormData) {
       pago,
       fracaoId: tipo === 'receita' ? fracaoId : null,
       fornecedorId: tipo === 'despesa' ? fornecedorId : null,
-      assembleiaPontoId: tipo === 'receita' ? assembleiaPontoId : null,
+      assembleiaPontoId,
       // Só faz sentido numa receita — é o pagador da quota, não da despesa.
       pagadorNome: tipo === 'receita' && pagadorNome ? pagadorNome : null,
       pagadorNif: tipo === 'receita' && pagadorNif ? pagadorNif : null,
+      requerAprovacao,
+      urgente,
+      justificacaoUrgencia: urgente ? justificacaoUrgencia : null,
       destino,
       // Detalhe do pagamento só faz sentido quando o movimento já nasce pago.
       meioPagamento: pago && meioPagamentoRaw ? meioPagamentoRaw : null,
@@ -528,7 +564,7 @@ export async function criarMovimento(formData: FormData) {
     acao: 'criar',
     entidade: 'movimento',
     entidadeId: novo.id,
-    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)${destino === 'reserva' ? ' [fundo de reserva]' : ''}${assembleiaPontoId ? ' [quota extraordinária]' : ''}`,
+    detalhes: `${tipo}: ${categoria} — ${descricao} (${valor} €)${destino === 'reserva' ? ' [fundo de reserva]' : ''}${tipo === 'receita' && assembleiaPontoId ? ' [quota extraordinária]' : ''}${tipo === 'despesa' && assembleiaPontoId ? ' [aprovada em assembleia]' : ''}${urgente ? ' [urgente]' : ''}`,
   })
 
   revalidatePath('/financas')
@@ -561,12 +597,18 @@ export async function atualizarMovimento(formData: FormData) {
   const destino = String(formData.get('destino') || 'geral')
   const pagadorNome = String(formData.get('pagadorNome') || '').trim()
   const pagadorNif = String(formData.get('pagadorNif') || '').trim()
+  const requerAprovacaoRaw = formData.get('requerAprovacao') === 'on'
+  const urgente = formData.get('urgente') === 'on'
+  const justificacaoUrgencia = String(formData.get('justificacaoUrgencia') || '').trim()
 
   if (!categoria || !descricao || !valor || !dataStr) {
     throw new Error('Preencha todos os campos obrigatórios')
   }
   if (destino !== 'geral' && destino !== 'reserva') {
     throw new Error('Destino inválido')
+  }
+  if (urgente && !justificacaoUrgencia) {
+    throw new Error('Indique a justificação da obra urgente')
   }
 
   const [atual] = await db
@@ -579,13 +621,14 @@ export async function atualizarMovimento(formData: FormData) {
   if (atual.tipo === 'receita' && !fracaoId) {
     throw new Error('Selecione a fração a que esta quota diz respeito')
   }
-  if (atual.tipo === 'receita' && assembleiaPontoId) {
+  if (assembleiaPontoId) {
     await validarAssembleiaPonto(admin.condominioId, assembleiaPontoId)
   }
 
   const novaData = new Date(dataStr)
   await garantirExercicioAberto(admin.condominioId, atual.data)
   await garantirExercicioAberto(admin.condominioId, novaData)
+  const requerAprovacao = atual.tipo === 'despesa' && requerAprovacaoRaw
 
   await db
     .update(movimento)
@@ -597,9 +640,12 @@ export async function atualizarMovimento(formData: FormData) {
       destino,
       fracaoId: atual.tipo === 'receita' ? fracaoId : null,
       fornecedorId: atual.tipo === 'despesa' ? fornecedorId : null,
-      assembleiaPontoId: atual.tipo === 'receita' ? assembleiaPontoId : null,
+      assembleiaPontoId,
       pagadorNome: atual.tipo === 'receita' && pagadorNome ? pagadorNome : null,
       pagadorNif: atual.tipo === 'receita' && pagadorNif ? pagadorNif : null,
+      requerAprovacao,
+      urgente: atual.tipo === 'despesa' && urgente,
+      justificacaoUrgencia: atual.tipo === 'despesa' && urgente ? justificacaoUrgencia : null,
     })
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
 

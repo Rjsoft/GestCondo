@@ -51,6 +51,9 @@ type Movimento = {
   assembleiaPontoId: number | null
   pagadorNome: string | null
   pagadorNif: string | null
+  requerAprovacao: boolean
+  urgente: boolean
+  justificacaoUrgencia: string | null
   fornecedorNome?: string | null
 }
 
@@ -275,12 +278,36 @@ export function FinancasTabs({
                           Reserva
                         </Badge>
                       )}
-                      {m.assembleiaPontoId != null && (
+                      {m.tipo === 'receita' && m.assembleiaPontoId != null && (
                         <Badge
                           variant="outline"
                           className="ml-2 border-violet-200 bg-violet-100 text-violet-800"
                         >
                           Quota extraordinária
+                        </Badge>
+                      )}
+                      {m.tipo === 'despesa' && m.assembleiaPontoId != null && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 border-emerald-200 bg-emerald-100 text-emerald-800"
+                        >
+                          Aprovada em assembleia
+                        </Badge>
+                      )}
+                      {m.tipo === 'despesa' && m.requerAprovacao && m.assembleiaPontoId == null && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 border-amber-200 bg-amber-100 text-amber-800"
+                        >
+                          Pendente de aprovação
+                        </Badge>
+                      )}
+                      {m.tipo === 'despesa' && m.urgente && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 border-red-200 bg-red-100 text-red-800"
+                        >
+                          Urgente
                         </Badge>
                       )}
                     </TableCell>
@@ -350,6 +377,9 @@ export function FinancasTabs({
                           assembleiaPontoId={m.assembleiaPontoId}
                           pagadorNome={m.pagadorNome}
                           pagadorNif={m.pagadorNif}
+                          requerAprovacao={m.requerAprovacao}
+                          urgente={m.urgente}
+                          justificacaoUrgencia={m.justificacaoUrgencia}
                           fracoes={fracoes}
                           fornecedores={fornecedores}
                           pontosAssembleia={pontosAssembleia}

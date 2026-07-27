@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getAssembleiaDetalhe } from '@/app/actions/assembleias'
-import { getResumoFinanceiro, getMapaSaldos } from '@/app/actions/financas'
+import { getResumoFinanceiro, getMapaSaldos, getDespesasParaRatificar } from '@/app/actions/financas'
 import { getExercicios } from '@/app/actions/exercicios'
 import { getBalancoPatrimonial } from '@/app/actions/contas-financeiras'
 import { getCondominioAtual, requireAcessoFinanceiro } from '@/lib/session'
@@ -49,11 +49,12 @@ export default async function DossierAssembleiaPage({
   if (!detalhe) notFound()
   const { assembleia, pontos, anexos } = detalhe
 
-  const [condominio, resumoFinanceiro, mapaSaldos, exercicios] = await Promise.all([
+  const [condominio, resumoFinanceiro, mapaSaldos, exercicios, despesasParaRatificar] = await Promise.all([
     getCondominioAtual(membro.condominioId),
     getResumoFinanceiro(),
     getMapaSaldos(),
     getExercicios(),
+    getDespesasParaRatificar(),
   ])
 
   // Mesmo critério de "exercício em vista" já usado em /financas: o aberto
@@ -200,6 +201,45 @@ export default async function DossierAssembleiaPage({
               </p>
             )}
           </div>
+
+          {despesasParaRatificar.length > 0 && (
+            <div>
+              <h2 className="mb-2 font-serif text-sm font-bold text-foreground">
+                Despesas urgentes / pendentes de aprovação
+              </h2>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead>Situação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {despesasParaRatificar.map((d) => (
+                    <TableRow key={d.id}>
+                      <TableCell>{formatData(d.data)}</TableCell>
+                      <TableCell>{d.categoria}</TableCell>
+                      <TableCell className="max-w-xs">
+                        {d.descricao}
+                        {d.urgente && d.justificacaoUrgencia && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Justificação: {d.justificacaoUrgencia}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">{formatEuro(Number(d.valor))}</TableCell>
+                      <TableCell>
+                        {d.urgente ? 'Obra urgente (art. 1427.º CC)' : 'Pendente de aprovação'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {anexos.length > 0 && (
             <div>

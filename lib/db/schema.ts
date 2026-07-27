@@ -362,7 +362,9 @@ export const movimento = pgTable(
       onDelete: "set null",
     }),
     // Opcional — liga uma quota extraordinária (tipo "receita") à deliberação
-    // de assembleia que a aprovou (G05). FK simples, não composta: ao
+    // de assembleia que a aprovou (G05), ou uma despesa à deliberação que a
+    // aprovou (ver `requerAprovacao` acima) — mesmo mecanismo para os dois
+    // tipos. FK simples, não composta: ao
     // contrário de exercicio/contaFinanceira, `assembleiaPonto` não tem
     // `condominioId` próprio nem `unique(id, condominioId)` (nunca foi
     // desenhada para FKs compostas — mesmo caso de `orcamentoRubrica`). O
@@ -394,6 +396,24 @@ export const movimento = pgTable(
     // em vez do NIF único da fração — ver lib/db/schema.ts `fracao.nif`.
     pagadorNome: text("pagadorNome"),
     pagadorNif: text("pagadorNif"),
+    // Aprovação de despesas / obras urgentes (FUNCTIONAL_GAPS.md, secção 4)
+    // — só fazem sentido em despesa. Sem limiar em euros (o Código Civil não
+    // fixa um, é uma distinção qualitativa entre conservação corrente e
+    // extraordinária/inovações) e sem bloqueio: o administrador marca
+    // manualmente, a app só torna visível — mesma filosofia já usada para o
+    // aviso de permilagem (avisa, nunca impede lançar/pagar).
+    // `requerAprovacao` combinado com `assembleiaPontoId` (abaixo) é a fonte
+    // de verdade: sem ponto ligado = pendente; ponto ligado (sempre
+    // `resultado='aprovado'`, ver validarAssembleiaPonto) = aprovada. Sem
+    // campo de estado próprio, para nunca poder divergir da realidade.
+    requerAprovacao: boolean("requerAprovacao").notNull().default(false),
+    // Obra urgente (art. 1427º CC) — independente de requerAprovacao (pode
+    // nunca vir a precisar de aprovação formal, ou as duas coisas ao mesmo
+    // tempo). Não cria nada automaticamente; fica visível na lista de
+    // despesas e no dossier de assembleia para o administrador decidir se
+    // cria um ponto de ordem de trabalhos para ratificação.
+    urgente: boolean("urgente").notNull().default(false),
+    justificacaoUrgencia: text("justificacaoUrgencia"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },

@@ -286,12 +286,14 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           O botão &ldquo;Dossier de apoio (PDF)&rdquo;, na página de detalhe
           da assembleia, reúne num único documento a ordem de trabalhos, o
           resumo financeiro do condomínio, o mapa de saldos por fração (com
-          o nome e a dívida de cada condómino) e o balanço patrimonial, para
-          preparar ou acompanhar a prestação de contas em assembleia. Por
-          mostrar dívidas nominais, só é visível a quem já tem acesso
-          financeiro (administrador, gestor, condómino ou auditor) — um
-          inquilino continua a ver a convocatória e a ata normalmente, mas
-          não este dossier.
+          o nome e a dívida de cada condómino), o balanço patrimonial e as
+          despesas urgentes ou pendentes de aprovação desde a última
+          assembleia (ver secção &ldquo;Finanças&rdquo;), para preparar ou
+          acompanhar a prestação de contas em assembleia. Por mostrar dívidas
+          nominais, só é visível a quem já tem acesso financeiro
+          (administrador, gestor, condómino ou auditor) — um inquilino
+          continua a ver a convocatória e a ata normalmente, mas não este
+          dossier.
         </p>
       </>
     ),
@@ -359,6 +361,24 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           pagador&rdquo; em &ldquo;Mais opções&rdquo; ao lançar ou editar o
           movimento — o recibo passa a mostrar esse nome/NIF em vez do NIF
           único da fração, para cada pagador poder comprovar a sua parte.
+        </p>
+        <Subtitulo>Aprovação de despesas e obras urgentes</Subtitulo>
+        <p>
+          Ao lançar ou editar uma despesa, em &ldquo;Mais opções&rdquo;, pode
+          marcar &ldquo;Requer aprovação da assembleia&rdquo; — a despesa fica
+          visível como pendente até ser ligada a uma decisão já aprovada numa
+          assembleia. Isto nunca impede lançar ou pagar a despesa: a lei não
+          fixa um valor a partir do qual uma despesa exige assembleia (é a
+          distinção entre conservação corrente e extraordinária), por isso é
+          sempre o administrador quem decide e a aplicação só regista essa
+          decisão.
+        </p>
+        <p>
+          Para uma obra urgente decidida sem esperar por assembleia (art.
+          1427.º do Código Civil), marque &ldquo;Obra urgente&rdquo; e indique
+          a justificação — fica destacada na lista de despesas e também no
+          dossier de apoio à próxima assembleia, para o administrador prestar
+          contas.
         </p>
       </>
     ),

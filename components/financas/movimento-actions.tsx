@@ -34,6 +34,9 @@ export function MovimentoActions({
   assembleiaPontoId,
   pagadorNome,
   pagadorNif,
+  requerAprovacao,
+  urgente,
+  justificacaoUrgencia,
   fracoes,
   fornecedores,
   pontosAssembleia,
@@ -51,6 +54,9 @@ export function MovimentoActions({
   assembleiaPontoId: number | null
   pagadorNome: string | null
   pagadorNif: string | null
+  requerAprovacao: boolean
+  urgente: boolean
+  justificacaoUrgencia: string | null
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
@@ -151,6 +157,9 @@ export function MovimentoActions({
         assembleiaPontoId={assembleiaPontoId}
         pagadorNome={pagadorNome}
         pagadorNif={pagadorNif}
+        requerAprovacao={requerAprovacao}
+        urgente={urgente}
+        justificacaoUrgencia={justificacaoUrgencia}
         fracoes={fracoes}
         fornecedores={fornecedores}
         pontosAssembleia={pontosAssembleia}
