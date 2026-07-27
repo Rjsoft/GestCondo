@@ -10,18 +10,24 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { MoreHorizontal, Trash2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
+import { RegistarTransmissaoDialog } from '@/components/fracoes/registar-transmissao-dialog'
+import { MoreHorizontal, Trash2, ArrowUpCircle, ArrowDownCircle, Repeat } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function FracaoActions({
   id,
   isentaElevador,
+  proprietario,
+  emDivida,
 }: {
   id: number
   isentaElevador: boolean
+  proprietario: string
+  emDivida: number
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [transmissaoOpen, setTransmissaoOpen] = useState(false)
 
   const remover = () => {
     startTransition(async () => {
@@ -71,6 +77,10 @@ export function FracaoActions({
               </>
             )}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTransmissaoOpen(true)}>
+            <Repeat className="h-4 w-4" />
+            Registar transmissão
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
@@ -80,6 +90,13 @@ export function FracaoActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <RegistarTransmissaoDialog
+        fracaoId={id}
+        proprietarioAtual={proprietario}
+        emDivida={emDivida}
+        open={transmissaoOpen}
+        onOpenChange={setTransmissaoOpen}
+      />
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}

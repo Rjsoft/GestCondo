@@ -5,12 +5,14 @@ import {
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
-import { getFracoes, getMembros } from '@/app/actions/fracoes'
+import { getContagemTransmissoesPorFracao, getFracoes, getMembros } from '@/app/actions/fracoes'
 import { getSeguros } from '@/app/actions/seguros'
+import { getMapaSaldos } from '@/app/actions/financas'
 import { PageHeader } from '@/components/page-header'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
 import { EditarFracaoDialog } from '@/components/fracoes/editar-fracao-dialog'
 import { FracaoActions } from '@/components/fracoes/fracao-actions'
+import { TransmissoesFracaoDialog } from '@/components/fracoes/transmissoes-fracao-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { SearchInput } from '@/components/ui/search-input'
 import {
@@ -37,7 +39,7 @@ export default async function FracoesPage({
   // (SECURITY_AUDIT.md S13). Para os restantes, getFracoes() já devolve
   // esses campos como null; aqui só se decide esconder a própria coluna.
   const veContactos = temConsultaGestao(membro)
-  const [todasFracoes, membros, seguros] = await Promise.all([
+  const [todasFracoes, membros, seguros, mapaSaldos, contagemTransmissoes] = await Promise.all([
     getFracoes(),
     // Só para quem gere/audita — usado para mostrar quais contas de
     // condómino estão ligadas a cada fração (visibilidade de
@@ -45,6 +47,10 @@ export default async function FracoesPage({
     // tecnicamente permitida, mas não tinha nenhuma UI que o mostrasse).
     veContactos ? getMembros() : Promise.resolve([]),
     getSeguros(),
+    // Só necessário para a ação "Registar transmissão" (admin) — evita a
+    // query extra para quem não vai usar essa ação.
+    isAdmin ? getMapaSaldos() : Promise.resolve([]),
+    isAdmin ? getContagemTransmissoesPorFracao() : Promise.resolve({} as Record<number, number>),
   ])
   // Pesquisa em memória: o número de frações por condomínio é
   // tipicamente pequeno (dezenas), não justifica paginação no servidor.
@@ -182,8 +188,19 @@ export default async function FracoesPage({
                             representanteLegalContacto={f.representanteLegalContacto}
                             notas={f.notas}
                           />
-                          <FracaoActions id={f.id} isentaElevador={f.isentaElevador} />
+                          <FracaoActions
+                            id={f.id}
+                            isentaElevador={f.isentaElevador}
+                            proprietario={f.proprietario}
+                            emDivida={mapaSaldos.find((s) => s.fracaoId === f.id)?.emDivida ?? 0}
+                          />
                         </div>
+                        {(contagemTransmissoes[f.id] ?? 0) > 0 && (
+                          <TransmissoesFracaoDialog
+                            fracaoId={f.id}
+                            total={contagemTransmissoes[f.id]}
+                          />
+                        )}
                       </TableCell>
                     )}
                   </TableRow>

@@ -330,6 +330,13 @@
       "when": 1785146374733,
       "tag": "0046_neat_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1785147705985,
+      "tag": "0047_outgoing_nova",
+      "breakpoints": true
     }
   ]
 }

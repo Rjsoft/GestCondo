@@ -314,6 +314,38 @@ export const fracao = pgTable(
   (t) => [index("fracao_condominio_idx").on(t.condominioId)],
 )
 
+// Registo de uma transmissão de fração (venda, doação, sucessão) — amarra
+// num só sítio o que antes ficava disperso (editar o proprietário à mão,
+// declaração de dívida à parte, gestão de contas em separado). Sem
+// `condominioId` próprio nem FK composta — mesmo padrão de
+// `documentoVersao`/`orcamentoRubrica`: isolamento validado contra a fração
+// pai. `saldoNaData` é um snapshot (a dívida real muda com o tempo, ver
+// getMapaSaldos) — guarda quanto se devia no momento da transmissão, para
+// registo histórico. `autorNome` denormalizado pelo mesmo motivo de
+// `documentoVersao`/`mensagem` (removerMembro pode apagar a linha `membro`).
+export const fracaoTransmissao = pgTable(
+  "fracao_transmissao",
+  {
+    id: serial("id").primaryKey(),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    vendedorNome: text("vendedorNome").notNull(),
+    vendedorNif: text("vendedorNif"),
+    compradorNome: text("compradorNome").notNull(),
+    compradorNif: text("compradorNif"),
+    dataEscritura: timestamp("dataEscritura").notNull(),
+    saldoNaData: numeric("saldoNaData", { precision: 12, scale: 2 }).notNull(),
+    // "transferido" | "mantido_vendedor" | "regularizado"
+    decisaoSaldo: text("decisaoSaldo").notNull(),
+    notas: text("notas"),
+    userId: text("userId").notNull(),
+    autorNome: text("autorNome").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("fracao_transmissao_fracao_idx").on(t.fracaoId)],
+)
+
 // Movimentos financeiros: quotas (receita) e despesas.
 // `deletedAt` implementa soft-delete: registos financeiros têm obrigação
 // legal de retenção (contabilística/fiscal) independente do RGPD, pelo que

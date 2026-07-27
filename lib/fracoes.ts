@@ -24,3 +24,13 @@ export const TIPO_TITULAR_LABEL: Record<TipoTitular, string> = {
   locatario: 'Locatário',
   antigo: 'Antigo condómino',
 }
+
+export const DECISOES_SALDO = ['transferido', 'mantido_vendedor', 'regularizado'] as const
+
+export type DecisaoSaldo = (typeof DECISOES_SALDO)[number]
+
+export const DECISAO_SALDO_LABEL: Record<DecisaoSaldo, string> = {
+  transferido: 'Transferido para o novo titular',
+  mantido_vendedor: 'Mantido como dívida do vendedor',
+  regularizado: 'Regularizado no ato da escritura',
+}

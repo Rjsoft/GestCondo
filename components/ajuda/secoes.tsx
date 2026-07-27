@@ -522,6 +522,20 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           venda), fica registado em &ldquo;Auditoria&rdquo; quem era o
           proprietário antes e depois da alteração, com data e autor.
         </p>
+        <Subtitulo>Registar uma transmissão (venda, doação, sucessão)</Subtitulo>
+        <p>
+          No menu &ldquo;...&rdquo; junto de cada fração, &ldquo;Registar
+          transmissão&rdquo; pede o nome do novo titular, a data da escritura
+          e o que acontece ao saldo em dívida (transferido para o novo
+          titular, mantido como dívida do vendedor, ou regularizado na
+          própria escritura). O proprietário da fração é atualizado
+          automaticamente e fica um histórico de &ldquo;transmissões
+          anteriores&rdquo; junto da fração. Depois de registar, ainda é
+          preciso gerir manualmente o acesso à aplicação em
+          &ldquo;Condóminos&rdquo; (remover a conta antiga, ligar a conta do
+          novo titular) e, se necessário, emitir a declaração de dívida em
+          &ldquo;Finanças&rdquo;.
+        </p>
       </>
     ),
   },

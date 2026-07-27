@@ -1,9 +1,10 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fracao, membro } from '@/lib/db/schema'
+import { fracao, fracaoTransmissao, membro } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
-import { TIPOS_TITULAR } from '@/lib/fracoes'
+import { DECISAO_SALDO_LABEL, DECISOES_SALDO, TIPOS_TITULAR, type DecisaoSaldo } from '@/lib/fracoes'
+import { getMapaSaldos } from '@/app/actions/financas'
 import {
   PERFIS,
   requireAcessoFinanceiro,
@@ -211,6 +212,105 @@ export async function alternarIsencaoElevador(id: number, isento: boolean) {
 
   revalidatePath('/fracoes')
   revalidatePath('/financas')
+}
+
+/**
+ * Regista a transmissão de uma fração (venda, doação, sucessão), amarrando
+ * num só passo o que antes ficava disperso: vendedor/comprador, data da
+ * escritura, decisão sobre o saldo em dívida (snapshot, não uma alteração
+ * automática de movimentos — a dívida é da fração, não de uma "pessoa"
+ * registada em `movimento`). Atualiza `fracao.proprietario`/`nif`,
+ * reaproveitando o mesmo diff de auditoria já usado em `atualizarFracao`
+ * ("Histórico de titularidade"). Não mexe em `membro` nem em movimentos —
+ * gerir o acesso à app (remover a conta antiga, ligar a do novo titular) e
+ * emitir a declaração de dívida, se necessário, continuam passos manuais
+ * separados (ver /condominos e /financas/declaracao-divida).
+ */
+export async function registarTransmissaoFracao(fracaoId: number, formData: FormData) {
+  const admin = await requireAdmin()
+  const condicao = and(eq(fracao.id, fracaoId), eq(fracao.condominioId, admin.condominioId))
+
+  const [antes] = await db
+    .select({ proprietario: fracao.proprietario, nif: fracao.nif })
+    .from(fracao)
+    .where(condicao)
+    .limit(1)
+  if (!antes) throw new Error('Fração não encontrada')
+
+  const compradorNome = String(formData.get('compradorNome') || '').trim()
+  const compradorNif = String(formData.get('compradorNif') || '').trim()
+  const dataEscrituraStr = String(formData.get('dataEscritura') || '').trim()
+  const decisaoSaldo = String(formData.get('decisaoSaldo') || '')
+  const notas = String(formData.get('notas') || '').trim()
+
+  if (!compradorNome) throw new Error('Indique o nome do novo titular')
+  if (!dataEscrituraStr) throw new Error('Indique a data da escritura')
+  if (!(DECISOES_SALDO as readonly string[]).includes(decisaoSaldo)) {
+    throw new Error('Indique a decisão sobre o saldo em dívida')
+  }
+
+  const saldos = await getMapaSaldos()
+  const saldoAtual = saldos.find((s) => s.fracaoId === fracaoId)?.emDivida ?? 0
+
+  await db.insert(fracaoTransmissao).values({
+    fracaoId,
+    vendedorNome: antes.proprietario,
+    vendedorNif: antes.nif,
+    compradorNome,
+    compradorNif: compradorNif || null,
+    dataEscritura: new Date(dataEscrituraStr),
+    saldoNaData: saldoAtual.toFixed(2),
+    decisaoSaldo,
+    notas: notas || null,
+    userId: admin.userId,
+    autorNome: admin.nome,
+  })
+
+  const novosValores = { proprietario: compradorNome, nif: compradorNif || null }
+  await db.update(fracao).set(novosValores).where(condicao)
+
+  const alteracoes = compararCampos(antes, novosValores, { proprietario: 'Proprietário', nif: 'NIF' })
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'fracao',
+    entidadeId: fracaoId,
+    detalhes: `Transmissão registada: ${antes.proprietario} → ${compradorNome}, escritura em ${dataEscrituraStr}, saldo à data: ${saldoAtual.toFixed(2)} € (${DECISAO_SALDO_LABEL[decisaoSaldo as DecisaoSaldo]})`,
+    alteracoes,
+  })
+
+  revalidatePath('/fracoes')
+}
+
+/** Contagem de transmissões por fração, para o botão "N transmissões anteriores" na listagem. */
+export async function getContagemTransmissoesPorFracao() {
+  const m = await requireAcessoFinanceiro()
+  const linhas = await db
+    .select({ fracaoId: fracaoTransmissao.fracaoId })
+    .from(fracaoTransmissao)
+    .innerJoin(fracao, eq(fracaoTransmissao.fracaoId, fracao.id))
+    .where(eq(fracao.condominioId, m.condominioId))
+
+  const contagem: Record<number, number> = {}
+  for (const l of linhas) contagem[l.fracaoId] = (contagem[l.fracaoId] ?? 0) + 1
+  return contagem
+}
+
+/** Histórico de transmissões de uma fração, mais recente primeiro. */
+export async function getTransmissoesFracao(fracaoId: number) {
+  const m = await requireAcessoFinanceiro()
+  const [f] = await db
+    .select({ id: fracao.id })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, m.condominioId)))
+    .limit(1)
+  if (!f) throw new Error('Fração não encontrada')
+
+  return db
+    .select()
+    .from(fracaoTransmissao)
+    .where(eq(fracaoTransmissao.fracaoId, fracaoId))
+    .orderBy(desc(fracaoTransmissao.createdAt))
 }
 
 export async function eliminarFracao(id: number) {
