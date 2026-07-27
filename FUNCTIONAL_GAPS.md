@@ -120,7 +120,7 @@ Este é o módulo funcionalmente mais crítico para o mercado português (as ass
 | Classificação por tipo | ✅ Implementado | `ata \| regulamento \| orcamento \| outro`. | — |
 | Controlo de permissões por documento | ✅ Implementado | Documento pode ser marcado como confidencial (na criação ou depois); fica filtrado no servidor para quem não tem acesso de gestão/auditoria (`temConsultaGestao`), não só escondido na UI. Não é uma lista de permissões por pessoa. | — |
 | Versionamento | ❌ Em falta | Substituir um documento perde a versão anterior. | P2 |
-| Atas / Faturas / Recibos / Contratos / Apólices / Orçamentos / Relatórios | 🟡 Só como categoria de texto | Sem tratamento diferenciado nem campos próprios (ex. uma fatura devia ter fornecedor, valor, NIF). | P2 |
+| Atas / Contratos / Apólices / Orçamentos / Relatórios (categoria "outro" desta tabela genérica) | 🟡 Só como categoria de texto | Sem tratamento diferenciado nem campos próprios. Faturas/recibos de fornecedor **não são um gap** — já têm entidade própria (`documento_fornecedor`, Fase A.2) com fornecedor/NIF, valor, nº documento, datas de emissão/vencimento e controlo de pagamentos, em `/financas` → tab "Documentos de fornecedor"; esta linha confundia as duas coisas. | P3 |
 | Exportação e arquivo | ❌ Em falta | — | P2 |
 
 ## 7. Auditoria (funcionalidade de produto, distinta da auditoria de segurança)
