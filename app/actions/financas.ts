@@ -5,6 +5,7 @@ import { assembleia, assembleiaPonto, fornecedor, fracao, movimento, orcamento }
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais, calcularRateioValor } from '@/lib/rateio'
+import { ESCALOES_ANTIGUIDADE, calcularAntiguidadeDivida } from '@/lib/antiguidade-divida'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, getTableColumns, gte, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
@@ -358,6 +359,45 @@ export async function getQuotasEmAtraso() {
         isNull(movimento.deletedAt),
       ),
     )
+}
+
+/**
+ * Antiguidade da dívida por escalão (30/60/90/180/+365 dias), por fração —
+ * agrupa as mesmas quotas em atraso de `getQuotasEmAtraso()` (quotas ainda
+ * não vencidas não entram aqui, só o que já está realmente em atraso).
+ * Inclui todas as frações do condomínio, mesmo sem dívida (escalões a
+ * zero), para o relatório mostrar sempre a lista completa.
+ */
+export async function getAntiguidadeDivida() {
+  const m = await requireAcessoFinanceiro()
+
+  const [fracoes, quotasEmAtraso] = await Promise.all([
+    db
+      .select({ id: fracao.id, identificacao: fracao.identificacao, proprietario: fracao.proprietario })
+      .from(fracao)
+      .where(eq(fracao.condominioId, m.condominioId))
+      .orderBy(asc(fracao.identificacao)),
+    getQuotasEmAtraso(),
+  ])
+
+  const antiguidade = calcularAntiguidadeDivida(
+    quotasEmAtraso
+      .filter((q): q is typeof q & { fracaoId: number } => q.fracaoId != null)
+      .map((q) => ({ fracaoId: q.fracaoId, valor: Number(q.valor), data: q.data })),
+  )
+  const porFracaoId = new Map(antiguidade.map((a) => [a.fracaoId, a]))
+  const escaloesVazios = Object.fromEntries(ESCALOES_ANTIGUIDADE.map((e) => [e.chave, 0]))
+
+  return fracoes.map((f) => {
+    const a = porFracaoId.get(f.id)
+    return {
+      fracaoId: f.id,
+      identificacao: f.identificacao,
+      proprietario: f.proprietario,
+      escaloes: a?.escaloes ?? escaloesVazios,
+      total: a?.total ?? 0,
+    }
+  })
 }
 
 /**

@@ -419,6 +419,10 @@ export function FinancasTabs({
       <TabsContent value="dividas" className="mt-4">
         {isAdmin && (
           <div className="mb-3 flex flex-wrap justify-end gap-2">
+            <Button variant="outline" render={<Link href="/financas/antiguidade-divida" />}>
+              <FileText className="h-4 w-4" />
+              Antiguidade da dívida
+            </Button>
             <DividirDespesaDialog fracoes={fracoes} pontosAssembleia={pontosAssembleia} />
             <LancarJurosDialog quotasEmAtraso={quotasEmAtraso} fracoes={fracoes} />
           </div>
