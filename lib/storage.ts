@@ -7,6 +7,7 @@ export type PastaFicheiro =
   | 'documentos-fornecedor'
   | 'assembleias'
   | 'orcamentos-obra'
+  | 'contratos'
 
 const REGRAS: Record<PastaFicheiro, { tipos: string[]; tamanhoMaximo: number }> = {
   documentos: {
@@ -31,6 +32,10 @@ const REGRAS: Record<PastaFicheiro, { tipos: string[]; tamanhoMaximo: number }> 
   },
   'orcamentos-obra': {
     tipos: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
+    tamanhoMaximo: 15 * 1024 * 1024,
+  },
+  contratos: {
+    tipos: ['application/pdf'],
     tamanhoMaximo: 15 * 1024 * 1024,
   },
 }

@@ -3,6 +3,7 @@ import { removerAcentos } from '@/lib/format'
 import { getFornecedores } from '@/app/actions/fornecedores'
 import { getOrcamentosObra } from '@/app/actions/orcamentos-obra'
 import { getOcorrencias } from '@/app/actions/ocorrencias'
+import { getContratos } from '@/app/actions/contratos'
 import { PageHeader } from '@/components/page-header'
 import { FornecedoresTabs } from '@/components/fornecedores/fornecedores-tabs'
 
@@ -18,11 +19,13 @@ export default async function FornecedoresPage({
   const orcamentosSearch = params.qOrcamentos ?? ''
   const orcamentosPage = Math.max(1, Number(params.page) || 1)
 
-  const [todosFornecedores, { orcamentos, totalPages: orcamentosTotalPages }, { ocorrencias }] = await Promise.all([
-    getFornecedores(),
-    getOrcamentosObra({ page: orcamentosPage, search: orcamentosSearch }),
-    getOcorrencias(),
-  ])
+  const [todosFornecedores, { orcamentos, totalPages: orcamentosTotalPages }, { ocorrencias }, contratos] =
+    await Promise.all([
+      getFornecedores(),
+      getOrcamentosObra({ page: orcamentosPage, search: orcamentosSearch }),
+      getOcorrencias(),
+      getContratos(),
+    ])
 
   // Pesquisa em memória: lista tipicamente pequena por condomínio, mesma
   // decisão já tomada para /fracoes/condominos.
@@ -38,7 +41,7 @@ export default async function FornecedoresPage({
     <div>
       <PageHeader
         title="Fornecedores"
-        description="Contactos de fornecedores e orçamentos de obra do condomínio."
+        description="Contactos de fornecedores, orçamentos de obra e contratos do condomínio."
       />
 
       <FornecedoresTabs
@@ -51,6 +54,7 @@ export default async function FornecedoresPage({
         orcamentosTotalPages={orcamentosTotalPages}
         orcamentosSearch={orcamentosSearch}
         ocorrencias={ocorrencias.map((o) => ({ id: o.id, titulo: o.titulo }))}
+        contratos={contratos}
       />
     </div>
   )

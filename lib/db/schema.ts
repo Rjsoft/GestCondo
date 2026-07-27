@@ -214,6 +214,50 @@ export const fornecedor = pgTable(
   (t) => [index("fornecedor_condominio_idx").on(t.condominioId)],
 )
 
+// Contratos recorrentes com fornecedores (elevador, limpeza, seguros de
+// terceiros, energia, etc.) — versão mínima da lacuna "Contratos e
+// manutenção preventiva" do FUNCTIONAL_GAPS.md (P1): datas, valor,
+// periodicidade e alerta de vencimento (mesmo padrão de `seguro`); SLA
+// formal, calendário de visitas e plano anual de manutenção ficam
+// diferidos (documentado no FUNCTIONAL_GAPS.md).
+// `fornecedorId` nullable + `onDelete: "set null"`, mesmo padrão de
+// `orcamentoObra.fornecedorId`/`movimento.fornecedorId`: eliminar o
+// fornecedor nunca pode ficar bloqueado por um contrato antigo.
+// Sem `deletedAt`: ao contrário do seguro (obrigação legal, DOC-01), não
+// há aqui um achado de retenção legal identificado — hard-delete, mesmo
+// padrão de `fornecedor`.
+export const contrato = pgTable(
+  "contrato",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    userId: text("userId").notNull(),
+    fornecedorId: integer("fornecedorId").references(() => fornecedor.id, {
+      onDelete: "set null",
+    }),
+    objeto: text("objeto").notNull(),
+    categoria: text("categoria"),
+    valor: numeric("valor", { precision: 12, scale: 2 }),
+    // "mensal" | "trimestral" | "semestral" | "anual" | "pontual" — ver
+    // lib/fornecedores.ts (PERIODICIDADES/PERIODICIDADE_LABEL).
+    periodicidade: text("periodicidade").notNull().default("anual"),
+    dataInicio: timestamp("dataInicio").notNull(),
+    dataFim: timestamp("dataFim"),
+    renovacaoAutomatica: boolean("renovacaoAutomatica").notNull().default(false),
+    prazoDenunciaDias: integer("prazoDenunciaDias"),
+    notas: text("notas"),
+    anexoUrl: text("anexoUrl"),
+    anexoNomeFicheiro: text("anexoNomeFicheiro"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("contrato_condominio_idx").on(t.condominioId),
+    index("contrato_fornecedor_idx").on(t.fornecedorId),
+  ],
+)
+
 // Lista de referência rápida para situações de urgência (ex. porteiro,
 // manutenção de elevadores, eletricista/canalizador de urgência) — distinta
 // de `fornecedor` (gestão comercial/financeira): visível a qualquer membro

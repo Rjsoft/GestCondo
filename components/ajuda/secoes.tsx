@@ -497,6 +497,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           como &ldquo;Vencedor&rdquo; — fica destacada, para se saber
           facilmente qual foi a decisão tomada.
         </p>
+        <Subtitulo>Contratos</Subtitulo>
+        <p>
+          Na tab &ldquo;Contratos&rdquo;, registe contratos recorrentes com
+          fornecedores (ex: manutenção do elevador, limpeza, energia), com
+          valor, periodicidade e datas de início/fim. Quando a data de fim se
+          aproxima (30 dias) ou já passou, aparece um aviso
+          (&ldquo;Expira em breve&rdquo; ou &ldquo;Expirado&rdquo;) na lista,
+          para não se esquecer de renovar.
+        </p>
       </>
     ),
   },

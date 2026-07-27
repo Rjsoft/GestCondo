@@ -6,6 +6,9 @@ import { EditarFornecedorDialog } from '@/components/fornecedores/editar-fornece
 import { FornecedorActions } from '@/components/fornecedores/fornecedor-actions'
 import { NovoOrcamentoObraDialog } from '@/components/fornecedores/novo-orcamento-obra-dialog'
 import { OrcamentoObraActions } from '@/components/fornecedores/orcamento-obra-actions'
+import { NovoContratoDialog } from '@/components/fornecedores/novo-contrato-dialog'
+import { EditarContratoDialog } from '@/components/fornecedores/editar-contrato-dialog'
+import { ContratoActions } from '@/components/fornecedores/contrato-actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
@@ -19,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatEuro, formatData } from '@/lib/format'
+import { PERIODICIDADE_LABEL } from '@/lib/fornecedores'
 
 type Fornecedor = {
   id: number
@@ -43,6 +47,23 @@ type OrcamentoObra = {
   createdAt: Date
 }
 
+type Contrato = {
+  id: number
+  fornecedorId: number | null
+  fornecedorNome: string | null
+  objeto: string
+  categoria: string | null
+  valor: string | null
+  periodicidade: string
+  dataInicio: Date
+  dataFim: Date | null
+  renovacaoAutomatica: boolean
+  prazoDenunciaDias: number | null
+  notas: string | null
+  anexoUrl: string | null
+  anexoNomeFicheiro: string | null
+}
+
 export function FornecedoresTabs({
   fornecedores,
   fornecedoresFiltrados,
@@ -53,6 +74,7 @@ export function FornecedoresTabs({
   orcamentosTotalPages,
   orcamentosSearch,
   ocorrencias,
+  contratos,
 }: {
   fornecedores: Fornecedor[]
   fornecedoresFiltrados: Fornecedor[]
@@ -63,12 +85,14 @@ export function FornecedoresTabs({
   orcamentosTotalPages: number
   orcamentosSearch: string
   ocorrencias: { id: number; titulo: string }[]
+  contratos: Contrato[]
 }) {
   return (
     <Tabs defaultValue="fornecedores" className="mt-4">
       <TabsList>
         <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
         <TabsTrigger value="orcamentosObra">Orçamentos de obra</TabsTrigger>
+        <TabsTrigger value="contratos">Contratos</TabsTrigger>
       </TabsList>
 
       <TabsContent value="fornecedores" className="mt-4">
@@ -241,6 +265,123 @@ export function FornecedoresTabs({
             }).toString()}`
           }
         />
+      </TabsContent>
+
+      <TabsContent value="contratos" className="mt-4">
+        <div className="mb-4 flex justify-end">
+          {isAdmin && (
+            <NovoContratoDialog fornecedores={fornecedores.map((f) => ({ id: f.id, nome: f.nome }))} />
+          )}
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Objeto</TableHead>
+                  <TableHead>Fornecedor</TableHead>
+                  <TableHead className="hidden sm:table-cell">Periodicidade</TableHead>
+                  <TableHead>Validade</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  {isAdmin && <TableHead className="w-20" />}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contratos.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5 + (isAdmin ? 1 : 0)}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      Ainda não existem contratos registados.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {contratos.map((c) => {
+                  const hoje = new Date()
+                  const diasParaExpirar = c.dataFim
+                    ? Math.ceil((c.dataFim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+                    : null
+                  const expirado = diasParaExpirar !== null && diasParaExpirar < 0
+                  const aExpirar = diasParaExpirar !== null && !expirado && diasParaExpirar <= 30
+                  return (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-medium">
+                        {c.objeto}
+                        {c.categoria && (
+                          <span className="block text-xs text-muted-foreground">{c.categoria}</span>
+                        )}
+                        {c.anexoUrl && (
+                          <a
+                            href={`/api/ficheiros?url=${encodeURIComponent(c.anexoUrl)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-xs text-primary underline-offset-4 hover:underline"
+                          >
+                            {c.anexoNomeFicheiro || 'Ver contrato'}
+                          </a>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {c.fornecedorNome ?? (c.fornecedorId ? 'Fornecedor removido' : '—')}
+                      </TableCell>
+                      <TableCell className="hidden text-muted-foreground sm:table-cell">
+                        {PERIODICIDADE_LABEL[c.periodicidade as keyof typeof PERIODICIDADE_LABEL] ?? c.periodicidade}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <span className="whitespace-nowrap text-muted-foreground">
+                            {formatData(c.dataInicio)}
+                            {c.dataFim ? ` – ${formatData(c.dataFim)}` : ' – sem fim definido'}
+                          </span>
+                          {expirado && (
+                            <Badge variant="outline" className="w-fit border-red-200 bg-red-100 text-red-800">
+                              Expirado
+                            </Badge>
+                          )}
+                          {aExpirar && (
+                            <Badge variant="outline" className="w-fit border-amber-200 bg-amber-100 text-amber-800">
+                              Expira em breve
+                            </Badge>
+                          )}
+                          {c.renovacaoAutomatica && (
+                            <Badge variant="outline" className="w-fit border-sky-200 bg-sky-100 text-sky-800">
+                              Renovação automática
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {c.valor ? formatEuro(Number(c.valor)) : '—'}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <EditarContratoDialog
+                              id={c.id}
+                              fornecedorId={c.fornecedorId}
+                              objeto={c.objeto}
+                              categoria={c.categoria}
+                              valor={c.valor}
+                              periodicidade={c.periodicidade}
+                              dataInicio={c.dataInicio}
+                              dataFim={c.dataFim}
+                              renovacaoAutomatica={c.renovacaoAutomatica}
+                              prazoDenunciaDias={c.prazoDenunciaDias}
+                              notas={c.notas}
+                              fornecedores={fornecedores.map((f) => ({ id: f.id, nome: f.nome }))}
+                            />
+                            <ContratoActions id={c.id} />
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   )
