@@ -27,6 +27,7 @@ import {
   Landmark,
   MessageSquare,
   Search,
+  Bell,
 } from 'lucide-react'
 import {
   PERFIL_LABEL,
@@ -45,6 +46,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: '/', label: 'Painel', icon: LayoutDashboard },
+  { href: '/notificacoes', label: 'Notificações', icon: Bell },
   { href: '/pesquisa', label: 'Pesquisa', icon: Search },
   {
     href: '/financas',

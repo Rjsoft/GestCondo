@@ -67,6 +67,12 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             em avisos, documentos, ocorrências, condóminos e movimentos
             financeiros.
           </li>
+          <li>
+            &ldquo;Notificações&rdquo; no menu lateral junta, num só sítio,
+            as mensagens por ler, os avisos importantes ou urgentes que
+            ainda não confirmou e as ocorrências que precisam de si — o
+            número junto ao nome mostra quantas tem.
+          </li>
         </ul>
 
         <Subtitulo>Algumas palavras que vai encontrar</Subtitulo>
