@@ -2,7 +2,13 @@ import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { PendingScreen } from '@/components/pending-screen'
 import { SuspensoScreen } from '@/components/suspenso-screen'
-import { ehOperadorPlataforma, getCondominioAtual, getMembroAtual, getSession } from '@/lib/session'
+import {
+  ehOperadorPlataforma,
+  getCondominioAtual,
+  getCondominiosDoUtilizador,
+  getMembroAtual,
+  getSession,
+} from '@/lib/session'
 import { getNotificacoes } from '@/app/actions/notificacoes'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -40,8 +46,11 @@ export default async function AppLayout({
     )
   }
 
-  const condominio = await getCondominioAtual(membro.condominioId)
-  const notificacoes = await getNotificacoes()
+  const [condominio, notificacoes, condominios] = await Promise.all([
+    getCondominioAtual(membro.condominioId),
+    getNotificacoes(),
+    getCondominiosDoUtilizador(),
+  ])
   const totalNotificacoes =
     notificacoes.mensagens.total + notificacoes.avisos.total + notificacoes.ocorrencias.total
 
@@ -52,6 +61,8 @@ export default async function AppLayout({
       isSuperAdmin={membro.isSuperAdmin}
       isOperadorPlataforma={membro.isOperadorPlataforma}
       condominioNome={condominio?.nome ?? 'Condomínio'}
+      condominioId={membro.condominioId}
+      condominios={condominios}
       contagensNav={{
         '/mensagens': notificacoes.mensagens.total,
         '/notificacoes': totalNotificacoes,

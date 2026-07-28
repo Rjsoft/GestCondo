@@ -27,11 +27,12 @@ import {
   documento,
 } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
-import { requireAdmin, getSession } from '@/lib/session'
+import { COOKIE_CONDOMINIO_ATIVO, requireAdmin, requireMembroAprovado, getSession } from '@/lib/session'
 import type { MembroSessao } from '@/lib/perfis'
 import { paraData, paraDataOuNula, remapear, remapearOpcional } from '@/lib/importacao-condominio'
-import { eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 
 const VERSAO_FORMATO_EXPORTACAO = 1
 
@@ -254,6 +255,104 @@ export async function entrarComCodigo(formData: FormData) {
     entidade: 'membro',
     entidadeId: novoMembro.id,
     detalhes: 'Registo via código de convite',
+  })
+
+  revalidatePath('/')
+}
+
+/**
+ * Junta a conta autenticada — que já tem pelo menos uma linha `membro`
+ * noutro condomínio — a mais um condomínio, pelo código de convite.
+ * Distinto de `entrarComCodigo` (onboarding da 1ª vez, para uma conta
+ * ainda sem nenhum `membro`, chamado a partir de `/onboarding`): esta ação
+ * serve as empresas gestoras que administram vários condomínios com a
+ * mesma conta, a partir de `/condominio`. Entra sempre como
+ * `pendente`/`condomino` — o administrador do condomínio novo aprova e
+ * ajusta o perfil (ex. `gestor`), tal como qualquer registo novo.
+ */
+export async function juntarOutroCondominio(formData: FormData) {
+  const membroAtual = await requireMembroAprovado()
+
+  const codigo = String(formData.get('codigo') || '').trim().toUpperCase()
+  if (!codigo) {
+    throw new Error('Introduza o código de convite')
+  }
+
+  const [c] = await db.select().from(condominio).where(eq(condominio.codigoConvite, codigo)).limit(1)
+  if (!c) {
+    throw new Error('Código de convite inválido')
+  }
+
+  const [jaMembro] = await db
+    .select({ id: membro.id })
+    .from(membro)
+    .where(and(eq(membro.userId, membroAtual.userId), eq(membro.condominioId, c.id)))
+    .limit(1)
+  if (jaMembro) {
+    throw new Error('A sua conta já está associada a este condomínio')
+  }
+
+  const [novoMembro] = await db
+    .insert(membro)
+    .values({
+      condominioId: c.id,
+      userId: membroAtual.userId,
+      nome: membroAtual.nome,
+      email: membroAtual.email,
+      perfil: 'condomino',
+      estado: 'pendente',
+    })
+    .returning()
+
+  await registarAuditoria({
+    actor: {
+      ...membroAtual,
+      id: novoMembro.id,
+      condominioId: novoMembro.condominioId,
+      perfil: 'condomino',
+      estado: 'pendente',
+      fracaoId: novoMembro.fracaoId,
+    },
+    acao: 'criar',
+    entidade: 'membro',
+    entidadeId: novoMembro.id,
+    detalhes: `Conta associada a mais um condomínio (${c.nome}) via código de convite`,
+  })
+
+  revalidatePath('/')
+}
+
+/**
+ * Define qual das linhas `membro` da conta (quando pertence a mais do que
+ * um condomínio) fica ativa nesta sessão de browser — grava num cookie
+ * lido por `getMembroAtual()`. Valida sempre que a conta tem mesmo uma
+ * linha `membro` aprovada nesse condomínio antes de aceitar, nunca confia
+ * num `condominioId` vindo só do cliente.
+ */
+export async function definirCondominioAtivo(condominioId: number) {
+  const session = await getSession()
+  if (!session?.user) throw new Error('Não autorizado')
+
+  const [pertence] = await db
+    .select({ id: membro.id })
+    .from(membro)
+    .where(
+      and(
+        eq(membro.userId, session.user.id),
+        eq(membro.condominioId, condominioId),
+        eq(membro.estado, 'aprovado'),
+      ),
+    )
+    .limit(1)
+  if (!pertence) throw new Error('A sua conta não pertence a este condomínio')
+
+  const cookieStore = await cookies()
+  cookieStore.set(COOKIE_CONDOMINIO_ATIVO, String(condominioId), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
   })
 
   revalidatePath('/')

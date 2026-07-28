@@ -1,9 +1,14 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { condominio, membro, user } from '@/lib/db/schema'
-import { asc, eq } from 'drizzle-orm'
-import { headers } from 'next/headers'
+import { and, asc, eq } from 'drizzle-orm'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+
+/** Nome do cookie que guarda qual das linhas `membro` da conta (quando
+ * pertence a mais do que um condomínio) está ativa nesta sessão de
+ * browser — ver `definirCondominioAtivo` em app/actions/condominio.ts. */
+export const COOKIE_CONDOMINIO_ATIVO = 'condominioAtivoId'
 import {
   type EstadoMembro,
   type MembroSessao,
@@ -45,6 +50,17 @@ export async function getSession() {
  * Devolve o `membro` do utilizador autenticado, se já tiver feito
  * onboarding. Cada `membro` pertence a exatamente um `condominio`
  * (`membro.condominioId`) — ver lib/db/schema.ts para o modelo multi-tenant.
+ * Uma conta pode ter mais do que uma linha `membro` (uma por condomínio a
+ * que pertence, ex. empresa gestora) — ver `getCondominiosDoUtilizador`.
+ *
+ * Escolhe qual das linhas fica "ativa" nesta chamada por esta ordem:
+ * 1. a indicada pelo cookie `condominioAtivoId` (só se ainda pertencer à
+ *    conta e estiver aprovada — nunca confia cegamente no cookie);
+ * 2. a primeira linha aprovada, se existir (evita prender uma conta no
+ *    ecrã "aguarda aprovação" só porque a linha mais antiga está pendente
+ *    noutro condomínio, quando já está aprovada nalgum);
+ * 3. a primeira linha de todas, aprovada ou não (comportamento anterior,
+ *    preservado para quem só tem uma linha pendente).
  *
  * Devolve `null` em dois casos distintos que os chamadores tratam de forma
  * diferente: (a) sem sessão válida, ou (b) sessão válida mas ainda sem
@@ -61,24 +77,30 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
 
   const { id: userId } = session.user
 
-  const [[linha], [userRow]] = await Promise.all([
+  const [linhas, [userRow], cookieStore] = await Promise.all([
     db
       .select({ membro, estadoSubscricao: condominio.estadoSubscricao })
       .from(membro)
       .innerJoin(condominio, eq(membro.condominioId, condominio.id))
       .where(eq(membro.userId, userId))
-      .orderBy(asc(membro.id))
-      .limit(1),
+      .orderBy(asc(membro.id)),
     db
       .select({ superAdmin: user.superAdmin, operadorPlataforma: user.operadorPlataforma })
       .from(user)
       .where(eq(user.id, userId))
       .limit(1),
+    cookies(),
   ])
   const isSuperAdmin = userRow?.superAdmin ?? false
   const isOperadorPlataforma = userRow?.operadorPlataforma ?? false
 
-  if (!linha) return null
+  if (linhas.length === 0) return null
+
+  const condominioAtivoId = Number(cookieStore.get(COOKIE_CONDOMINIO_ATIVO)?.value)
+  const linha =
+    linhas.find((l) => l.membro.condominioId === condominioAtivoId && l.membro.estado === 'aprovado') ??
+    linhas.find((l) => l.membro.estado === 'aprovado') ??
+    linhas[0]
   const { membro: existente, estadoSubscricao } = linha
 
   return {
@@ -95,6 +117,26 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     isOperadorPlataforma,
     condominioSuspenso: estadoSubscricao === 'suspenso',
   }
+}
+
+/**
+ * Lista os condomínios aprovados a que a conta autenticada pertence — para
+ * mostrar o seletor de "condomínio ativo" na barra lateral quando há mais
+ * do que um (ver `components/app-shell.tsx`). Devolve lista vazia sem
+ * sessão válida, em vez de lançar — chamado incondicionalmente no layout.
+ */
+export async function getCondominiosDoUtilizador(): Promise<
+  { condominioId: number; nome: string }[]
+> {
+  const session = await getSession()
+  if (!session?.user) return []
+
+  return db
+    .select({ condominioId: membro.condominioId, nome: condominio.nome })
+    .from(membro)
+    .innerJoin(condominio, eq(membro.condominioId, condominio.id))
+    .where(and(eq(membro.userId, session.user.id), eq(membro.estado, 'aprovado')))
+    .orderBy(asc(condominio.nome))
 }
 
 /**

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
+import { CondominioSelector } from '@/components/condominio-selector'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -112,6 +113,8 @@ export function AppShell({
   isSuperAdmin,
   isOperadorPlataforma,
   condominioNome,
+  condominioId,
+  condominios,
   contagensNav,
 }: {
   children: React.ReactNode
@@ -120,6 +123,11 @@ export function AppShell({
   isSuperAdmin: boolean
   isOperadorPlataforma: boolean
   condominioNome: string
+  condominioId: number
+  /** Todos os condomínios aprovados da conta — quando tem mais do que um
+   * (empresa gestora), o nome do condomínio na barra lateral vira um
+   * seletor em vez de texto estático (ver CondominioSelector). */
+  condominios: { condominioId: number; nome: string }[]
   /** Contagens para um badge junto à entrada de navegação, indexadas por
    * `href` (ex. não lidas em "Mensagens") — opcional, não obriga as
    * restantes entradas de NAV a mudar de forma. */
@@ -154,9 +162,13 @@ export function AppShell({
         </div>
         <div className="min-w-0 leading-tight">
           <p className="font-serif text-base font-bold">GestCondo</p>
-          <p className="truncate text-xs text-sidebar-foreground/60">
-            {condominioNome}
-          </p>
+          {condominios.length > 1 ? (
+            <CondominioSelector condominios={condominios} condominioIdAtivo={condominioId} />
+          ) : (
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              {condominioNome}
+            </p>
+          )}
         </div>
       </div>
 

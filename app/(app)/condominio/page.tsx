@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { EditarCondominioForm } from '@/components/condominio/editar-condominio-form'
 import { CodigoConviteCard } from '@/components/condominio/codigo-convite-card'
+import { JuntarCondominioForm } from '@/components/condominio/juntar-condominio-form'
 import { ExportarDadosCondominioButton } from '@/components/condominio/exportar-dados-button'
 import { PatrimonioCard } from '@/components/condominio/patrimonio-card'
 
@@ -43,6 +44,14 @@ export default async function CondominioPage() {
         <CardContent className="flex flex-col gap-4 p-5">
           <h2 className="font-serif text-sm font-bold text-foreground">Convidar novos membros</h2>
           <CodigoConviteCard codigoConvite={condominio.codigoConvite} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="flex flex-col gap-4 p-5">
+          <h2 className="font-serif text-sm font-bold text-foreground">
+            Juntar-me a outro condomínio
+          </h2>
+          <JuntarCondominioForm />
         </CardContent>
       </Card>
       <Card>

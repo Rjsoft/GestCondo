@@ -676,6 +676,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             partilha com novos condóminos para se juntarem a este
             condomínio. Regenerar invalida imediatamente o código anterior.
           </li>
+          <li>
+            Se gere mais do que um condomínio com a mesma conta (ex: empresa
+            gestora), &ldquo;Juntar-me a outro condomínio&rdquo; permite
+            entrar noutro condomínio pelo código de convite dele — fica
+            &ldquo;pendente&rdquo; até o administrador desse condomínio
+            aprovar. Assim que aprovado, o nome do condomínio no canto
+            superior esquerdo passa a um menu para trocar entre os
+            condomínios a que pertence.
+          </li>
           <li>Exportar todos os dados do condomínio para um ficheiro.</li>
         </ul>
       </>
