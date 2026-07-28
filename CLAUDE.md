@@ -15,6 +15,7 @@ Não repitas nada disto de memória — os ficheiros abaixo são a fonte de verd
 - `docs/audit/ACCESSIBILITY_AUDIT.md` — acessibilidade a leitores de ecrã (NVDA), achados A1–A4. Requisito explícito do utilizador para toda a app, não só um módulo.
 - `docs/audit/PRE_CLIENTE_EXTERNO.md` — lista consolidada do que tem de estar concluído antes do primeiro cliente externo (não bloqueia o piloto atual).
 - `docs/CHECKLIST_TESTE_MANUAL.md` — checklist para o utilizador percorrer a app com dados reais, não substitui os testes automáticos.
+- `docs/GUIA_TESTE_NVDA.md` — guião para um utilizador externo (não técnico) testar toda a app com o NVDA. Resolve o achado A4/L4 pendente em `docs/audit/ACCESSIBILITY_AUDIT.md` (nunca houve teste real com leitor de ecrã, só revisão de código).
 
 **Não usar como fonte de estado:** `AUDIT.md` é a auditoria inicial de 2026-07-06, **congelada como registo histórico em 2026-07-24**. Descreve um estado do projeto que já não existe (diz que não há multi-tenancy, assembleias, RGPD, auditoria, testes nem git — tudo isso existe hoje). Ler só para contexto histórico.
 
