@@ -25,6 +25,17 @@ export const TIPO_TITULAR_LABEL: Record<TipoTitular, string> = {
   antigo: 'Antigo condómino',
 }
 
+// Soma máxima de permilagem entre todas as frações de um condomínio — o
+// próprio conceito de permilagem (quota-parte em milésimos) implica que a
+// soma nunca deveria ultrapassar 1000‰, ao contrário de ficar abaixo (uma
+// fração ainda por registar é uma situação transitória normal, não um
+// erro). Ver FUNCTIONAL_GAPS.md, "Permilagens".
+export const PERMILAGEM_TOTAL_MAX = 1000
+
+export function excedePermilagemTotal(somaOutrasFracoes: number, novaPermilagem: number): boolean {
+  return somaOutrasFracoes + novaPermilagem > PERMILAGEM_TOTAL_MAX
+}
+
 export const DECISOES_SALDO = ['transferido', 'mantido_vendedor', 'regularizado'] as const
 
 export type DecisaoSaldo = (typeof DECISOES_SALDO)[number]

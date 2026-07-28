@@ -581,6 +581,11 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           fração não tiver acesso ao elevador (por exemplo, um rés-do-chão),
           assinale a opção de isenção da parcela do elevador.
         </p>
+        <p className="text-xs text-muted-foreground">
+          A soma das permilagens de todas as frações nunca pode ultrapassar
+          1000‰ — a aplicação recusa guardar uma fração nova ou uma edição
+          que ultrapasse esse limite, indicando qual seria a soma total.
+        </p>
         <p>
           Em &ldquo;Mais opções&rdquo; pode ainda preencher o NIF, contactos
           de email/telefone, a área privativa e a área comum imputada (em

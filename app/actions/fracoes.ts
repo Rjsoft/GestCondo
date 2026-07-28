@@ -3,7 +3,13 @@
 import { db } from '@/lib/db'
 import { fornecedor, fracao, fracaoTransmissao, membro } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
-import { DECISAO_SALDO_LABEL, DECISOES_SALDO, TIPOS_TITULAR, type DecisaoSaldo } from '@/lib/fracoes'
+import {
+  DECISAO_SALDO_LABEL,
+  DECISOES_SALDO,
+  TIPOS_TITULAR,
+  excedePermilagemTotal,
+  type DecisaoSaldo,
+} from '@/lib/fracoes'
 import { getMapaSaldos } from '@/app/actions/financas'
 import {
   PERFIS,
@@ -12,8 +18,21 @@ import {
   requireConsultaGestao,
   temConsultaGestao,
 } from '@/lib/session'
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, ne, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+
+/** Soma da permilagem de todas as frações do condomínio, excluindo
+ * opcionalmente uma (para validar uma edição contra as restantes). */
+async function getSomaPermilagemOutrasFracoes(condominioId: number, excluirId?: number) {
+  const condicao = excluirId
+    ? and(eq(fracao.condominioId, condominioId), ne(fracao.id, excluirId))
+    : eq(fracao.condominioId, condominioId)
+  const [{ soma }] = await db
+    .select({ soma: sql<string>`coalesce(sum(${fracao.permilagem}), 0)` })
+    .from(fracao)
+    .where(condicao)
+  return Number(soma)
+}
 
 export async function getFracoes() {
   // Dados patrimoniais: admin, gestor, condómino ou auditor — não
@@ -79,6 +98,13 @@ export async function criarFracao(formData: FormData) {
     throw new Error('Preencha a identificação e o proprietário')
   }
 
+  const somaOutras = await getSomaPermilagemOutrasFracoes(admin.condominioId)
+  if (excedePermilagemTotal(somaOutras, Number(permilagem) || 0)) {
+    throw new Error(
+      `A soma das permilagens ficaria em ${(somaOutras + (Number(permilagem) || 0)).toFixed(2)}‰ — acima do máximo de 1000‰`,
+    )
+  }
+
   const [nova] = await db
     .insert(fracao)
     .values({
@@ -133,6 +159,13 @@ export async function atualizarFracao(formData: FormData) {
 
   if (!identificacao || !proprietario) {
     throw new Error('Preencha a identificação e o proprietário')
+  }
+
+  const somaOutras = await getSomaPermilagemOutrasFracoes(admin.condominioId, id)
+  if (excedePermilagemTotal(somaOutras, Number(permilagem) || 0)) {
+    throw new Error(
+      `A soma das permilagens ficaria em ${(somaOutras + (Number(permilagem) || 0)).toFixed(2)}‰ — acima do máximo de 1000‰`,
+    )
   }
 
   // Estado completo antes do update — importante sobretudo para o
