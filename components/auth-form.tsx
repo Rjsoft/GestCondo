@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
@@ -21,8 +21,17 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [pedeCodigo2fa, setPedeCodigo2fa] = useState(false)
   const [usarCodigoRecuperacao, setUsarCodigoRecuperacao] = useState(false)
   const [codigo2fa, setCodigo2fa] = useState('')
+  const tituloRegistadoRef = useRef<HTMLHeadingElement>(null)
 
   const isSignUp = mode === 'sign-up'
+
+  // Ao passar para o ecrã "Falta só um passo" não há mudança de rota nem
+  // de campo de formulário para onde o foco vá naturalmente — sem isto,
+  // ficava preso no botão "Criar conta" já removido do ecrã, invisível
+  // para quem navega só por teclado/leitor de ecrã.
+  useEffect(() => {
+    if (registado) tituloRegistadoRef.current?.focus()
+  }, [registado])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -150,7 +159,11 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <MailCheck className="h-6 w-6" />
             </div>
-            <h1 className="mt-4 font-serif text-xl font-bold text-foreground">
+            <h1
+              ref={tituloRegistadoRef}
+              tabIndex={-1}
+              className="mt-4 font-serif text-xl font-bold text-foreground"
+            >
               Falta só um passo
             </h1>
             <p className="mt-2 text-sm text-pretty text-muted-foreground">

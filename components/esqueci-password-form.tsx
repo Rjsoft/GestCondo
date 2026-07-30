@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,13 @@ export function EsqueciPasswordForm() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [enviado, setEnviado] = useState(false)
+  const tituloEnviadoRef = useRef<HTMLHeadingElement>(null)
+
+  // Ver auth-form.tsx para a mesma correção — sem isto, o foco ficava
+  // preso no botão "Enviar link de recuperação" já removido do ecrã.
+  useEffect(() => {
+    if (enviado) tituloEnviadoRef.current?.focus()
+  }, [enviado])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +43,11 @@ export function EsqueciPasswordForm() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <MailCheck className="h-6 w-6" />
             </div>
-            <h1 className="mt-4 font-serif text-xl font-bold text-foreground">
+            <h1
+              ref={tituloEnviadoRef}
+              tabIndex={-1}
+              className="mt-4 font-serif text-xl font-bold text-foreground"
+            >
               Verifique o seu email
             </h1>
             <p className="mt-2 text-sm text-pretty text-muted-foreground">

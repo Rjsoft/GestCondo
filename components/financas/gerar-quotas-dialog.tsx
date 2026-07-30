@@ -173,6 +173,9 @@ export function GerarQuotasDialog({
         )}
 
         <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+            Cancelar
+          </Button>
           <Button onClick={confirmar} disabled={pending || !!erro}>
             {pending ? 'A gerar...' : 'Confirmar e gerar'}
           </Button>

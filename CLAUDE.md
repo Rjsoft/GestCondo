@@ -12,7 +12,7 @@ Não repitas nada disto de memória — os ficheiros abaixo são a fonte de verd
 - `SECURITY_AUDIT.md` — achados de segurança (S1–S17+).
 - `GDPR_CHECKLIST.md`, `RAT.md` — conformidade RGPD.
 - `MVP_PLAN.md` — detalhe da Fase 2 (MVP funcional).
-- `docs/audit/ACCESSIBILITY_AUDIT.md` — acessibilidade a leitores de ecrã (NVDA), achados A1–A6. Requisito explícito do utilizador para toda a app, não só um módulo.
+- `docs/audit/ACCESSIBILITY_AUDIT.md` — acessibilidade a leitores de ecrã (NVDA), achados A1–A9. Requisito explícito do utilizador para toda a app, não só um módulo.
 - `docs/audit/PRE_CLIENTE_EXTERNO.md` — lista consolidada do que tem de estar concluído antes do primeiro cliente externo (não bloqueia o piloto atual).
 - `docs/CHECKLIST_TESTE_MANUAL.md` — checklist para o utilizador percorrer a app com dados reais, não substitui os testes automáticos.
 - `docs/GUIA_TESTE_NVDA.md` — guião para um utilizador externo (não técnico) testar toda a app com o NVDA. Resolve o achado A4/L4 pendente em `docs/audit/ACCESSIBILITY_AUDIT.md` (nunca houve teste real com leitor de ecrã, só revisão de código).
