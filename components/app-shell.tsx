@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
@@ -136,6 +136,24 @@ export function AppShell({
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
+  const primeiraRenderizacao = useRef(true)
+
+  // Ao navegar entre páginas pela barra lateral (navegação interna do
+  // Next.js, sem recarregar), o browser não repõe o foco no topo da
+  // página como faria numa navegação normal — fica preso no link que
+  // acabou de ser ativado, obrigando quem usa só teclado a percorrer o
+  // resto da barra lateral até chegar ao conteúdo novo. Movemos o foco
+  // para o conteúdo principal a cada mudança de página (exceto na
+  // primeira renderização, para não roubar o foco inicial ao carregar a
+  // aplicação).
+  useEffect(() => {
+    if (primeiraRenderizacao.current) {
+      primeiraRenderizacao.current = false
+      return
+    }
+    mainRef.current?.focus()
+  }, [pathname])
 
   const items = NAV.filter(
     (i) => !i.visivel || i.visivel(perfil, isSuperAdmin, isOperadorPlataforma),
@@ -290,7 +308,7 @@ export function AppShell({
         </div>
       )}
 
-      <main id="main-content" tabIndex={-1} className="print:pl-0 lg:pl-64">
+      <main id="main-content" ref={mainRef} tabIndex={-1} className="print:pl-0 lg:pl-64">
         {/* 1600px em vez do max-w-6xl (1152px) anterior: aproveita a
             largura disponível em ecrãs grandes sem deixar as linhas de
             texto/tabelas absurdamente esticadas em monitores ultra-largos.

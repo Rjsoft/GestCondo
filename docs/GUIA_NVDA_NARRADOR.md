@@ -2,7 +2,7 @@
 
 Data: 2026-07-30. Para quem usa a GestCondo com um leitor de ecrã (NVDA ou o Narrador do Windows) e navega **só com o teclado, sem rato**. Não é preciso saber nada de programação.
 
-Este manual nasceu de um teste real feito por um utilizador cego em 2026-07-29, que reportou dificuldade em navegar só por teclado. Nessa sequência, foi corrigido um problema real confirmado no código (os botões "Anterior"/"Seguinte" de paginação ficavam com um estado "desativado" que o leitor de ecrã não anunciava — ver `docs/audit/ACCESSIBILITY_AUDIT.md`, achado A5) e verificados, um por um, todos os outros padrões de botões/menus/formulários usados na aplicação. Este manual explica como usar esses padrões — muitos dos quais têm atalhos que não são óbvios se ninguém os disser.
+Este manual nasceu de um teste real feito por um utilizador cego em 2026-07-29, que reportou dificuldade em navegar só por teclado. Nessa sequência, foram corrigidos dois problemas reais confirmados no código (ver `docs/audit/ACCESSIBILITY_AUDIT.md`, achados A5 e A6): os botões "Anterior"/"Seguinte" de paginação ficavam com um estado "desativado" que o leitor de ecrã não anunciava, e — o mais importante — ao mudar de página pelo menu lateral, o foco ficava preso no link que se acabava de ativar, obrigando a percorrer o resto do menu inteiro antes de chegar ao conteúdo. Foram também verificados, um por um, todos os outros padrões de botões/menus/formulários usados na aplicação. Este manual explica como usar esses padrões — muitos dos quais têm atalhos que não são óbvios se ninguém os disser.
 
 ## 1. Antes de começares
 
@@ -47,21 +47,25 @@ Os atalhos do Narrador podem variar ligeiramente consoante a versão do Windows.
 
 ## 5. Como a GestCondo está organizada (o que precisas de saber sobre esta app em particular)
 
-### 5.1 Ao abrir qualquer página
+### 5.1 Ao abrir a aplicação pela primeira vez (login, ou escrever o endereço)
 
-O **primeiro** `Tab` numa página foca sempre um link chamado "Saltar para o conteúdo", que normalmente não é visível. Pressiona `Enter` nele para ires diretamente para o conteúdo da página, sem teres de passar pelos ~15 itens do menu lateral de cada vez. **Isto poupa imenso tempo** — usa-o sempre que já conheceres o menu lateral e só quereres chegar ao conteúdo.
+O **primeiro** `Tab` foca sempre um link chamado "Saltar para o conteúdo", que normalmente não é visível. Pressiona `Enter` nele para ires diretamente para o conteúdo, sem teres de passar pelo menu lateral inteiro. Isto só acontece na primeira página que abres — ver 5.2 para o que acontece depois, ao mudar de página pelo menu.
 
-### 5.2 O menu lateral
+### 5.2 Ao mudar de página pelo menu lateral
+
+Ao pressionares `Enter` num item do menu lateral (ex. "Finanças"), a aplicação muda de página **e o foco é movido automaticamente para o conteúdo novo** — não precisas de fazer mais nada, o `Tab` seguinte já vai para o primeiro elemento útil da página (ex. o separador "Movimentos", em Finanças). Não voltas a precisar do link "Saltar para o conteúdo" depois da primeira página.
+
+### 5.3 O menu lateral em si
 
 É uma lista de links normais (Painel, Notificações, Pesquisa, Finanças, Avisos, Ocorrências, Documentos, Mensagens, Fornecedores, Frações, Condóminos, Assembleias, Auditoria, Condomínio, Ajuda, Os meus dados), cada um levando-te diretamente à página. Não tem truques — `Tab` item a item, ou `Insert+F7` (NVDA) para ires diretamente a um pelo nome.
 
-### 5.3 Separadores dentro de uma página (ex.: "Finanças" tem 10: Movimentos, Dívidas por fração, Orçamentos, etc.)
+### 5.4 Separadores dentro de uma página (ex.: "Finanças" tem 10: Movimentos, Dívidas por fração, Orçamentos, etc.)
 
 **Isto é o truque mais importante deste manual.** Quando o foco está num separador (o leitor de ecrã diz "separador" ou "tab"), **não uses `Tab` para ires ao separador seguinte** — usa as **setas esquerda/direita**. Cada seta já muda de separador e mostra o conteúdo novo automaticamente, sem teres de confirmar com `Enter`. Só depois de estares no separador que queres é que usas `Tab` para entrares no conteúdo dele.
 
 Se usares `Tab` repetidamente a partir de um separador, sais logo para o conteúdo do separador atual — não percorres a lista de separadores. Para voltar à lista de separadores, `Shift+Tab` até ao separador ativo e usa as setas.
 
-### 5.4 Campos de escolha (menus tipo "escolhe uma opção")
+### 5.5 Campos de escolha (menus tipo "escolhe uma opção")
 
 Exemplos: "Tipo de titular" numa fração, "Critério de rateio" no condomínio, "Categoria" numa despesa.
 
@@ -71,28 +75,28 @@ Exemplos: "Tipo de titular" numa fração, "Critério de rateio" no condomínio,
 4. `Enter` confirma a escolha e fecha a lista.
 5. `Escape` fecha sem alterar nada — a opção mantém-se a que estava antes.
 
-### 5.5 Diálogos (janelas que aparecem por cima da página, ex.: "Nova fração", "Novo aviso")
+### 5.6 Diálogos (janelas que aparecem por cima da página, ex.: "Nova fração", "Novo aviso")
 
 - Ao abrir, o foco vai automaticamente para o primeiro campo, e o título do diálogo é anunciado.
 - `Tab` percorre todos os campos e botões do diálogo. Ao chegar ao último, o `Tab` seguinte volta ao primeiro — **o foco nunca sai do diálogo para a página por trás** enquanto o diálogo estiver aberto (se achares que saiu, ver a nota da secção 7).
 - `Escape`, ou o botão "Fechar"/"Cancelar", fecham o diálogo e devolvem o foco ao botão que o abriu.
 
-### 5.6 Menus de "Ações" (o botão com três pontinhos, numa linha de tabela)
+### 5.7 Menus de "Ações" (o botão com três pontinhos, numa linha de tabela)
 
 - `Tab` até ao botão "Ações" (tem sempre um nome, nunca é só "botão").
 - `Enter` abre o menu, com foco já na primeira opção.
 - Setas para cima/baixo movem entre as opções.
 - `Enter` escolhe a opção. `Escape` fecha sem escolher nada, e o foco volta ao botão "Ações".
 
-### 5.7 Tabelas (ex.: lista de movimentos em Finanças)
+### 5.8 Tabelas (ex.: lista de movimentos em Finanças)
 
 As tabelas têm cabeçalhos de coluna associados a cada célula. Usa `T` (NVDA) para entrares na tabela e `Ctrl+Alt+Setas` para andares célula a célula — o leitor de ecrã anuncia o cabeçalho da coluna a cada célula nova, para não perderes a noção de que coluna estás a ouvir.
 
-### 5.8 Mensagens de sucesso/erro (aparecem num canto do ecrã, tipo notificação)
+### 5.9 Mensagens de sucesso/erro (aparecem num canto do ecrã, tipo notificação)
 
 São anunciadas automaticamente pelo leitor de ecrã assim que aparecem — não precisas de as procurar nem de mudar de sítio.
 
-### 5.9 Carregar ficheiros (ex.: anexar uma foto a uma ocorrência)
+### 5.10 Carregar ficheiros (ex.: anexar uma foto a uma ocorrência)
 
 São campos nativos do browser — `Tab` até ao campo, `Enter` abre a janela de escolha de ficheiro do Windows, que já é acessível por si só.
 
