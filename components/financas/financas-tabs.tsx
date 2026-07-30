@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/table'
 import { formatEuro, formatData } from '@/lib/format'
 import { TIPO_SEGURO_LABEL } from '@/lib/financas'
+import type { CriterioRateio } from '@/lib/rateio'
 
 type Movimento = {
   id: number
@@ -185,6 +186,7 @@ export function FinancasTabs({
   pontosAssembleia,
   balancoPatrimonialInicial,
   isAdmin,
+  criterioRateio,
 }: {
   movimentos: Movimento[]
   movimentosCsv: Movimento[]
@@ -215,6 +217,7 @@ export function FinancasTabs({
   pontosAssembleia: PontoAssembleiaOpcao[]
   balancoPatrimonialInicial: Awaited<ReturnType<typeof getBalancoPatrimonial>> | null
   isAdmin: boolean
+  criterioRateio: CriterioRateio
 }) {
   return (
     <Tabs defaultValue="movimentos" className="mt-4">
@@ -427,7 +430,11 @@ export function FinancasTabs({
               <FileText className="h-4 w-4" />
               Lembretes de cobrança
             </Button>
-            <DividirDespesaDialog fracoes={fracoes} pontosAssembleia={pontosAssembleia} />
+            <DividirDespesaDialog
+              fracoes={fracoes}
+              pontosAssembleia={pontosAssembleia}
+              criterioRateio={criterioRateio}
+            />
             <LancarJurosDialog quotasEmAtraso={quotasEmAtraso} fracoes={fracoes} />
           </div>
         )}
@@ -623,6 +630,7 @@ export function FinancasTabs({
                             o.percentagemFundoReserva ? Number(o.percentagemFundoReserva) : 0
                           }
                           fracoes={fracoes}
+                          criterioRateio={criterioRateio}
                         />
                       </TableCell>
                     )}

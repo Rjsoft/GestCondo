@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao, getCondominioAtual } from '@/lib/session'
 import {
   getMapaMensalQuotas,
   getMapaSaldos,
@@ -61,6 +61,7 @@ export default async function FinancasPage({
     documentosFornecedor,
     pontosAssembleia,
     resumoFinanceiro,
+    condominioAtual,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -80,7 +81,9 @@ export default async function FinancasPage({
     getDocumentosFornecedor(),
     getPontosAprovadosParaQuota(),
     getResumoFinanceiro(),
+    getCondominioAtual(membro.condominioId),
   ])
+  const criterioRateio = condominioAtual?.criterioRateio === 'partes_iguais' ? 'partes_iguais' : 'permilagem'
 
   // Exercício por omissão para mostrar saldos: o aberto mais recente (o
   // caso normal) ou, na sua falta, o mais recente de todos — nunca
@@ -187,6 +190,7 @@ export default async function FinancasPage({
           assembleiaData: p.assembleiaData.toISOString(),
         }))}
         isAdmin={isAdmin}
+        criterioRateio={criterioRateio}
       />
     </div>
   )

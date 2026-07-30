@@ -1,0 +1,1 @@
+ALTER TABLE "condominio" ADD COLUMN "criterioRateio" text DEFAULT 'permilagem' NOT NULL;

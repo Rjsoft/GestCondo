@@ -1,11 +1,23 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { atualizarCondominio } from '@/app/actions/condominio'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
+
+const CRITERIO_RATEIO_LABEL: Record<string, string> = {
+  permilagem: 'Por permilagem (regra geral)',
+  partes_iguais: 'Partes iguais',
+}
 
 export function EditarCondominioForm({
   nome,
@@ -16,6 +28,7 @@ export function EditarCondominioForm({
   licencaHabitacao,
   projetoArquiteto,
   areaConstrucao,
+  criterioRateio,
 }: {
   nome: string
   morada: string | null
@@ -25,10 +38,13 @@ export function EditarCondominioForm({
   licencaHabitacao: string | null
   projetoArquiteto: string | null
   areaConstrucao: string | null
+  criterioRateio: string
 }) {
   const [pending, startTransition] = useTransition()
+  const [criterio, setCriterio] = useState(criterioRateio)
 
   const onSubmit = (formData: FormData) => {
+    formData.set('criterioRateio', criterio)
     startTransition(async () => {
       try {
         await atualizarCondominio(formData)
@@ -103,6 +119,28 @@ export function EditarCondominioForm({
           defaultValue={areaConstrucao ?? ''}
           placeholder="Opcional"
         />
+      </div>
+
+      <h3 className="mt-2 font-serif text-sm font-bold text-foreground">Quotas</h3>
+
+      <div className="flex flex-col gap-2">
+        <Label>Critério de rateio das quotas e despesas comuns</Label>
+        <Select value={criterio} onValueChange={(value) => value && setCriterio(value)}>
+          <SelectTrigger>
+            <SelectValue>{(v: string | null) => (v ? CRITERIO_RATEIO_LABEL[v] : '')}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="permilagem">Por permilagem (regra geral)</SelectItem>
+            <SelectItem value="partes_iguais">Partes iguais</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          &ldquo;Partes iguais&rdquo; só é válido se estiver previsto no regulamento de
+          condomínio, aprovado sem oposição por maioria dos condóminos que
+          representem a maioria do valor total do prédio (art. 1424º n.º2 do
+          Código Civil). Confirme isso antes de ativar — a aplicação não
+          valida essa aprovação.
+        </p>
       </div>
 
       <div>

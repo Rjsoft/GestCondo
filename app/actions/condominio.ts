@@ -59,6 +59,7 @@ export async function atualizarCondominio(formData: FormData) {
   const licencaHabitacao = String(formData.get('licencaHabitacao') || '').trim()
   const projetoArquiteto = String(formData.get('projetoArquiteto') || '').trim()
   const areaConstrucaoTexto = String(formData.get('areaConstrucao') || '').trim()
+  const criterioRateio = String(formData.get('criterioRateio') || 'permilagem').trim()
 
   if (!nome) {
     throw new Error('Preencha o nome do condomínio')
@@ -66,6 +67,9 @@ export async function atualizarCondominio(formData: FormData) {
   if (areaConstrucaoTexto) {
     const valor = Number(areaConstrucaoTexto)
     if (Number.isNaN(valor) || valor < 0) throw new Error('Área de construção inválida')
+  }
+  if (criterioRateio !== 'permilagem' && criterioRateio !== 'partes_iguais') {
+    throw new Error('Critério de rateio inválido')
   }
 
   const [antes] = await db.select().from(condominio).where(eq(condominio.id, admin.condominioId)).limit(1)
@@ -80,6 +84,7 @@ export async function atualizarCondominio(formData: FormData) {
     licencaHabitacao: licencaHabitacao || null,
     projetoArquiteto: projetoArquiteto || null,
     areaConstrucao: areaConstrucaoTexto || null,
+    criterioRateio,
   }
 
   await db.update(condominio).set(novosValores).where(eq(condominio.id, admin.condominioId))
@@ -93,6 +98,7 @@ export async function atualizarCondominio(formData: FormData) {
     licencaHabitacao: 'Licença de habitação',
     projetoArquiteto: 'Projeto/arquiteto',
     areaConstrucao: 'Área de construção',
+    criterioRateio: 'Critério de rateio das quotas',
   })
   if (alteracoes.length > 0) {
     await registarAuditoria({

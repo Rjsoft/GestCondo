@@ -2,7 +2,7 @@
 
 import { useMemo, useTransition } from 'react'
 import { gerarQuotasOrcamento } from '@/app/actions/orcamentos'
-import { aplicarPercentagemReserva, calcularQuotasMensais } from '@/lib/rateio'
+import { aplicarPercentagemReserva, calcularQuotasMensais, type CriterioRateio } from '@/lib/rateio'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -32,6 +32,7 @@ export function GerarQuotasDialog({
   valorAnualElevador,
   percentagemFundoReserva,
   fracoes,
+  criterioRateio,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -46,6 +47,7 @@ export function GerarQuotasDialog({
     permilagem: number
     isentaElevador: boolean
   }[]
+  criterioRateio: CriterioRateio
 }) {
   const [pending, startTransition] = useTransition()
 
@@ -56,12 +58,12 @@ export function GerarQuotasDialog({
 
   const preview = useMemo(() => {
     try {
-      const quotas = calcularQuotasMensais(fracoes, valorAnual, valorAnualElevador)
+      const quotas = calcularQuotasMensais(fracoes, valorAnual, valorAnualElevador, criterioRateio)
       return aplicarPercentagemReserva(quotas, percentagemFundoReserva)
     } catch (e) {
       return e instanceof Error ? e.message : 'Erro ao calcular o rateio'
     }
-  }, [fracoes, valorAnual, valorAnualElevador, percentagemFundoReserva])
+  }, [fracoes, valorAnual, valorAnualElevador, percentagemFundoReserva, criterioRateio])
 
   const confirmar = () => {
     startTransition(async () => {
@@ -84,7 +86,8 @@ export function GerarQuotasDialog({
         <DialogHeader>
           <DialogTitle>Gerar quotas mensais — {ano}</DialogTitle>
           <DialogDescription>
-            Cria 12 quotas por fração (uma por mês), com o valor rateado por permilagem a
+            Cria 12 quotas por fração (uma por mês), com o valor rateado
+            {criterioRateio === 'partes_iguais' ? ' em partes iguais' : ' por permilagem'} a
             partir do orçamento anual de {formatEuro(valorAnual)}
             {valorAnualElevador > 0 &&
               ` (incluindo ${formatEuro(valorAnualElevador)} de elevador, rateado só pelas frações não isentas)`}
@@ -149,17 +152,23 @@ export function GerarQuotasDialog({
                 </TableBody>
               </Table>
             </div>
-            <p
-              className={
-                Math.abs(totalPermilagem - 1000) > 0.5
-                  ? 'text-xs text-amber-600'
-                  : 'text-xs text-muted-foreground'
-              }
-            >
-              Permilagem total apurada: {totalPermilagem.toFixed(2)}‰
-              {Math.abs(totalPermilagem - 1000) > 0.5 &&
-                ' — o esperado é 1000‰. O rateio é feito proporcionalmente à soma real, mas confirme as permilagens das frações em "Frações".'}
-            </p>
+            {criterioRateio === 'partes_iguais' ? (
+              <p className="text-xs text-muted-foreground">
+                Critério: partes iguais — a permilagem das frações não é usada neste rateio.
+              </p>
+            ) : (
+              <p
+                className={
+                  Math.abs(totalPermilagem - 1000) > 0.5
+                    ? 'text-xs text-amber-600'
+                    : 'text-xs text-muted-foreground'
+                }
+              >
+                Permilagem total apurada: {totalPermilagem.toFixed(2)}‰
+                {Math.abs(totalPermilagem - 1000) > 0.5 &&
+                  ' — o esperado é 1000‰. O rateio é feito proporcionalmente à soma real, mas confirme as permilagens das frações em "Frações".'}
+              </p>
+            )}
           </>
         )}
 

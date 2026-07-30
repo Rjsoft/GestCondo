@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { GerarQuotasDialog } from '@/components/financas/gerar-quotas-dialog'
+import type { CriterioRateio } from '@/lib/rateio'
 import { GerirRubricasDialog } from '@/components/financas/gerir-rubricas-dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { MoreHorizontal, Trash2, Calculator, ListTree } from 'lucide-react'
@@ -22,6 +23,7 @@ export function OrcamentoActions({
   valorAnualElevador,
   percentagemFundoReserva,
   fracoes,
+  criterioRateio,
 }: {
   id: number
   ano: number
@@ -34,6 +36,7 @@ export function OrcamentoActions({
     permilagem: number
     isentaElevador: boolean
   }[]
+  criterioRateio: CriterioRateio
 }) {
   const [pending, startTransition] = useTransition()
   const [gerarAberto, setGerarAberto] = useState(false)
@@ -86,6 +89,7 @@ export function OrcamentoActions({
         valorAnualElevador={valorAnualElevador}
         percentagemFundoReserva={percentagemFundoReserva}
         fracoes={fracoes}
+        criterioRateio={criterioRateio}
       />
       <GerirRubricasDialog
         open={rubricasAberto}

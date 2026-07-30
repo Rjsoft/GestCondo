@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fracao, movimento, orcamento, orcamentoRubrica } from '@/lib/db/schema'
+import { condominio, fracao, movimento, orcamento, orcamentoRubrica } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { aplicarPercentagemReserva, calcularQuotasMensais } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
@@ -76,11 +76,13 @@ export async function criarOrcamento(formData: FormData) {
 }
 
 /**
- * Gera as 12 quotas mensais de cada fração para o ano do orçamento, por
- * rateio de permilagem (ver lib/rateio.ts). Bloqueia se já existirem quotas
- * geradas a partir deste orçamento (verificado por `movimento.orcamentoId`,
- * não por inferência de texto) — para gerar de novo, o admin tem de
- * eliminar essas quotas manualmente primeiro.
+ * Gera as 12 quotas mensais de cada fração para o ano do orçamento, pelo
+ * critério de rateio do condomínio — permilagem por omissão, ou partes
+ * iguais se `condominio.criterioRateio` assim o definir (ver lib/rateio.ts).
+ * Bloqueia se já existirem quotas geradas a partir deste orçamento
+ * (verificado por `movimento.orcamentoId`, não por inferência de texto) —
+ * para gerar de novo, o admin tem de eliminar essas quotas manualmente
+ * primeiro.
  */
 export async function gerarQuotasOrcamento(orcamentoId: number) {
   const admin = await requireAdmin()
@@ -103,10 +105,17 @@ export async function gerarQuotasOrcamento(orcamentoId: number) {
     )
   }
 
-  const fracoes = await db
-    .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
-    .from(fracao)
-    .where(eq(fracao.condominioId, admin.condominioId))
+  const [fracoes, [cond]] = await Promise.all([
+    db
+      .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
+      .from(fracao)
+      .where(eq(fracao.condominioId, admin.condominioId)),
+    db
+      .select({ criterioRateio: condominio.criterioRateio })
+      .from(condominio)
+      .where(eq(condominio.id, admin.condominioId))
+      .limit(1),
+  ])
 
   const quotasMensais = calcularQuotasMensais(
     fracoes.map((f) => ({
@@ -116,6 +125,7 @@ export async function gerarQuotasOrcamento(orcamentoId: number) {
     })),
     Number(orc.valorAnual),
     orc.valorAnualElevador ? Number(orc.valorAnualElevador) : 0,
+    cond?.criterioRateio === 'partes_iguais' ? 'partes_iguais' : 'permilagem',
   )
   const totalPermilagem = fracoes.reduce((s, f) => s + Number(f.permilagem), 0)
   const percentagemReserva = orc.percentagemFundoReserva ? Number(orc.percentagemFundoReserva) : 0

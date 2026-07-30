@@ -128,6 +128,15 @@ export const condominio = pgTable("condominio", {
   licencaHabitacao: text("licencaHabitacao"),
   projetoArquiteto: text("projetoArquiteto"),
   areaConstrucao: numeric("areaConstrucao", { precision: 10, scale: 2 }),
+  // Critério de rateio de quotas e despesas comuns entre frações — regra
+  // geral é "permilagem" (art. 1424º n.º1 CC). "partes_iguais" só é válido
+  // se previsto no regulamento de condomínio, aprovado sem oposição por
+  // maioria que represente a maioria do valor total do prédio (art. 1424º
+  // n.º2 CC) — a app não valida esse quórum, é responsabilidade do admin.
+  // Usado em lib/rateio.ts (calcularQuotasMensais/calcularRateioValor) via
+  // app/actions/orcamentos.ts:gerarQuotasOrcamento e
+  // app/actions/financas.ts:ratearDespesaComum.
+  criterioRateio: text("criterioRateio").notNull().default("permilagem"), // "permilagem" | "partes_iguais"
   // Código de convite partilhado para novos membros se juntarem a este
   // condomínio (em vez de criarem um condomínio novo) — ver lib/session.ts
   // e app/onboarding. Não determina o nível de acesso: quem entra por

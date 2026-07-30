@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { assembleia, assembleiaPonto, fornecedor, fracao, lembreteCobranca, membro, movimento, orcamento } from '@/lib/db/schema'
+import { assembleia, assembleiaPonto, condominio, fornecedor, fracao, lembreteCobranca, membro, movimento, orcamento } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import { calcularJurosMora } from '@/lib/juros'
 import { calcularQuotasMensais, calcularRateioValor } from '@/lib/rateio'
@@ -278,7 +278,7 @@ export async function getDeclaracaoDivida(fracaoId: number) {
     .limit(1)
   if (!f) throw new Error('Fração não encontrada')
 
-  const [fracoes, [orcamentoRecente], dividas] = await Promise.all([
+  const [fracoes, [orcamentoRecente], dividas, [cond]] = await Promise.all([
     db
       .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
       .from(fracao)
@@ -308,6 +308,11 @@ export async function getDeclaracaoDivida(fracaoId: number) {
         ),
       )
       .orderBy(asc(movimento.data)),
+    db
+      .select({ criterioRateio: condominio.criterioRateio })
+      .from(condominio)
+      .where(eq(condominio.id, m.condominioId))
+      .limit(1),
   ])
 
   let quotaMensalAtual: number | null = null
@@ -320,6 +325,7 @@ export async function getDeclaracaoDivida(fracaoId: number) {
       })),
       Number(orcamentoRecente.valorAnual),
       orcamentoRecente.valorAnualElevador ? Number(orcamentoRecente.valorAnualElevador) : 0,
+      cond?.criterioRateio === 'partes_iguais' ? 'partes_iguais' : 'permilagem',
     )
     quotaMensalAtual = quotas.find((q) => q.fracaoId === fracaoId)?.valorMensal ?? null
   }
@@ -583,11 +589,13 @@ export async function lancarJurosMora(taxaAnualPercent: number) {
 
 /**
  * Divide uma despesa comum extraordinária (ex: pintura da fachada) pelas
- * frações por permilagem (lib/rateio.ts:calcularRateioValor), gerando um
- * movimento de receita (dívida) por fração — mesmo padrão de
- * lancarJurosMora, mas o valor a dividir é indicado pelo admin em vez de
- * calculado a partir de quotas em atraso. Não lança a despesa em si
- * (pagamento ao fornecedor); isso continua a fazer-se à parte, como hoje.
+ * frações, pelo critério de rateio do condomínio (lib/rateio.ts:
+ * calcularRateioValor — permilagem por omissão, ou partes iguais se
+ * `condominio.criterioRateio` assim o definir), gerando um movimento de
+ * receita (dívida) por fração — mesmo padrão de lancarJurosMora, mas o
+ * valor a dividir é indicado pelo admin em vez de calculado a partir de
+ * quotas em atraso. Não lança a despesa em si (pagamento ao fornecedor);
+ * isso continua a fazer-se à parte, como hoje.
  */
 export async function ratearDespesaComum(formData: FormData) {
   const admin = await requireAdmin()
@@ -606,15 +614,23 @@ export async function ratearDespesaComum(formData: FormData) {
     await validarAssembleiaPonto(admin.condominioId, assembleiaPontoId)
   }
 
-  const fracoes = await db
-    .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
-    .from(fracao)
-    .where(eq(fracao.condominioId, admin.condominioId))
+  const [fracoes, [cond]] = await Promise.all([
+    db
+      .select({ id: fracao.id, permilagem: fracao.permilagem, isentaElevador: fracao.isentaElevador })
+      .from(fracao)
+      .where(eq(fracao.condominioId, admin.condominioId)),
+    db
+      .select({ criterioRateio: condominio.criterioRateio })
+      .from(condominio)
+      .where(eq(condominio.id, admin.condominioId))
+      .limit(1),
+  ])
 
   const rateio = calcularRateioValor(
     fracoes.map((f) => ({ id: f.id, permilagem: Number(f.permilagem), isentaElevador: f.isentaElevador })),
     valorTotal,
     isentarElevador,
+    cond?.criterioRateio === 'partes_iguais' ? 'partes_iguais' : 'permilagem',
   )
 
   const dataMovimento = dataStr ? new Date(dataStr) : new Date()

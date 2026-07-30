@@ -36,6 +36,7 @@ export default async function CondominioPage() {
             licencaHabitacao={condominio.licencaHabitacao}
             projetoArquiteto={condominio.projetoArquiteto}
             areaConstrucao={condominio.areaConstrucao}
+            criterioRateio={condominio.criterioRateio}
           />
         </CardContent>
       </Card>

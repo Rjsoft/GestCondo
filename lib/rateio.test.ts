@@ -88,6 +88,34 @@ describe('calcularQuotasMensais', () => {
       { fracaoId: 2, valorMensal: 50 },
     ])
   })
+
+  it('com criterioRateio partes_iguais, ignora a permilagem e divide o valor por igual', () => {
+    const fracoes = [
+      { id: 1, permilagem: 700 },
+      { id: 2, permilagem: 300 },
+    ]
+    const resultado = calcularQuotasMensais(fracoes, 1200, 0, 'partes_iguais')
+    expect(resultado).toEqual([
+      { fracaoId: 1, valorMensal: 50 }, // 1200/2/12
+      { fracaoId: 2, valorMensal: 50 },
+    ])
+  })
+
+  it('partes_iguais + isenção de elevador: parcela geral por igual entre todas, elevador por igual só entre as com direito', () => {
+    const fracoes = [
+      { id: 1, permilagem: 300, isentaElevador: true }, // R/C
+      { id: 2, permilagem: 350, isentaElevador: false },
+      { id: 3, permilagem: 350, isentaElevador: false },
+    ]
+    const resultado = calcularQuotasMensais(fracoes, 1200, 600, 'partes_iguais')
+    const rc = resultado.find((r) => r.fracaoId === 1)!
+    const piso2 = resultado.find((r) => r.fracaoId === 2)!
+    const piso3 = resultado.find((r) => r.fracaoId === 3)!
+
+    expect(rc.valorMensal).toBeCloseTo(1200 / 3 / 12, 2) // só parte geral, 1/3 cada
+    expect(piso2.valorMensal).toBeCloseTo(1200 / 3 / 12 + 600 / 2 / 12, 2)
+    expect(piso3.valorMensal).toBeCloseTo(1200 / 3 / 12 + 600 / 2 / 12, 2)
+  })
 })
 
 describe('calcularRateioValor', () => {
@@ -160,6 +188,33 @@ describe('calcularRateioValor', () => {
     expect(calcularRateioValor(fracoes, 1000)).toEqual([
       { fracaoId: 1, valor: 500 },
       { fracaoId: 2, valor: 500 },
+    ])
+  })
+
+  it('com criterioRateio partes_iguais, divide o valor por igual independentemente da permilagem', () => {
+    const fracoes = [
+      { id: 1, permilagem: 700 },
+      { id: 2, permilagem: 200 },
+      { id: 3, permilagem: 100 },
+    ]
+    const resultado = calcularRateioValor(fracoes, 900, false, 'partes_iguais')
+    expect(resultado).toEqual([
+      { fracaoId: 1, valor: 300 },
+      { fracaoId: 2, valor: 300 },
+      { fracaoId: 3, valor: 300 },
+    ])
+  })
+
+  it('partes_iguais com isentarElevador exclui as frações isentas e divide o resto por igual', () => {
+    const fracoes = [
+      { id: 1, permilagem: 300, isentaElevador: true },
+      { id: 2, permilagem: 350, isentaElevador: false },
+      { id: 3, permilagem: 350, isentaElevador: false },
+    ]
+    const resultado = calcularRateioValor(fracoes, 700, true, 'partes_iguais')
+    expect(resultado).toEqual([
+      { fracaoId: 2, valor: 350 },
+      { fracaoId: 3, valor: 350 },
     ])
   })
 })

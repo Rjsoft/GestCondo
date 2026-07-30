@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { ratearDespesaComum } from '@/app/actions/financas'
-import { calcularRateioValor } from '@/lib/rateio'
+import { calcularRateioValor, type CriterioRateio } from '@/lib/rateio'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -44,9 +44,11 @@ const SEM_DELIBERACAO = '__sem_deliberacao__'
 export function DividirDespesaDialog({
   fracoes,
   pontosAssembleia,
+  criterioRateio,
 }: {
   fracoes: FracaoOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
+  criterioRateio: CriterioRateio
 }) {
   const [open, setOpen] = useState(false)
   const [categoria, setCategoria] = useState('')
@@ -66,7 +68,7 @@ export function DividirDespesaDialog({
   let erroPreview: string | null = null
   if (valorNumero > 0) {
     try {
-      preview = calcularRateioValor(fracoes, valorNumero, isentarElevador)
+      preview = calcularRateioValor(fracoes, valorNumero, isentarElevador, criterioRateio)
     } catch (e) {
       erroPreview = e instanceof Error ? e.message : 'Erro ao calcular o rateio'
     }
@@ -105,9 +107,10 @@ export function DividirDespesaDialog({
           <DialogTitle>Dividir despesa por frações</DialogTitle>
           <DialogDescription>
             Divide uma despesa extraordinária (ex: pintura da fachada) pelas
-            frações por permilagem, criando uma dívida (quota extraordinária)
-            por fração. Não lança a despesa em si — o pagamento ao fornecedor
-            continua a registar-se à parte, como hoje.
+            frações {criterioRateio === 'partes_iguais' ? 'em partes iguais' : 'por permilagem'},
+            criando uma dívida (quota extraordinária) por fração. Não lança a
+            despesa em si — o pagamento ao fornecedor continua a
+            registar-se à parte, como hoje.
           </DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="flex flex-col gap-4">
