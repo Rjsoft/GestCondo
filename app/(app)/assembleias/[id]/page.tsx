@@ -83,6 +83,7 @@ export default async function AssembleiaDetalhePage({
               variant="outline"
               size="sm"
               render={<Link href={`/assembleias/${assembleia.id}/convocatoria`} />}
+              nativeButton={false}
             >
               Convocatória (PDF)
             </Button>
@@ -92,6 +93,7 @@ export default async function AssembleiaDetalhePage({
               variant="outline"
               size="sm"
               render={<Link href={`/assembleias/${assembleia.id}/procuracao`} />}
+              nativeButton={false}
             >
               Procuração (PDF)
             </Button>
@@ -101,6 +103,7 @@ export default async function AssembleiaDetalhePage({
               variant="outline"
               size="sm"
               render={<Link href={`/assembleias/${assembleia.id}/dossier`} />}
+              nativeButton={false}
             >
               Dossier de apoio (PDF)
             </Button>
@@ -110,6 +113,7 @@ export default async function AssembleiaDetalhePage({
               variant="outline"
               size="sm"
               render={<Link href={`/assembleias/${assembleia.id}/comunicacao-deliberacoes`} />}
+              nativeButton={false}
             >
               Comunicação aos ausentes
             </Button>

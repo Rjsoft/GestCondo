@@ -111,7 +111,10 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           visível quando está selecionado) que permite saltar diretamente o
           menu lateral. Pode navegar entre os separadores desta página de
           ajuda com as setas do teclado, depois de colocar o foco num deles
-          com a tecla Tab.
+          com a tecla Tab. Existe um manual mais completo de utilização com
+          o NVDA ou o Narrador do Windows, incluindo estes atalhos e outros
+          específicos da aplicação (menus, diálogos, tabelas) — peça-o ao
+          administrador se precisar.
         </p>
       </>
     ),

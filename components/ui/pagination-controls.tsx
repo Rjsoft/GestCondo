@@ -24,6 +24,7 @@ export function PaginationControls({
           size="sm"
           disabled={page <= 1}
           render={<Link href={buildHref(page - 1)} />}
+          nativeButton={false}
         >
           <ChevronLeft className="h-4 w-4" />
           Anterior
@@ -33,6 +34,7 @@ export function PaginationControls({
           size="sm"
           disabled={page >= totalPages}
           render={<Link href={buildHref(page + 1)} />}
+          nativeButton={false}
         >
           Seguinte
           <ChevronRight className="h-4 w-4" />

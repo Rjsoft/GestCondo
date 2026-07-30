@@ -129,7 +129,7 @@ export function MapaMensalTab({
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" render={<Link href={`/financas/mapa-mensal?ano=${ano}`} />}>
+          <Button variant="outline" render={<Link href={`/financas/mapa-mensal?ano=${ano}`} />} nativeButton={false}>
             <FileText className="h-4 w-4" />
             Imprimir / PDF
           </Button>
@@ -216,6 +216,7 @@ export function MapaMensalTab({
                       size="icon"
                       aria-label="Ver recibo"
                       render={<Link href={`/financas/recibo/${mv.id}`} />}
+                      nativeButton={false}
                     >
                       <Receipt className="h-4 w-4" />
                     </Button>

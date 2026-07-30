@@ -238,7 +238,7 @@ export function FinancasTabs({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <SearchInput placeholder="Pesquisar movimentos..." />
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" render={<Link href="/financas/relatorio" />}>
+            <Button variant="outline" render={<Link href="/financas/relatorio" />} nativeButton={false}>
               <FileText className="h-4 w-4" />
               Relatório (PDF)
             </Button>
@@ -374,6 +374,7 @@ export function FinancasTabs({
                           size="icon"
                           aria-label="Ver recibo"
                           render={<Link href={`/financas/recibo/${m.id}`} />}
+                          nativeButton={false}
                         >
                           <Receipt className="h-4 w-4" />
                         </Button>
@@ -422,11 +423,11 @@ export function FinancasTabs({
       <TabsContent value="dividas" className="mt-4">
         {isAdmin && (
           <div className="mb-3 flex flex-wrap justify-end gap-2">
-            <Button variant="outline" render={<Link href="/financas/antiguidade-divida" />}>
+            <Button variant="outline" render={<Link href="/financas/antiguidade-divida" />} nativeButton={false}>
               <FileText className="h-4 w-4" />
               Antiguidade da dívida
             </Button>
-            <Button variant="outline" render={<Link href="/financas/lembretes-cobranca" />}>
+            <Button variant="outline" render={<Link href="/financas/lembretes-cobranca" />} nativeButton={false}>
               <FileText className="h-4 w-4" />
               Lembretes de cobrança
             </Button>
@@ -480,6 +481,7 @@ export function FinancasTabs({
                           variant="ghost"
                           size="sm"
                           render={<Link href={`/financas/declaracao-divida/${s.fracaoId}`} />}
+                          nativeButton={false}
                         >
                           <FileText className="h-4 w-4" />
                           Declaração
@@ -489,6 +491,7 @@ export function FinancasTabs({
                             variant="ghost"
                             size="sm"
                             render={<Link href={`/financas/interpelacao/${s.fracaoId}`} />}
+                            nativeButton={false}
                           >
                             <FileText className="h-4 w-4" />
                             Interpelação
@@ -612,6 +615,7 @@ export function FinancasTabs({
                         variant="ghost"
                         size="sm"
                         render={<Link href={`/financas/balanco/${o.id}`} />}
+                        nativeButton={false}
                       >
                         <FileText className="h-4 w-4" />
                         Balanço

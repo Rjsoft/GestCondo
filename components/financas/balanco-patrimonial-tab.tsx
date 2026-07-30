@@ -75,6 +75,7 @@ export function BalancoPatrimonialTab({
           <Button
             variant="outline"
             render={<Link href={`/financas/balanco-patrimonial/${exercicioId}`} />}
+            nativeButton={false}
           >
             <FileText className="h-4 w-4" />
             Imprimir / PDF
