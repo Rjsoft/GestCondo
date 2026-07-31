@@ -58,6 +58,7 @@ export function EditarMovimentoDialog({
   fracoes,
   fornecedores,
   pontosAssembleia,
+  updatedAt,
 }: {
   id: number
   open: boolean
@@ -79,6 +80,10 @@ export function EditarMovimentoDialog({
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
+  /** Versão do movimento carregada ao abrir o diálogo — enviada de volta
+   * ao servidor para detetar se outra pessoa o alterou entretanto (F08,
+   * docs/audit/USABILITY_FINDINGS.md). */
+  updatedAt: Date
 }) {
   const [fracaoIdValor, setFracaoIdValor] = useState(fracaoId ? String(fracaoId) : '')
   const [fornecedorIdValor, setFornecedorIdValor] = useState(
@@ -97,6 +102,7 @@ export function EditarMovimentoDialog({
 
   const onSubmit = (formData: FormData) => {
     formData.set('id', String(id))
+    formData.set('updatedAtEsperado', updatedAt.toISOString())
     formData.set('destino', destinoValor)
     if (tipo === 'receita') {
       formData.set('fracaoId', fracaoIdValor)

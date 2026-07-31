@@ -862,6 +862,7 @@ export async function atualizarMovimento(formData: FormData) {
   const requerAprovacaoRaw = formData.get('requerAprovacao') === 'on'
   const urgente = formData.get('urgente') === 'on'
   const justificacaoUrgencia = String(formData.get('justificacaoUrgencia') || '').trim()
+  const updatedAtEsperadoStr = String(formData.get('updatedAtEsperado') || '')
 
   if (!categoria || !descricao || !valor || !dataStr) {
     throw new Error('Preencha todos os campos obrigatórios')
@@ -879,6 +880,19 @@ export async function atualizarMovimento(formData: FormData) {
     .where(and(eq(movimento.id, id), eq(movimento.condominioId, admin.condominioId)))
     .limit(1)
   if (!atual) throw new Error('Movimento não encontrado')
+
+  // Controlo otimista de concorrência (achado F08) — deteta que outra
+  // pessoa alterou este movimento entretanto (ex. duas pessoas a editar a
+  // mesma despesa ao mesmo tempo), em vez de a última escrita ganhar em
+  // silêncio sem avisar quem perdeu a sua alteração.
+  if (updatedAtEsperadoStr) {
+    const updatedAtEsperado = new Date(updatedAtEsperadoStr)
+    if (atual.updatedAt.getTime() !== updatedAtEsperado.getTime()) {
+      throw new Error(
+        'Este movimento foi alterado por outra pessoa entretanto. Feche este diálogo e abra-o novamente para ver a versão mais recente antes de corrigir.',
+      )
+    }
+  }
 
   if (atual.tipo === 'receita' && !fracaoId) {
     throw new Error('Selecione a fração a que esta quota diz respeito')
@@ -906,6 +920,7 @@ export async function atualizarMovimento(formData: FormData) {
     requerAprovacao,
     urgente: atual.tipo === 'despesa' && urgente,
     justificacaoUrgencia: atual.tipo === 'despesa' && urgente ? justificacaoUrgencia : null,
+    updatedAt: new Date(),
   }
 
   await db

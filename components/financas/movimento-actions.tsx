@@ -40,6 +40,7 @@ export function MovimentoActions({
   fracoes,
   fornecedores,
   pontosAssembleia,
+  updatedAt,
 }: {
   id: number
   pago: boolean
@@ -60,6 +61,7 @@ export function MovimentoActions({
   fracoes: FracaoOpcao[]
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
+  updatedAt: Date
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -163,6 +165,7 @@ export function MovimentoActions({
         fracoes={fracoes}
         fornecedores={fornecedores}
         pontosAssembleia={pontosAssembleia}
+        updatedAt={updatedAt}
       />
     </>
   )

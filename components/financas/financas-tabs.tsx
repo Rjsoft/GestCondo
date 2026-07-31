@@ -60,6 +60,7 @@ type Movimento = {
   urgente: boolean
   justificacaoUrgencia: string | null
   fornecedorNome?: string | null
+  updatedAt: Date
 }
 
 type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
@@ -252,6 +253,21 @@ export function FinancasTabs({
             )}
           </div>
         </div>
+        {movimentos.length > 0 && (
+          <p className="mb-2 text-sm text-muted-foreground">
+            {movimentos.length}{' '}
+            {movimentos.length === 1 ? 'movimento nesta página' : 'movimentos nesta página'}
+            {totalPaginasMovimentos > 1 ? ` (página ${paginaMovimentos} de ${totalPaginasMovimentos})` : ''}
+            , total{' '}
+            {formatEuro(
+              movimentos.reduce(
+                (s, m) => s + (m.tipo === 'receita' ? Number(m.valor) : -Number(m.valor)),
+                0,
+              ),
+            )}
+            .
+          </p>
+        )}
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -402,6 +418,7 @@ export function FinancasTabs({
                           fracoes={fracoes}
                           fornecedores={fornecedores}
                           pontosAssembleia={pontosAssembleia}
+                          updatedAt={m.updatedAt}
                         />
                       </TableCell>
                     )}

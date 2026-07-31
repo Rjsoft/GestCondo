@@ -510,6 +510,14 @@ export const movimento = pgTable(
     urgente: boolean("urgente").notNull().default(false),
     justificacaoUrgencia: text("justificacaoUrgencia"),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
+    // Controlo otimista de concorrência (achado F08,
+    // docs/audit/USABILITY_FINDINGS.md) — comparado em
+    // app/actions/financas.ts:atualizarMovimento antes de escrever, para
+    // detetar duas pessoas a editar o mesmo movimento em simultâneo.
+    // Definida manualmente em cada `.set()` de escrita (mesmo padrão já
+    // usado por ocorrencia/contaFinanceira/exercicioFinanceiro), não há
+    // `$onUpdate` automático no schema.
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
     deletedAt: timestamp("deletedAt"),
   },
   (t) => [

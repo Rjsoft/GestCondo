@@ -3,13 +3,13 @@ import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/
 import { getContactosEmergencia } from '@/app/actions/contactos-emergencia'
 import { getInconsistencias } from '@/app/actions/inconsistencias'
 import { db } from '@/lib/db'
-import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { assembleia, aviso, fracao, membro as tabelaMembro, movimento, ocorrencia } from '@/lib/db/schema'
+import { and, asc, count, desc, eq, isNull } from 'drizzle-orm'
 import { PageHeader } from '@/components/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ContactosEmergenciaCard } from '@/components/painel/contactos-emergencia-card'
 import { PrioridadeBadge, EstadoBadge } from '@/components/badges'
-import { formatEuro, formatData } from '@/lib/format'
+import { formatEuro, formatData, formatDataHora } from '@/lib/format'
 import {
   Wallet,
   TrendingUp,
@@ -29,8 +29,16 @@ export default async function DashboardPage() {
 
   const gerePermissoes = temPermissaoGestao(membro)
 
-  const [movimentos, avisos, ocorrencias, fracoes, contactosEmergencia, inconsistencias] =
-    await Promise.all([
+  const [
+    movimentos,
+    avisos,
+    ocorrencias,
+    fracoes,
+    contactosEmergencia,
+    inconsistencias,
+    membrosPendentes,
+    proximaAssembleia,
+  ] = await Promise.all([
       veFinancas
         ? db
             .select()
@@ -59,6 +67,22 @@ export default async function DashboardPage() {
         : Promise.resolve([] as (typeof fracao.$inferSelect)[]),
       getContactosEmergencia(),
       gerePermissoes ? getInconsistencias() : Promise.resolve([]),
+      gerePermissoes
+        ? db
+            .select({ total: count() })
+            .from(tabelaMembro)
+            .where(and(eq(tabelaMembro.condominioId, membro.condominioId), eq(tabelaMembro.estado, 'pendente')))
+            .then(([r]) => r.total)
+        : Promise.resolve(0),
+      gerePermissoes
+        ? db
+            .select({ id: assembleia.id, dataPrimeiraConvocatoria: assembleia.dataPrimeiraConvocatoria })
+            .from(assembleia)
+            .where(and(eq(assembleia.condominioId, membro.condominioId), eq(assembleia.estado, 'convocada')))
+            .orderBy(asc(assembleia.dataPrimeiraConvocatoria))
+            .limit(1)
+            .then(([r]) => r ?? null)
+        : Promise.resolve(null),
     ])
 
   // Conta corrente do condomínio: exclui o fundo de reserva, que é
@@ -243,6 +267,48 @@ export default async function DashboardPage() {
           ))}
         </CardContent>
       </Card>
+
+      {gerePermissoes && (membrosPendentes > 0 || proximaAssembleia) && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Pendências
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {membrosPendentes > 0 && (
+              <Link
+                href="/condominos"
+                className="flex flex-col gap-0.5 rounded-lg border border-border p-3 hover:bg-muted"
+              >
+                <p className="font-medium text-foreground">
+                  {membrosPendentes}{' '}
+                  {membrosPendentes === 1
+                    ? 'pedido de acesso por aprovar'
+                    : 'pedidos de acesso por aprovar'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Contas à espera de aprovação de um administrador.
+                </p>
+              </Link>
+            )}
+            {proximaAssembleia && (
+              <Link
+                href={`/assembleias/${proximaAssembleia.id}`}
+                className="flex flex-col gap-0.5 rounded-lg border border-border p-3 hover:bg-muted"
+              >
+                <p className="font-medium text-foreground">
+                  Próxima assembleia: {formatDataHora(proximaAssembleia.dataPrimeiraConvocatoria)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Ainda por realizar.
+                </p>
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {gerePermissoes && inconsistencias.length > 0 && (
         <Card className="mt-4">

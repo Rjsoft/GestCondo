@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
+import { DateRangeFilter } from '@/components/ui/date-range-filter'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import {
   Table,
@@ -62,7 +63,7 @@ function formatarValor(v: unknown) {
 export default async function AuditoriaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>
+  searchParams: Promise<{ q?: string; page?: string; de?: string; ate?: string }>
 }) {
   const membro = await requireMembroPagina()
   if (!temConsultaGestao(membro)) notFound()
@@ -70,7 +71,10 @@ export default async function AuditoriaPage({
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
-  const { registos, totalPages } = await getAuditLog({ page, search })
+  // "ate" cobre o dia inteiro (23:59:59.999), não só a meia-noite.
+  const dataInicio = params.de ? new Date(`${params.de}T00:00:00`) : undefined
+  const dataFim = params.ate ? new Date(`${params.ate}T23:59:59.999`) : undefined
+  const { registos, totalPages } = await getAuditLog({ page, search, dataInicio, dataFim })
 
   return (
     <div>
@@ -79,8 +83,9 @@ export default async function AuditoriaPage({
         description="Registo de ações sensíveis realizadas no condomínio."
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <SearchInput placeholder="Pesquisar por autor ou detalhes..." />
+        <DateRangeFilter />
       </div>
 
       <Card>
@@ -141,7 +146,14 @@ export default async function AuditoriaPage({
       <PaginationControls
         page={page}
         totalPages={totalPages}
-        buildHref={(p) => `/auditoria?${new URLSearchParams({ ...(search ? { q: search } : {}), page: String(p) }).toString()}`}
+        buildHref={(p) =>
+          `/auditoria?${new URLSearchParams({
+            ...(search ? { q: search } : {}),
+            ...(params.de ? { de: params.de } : {}),
+            ...(params.ate ? { ate: params.ate } : {}),
+            page: String(p),
+          }).toString()}`
+        }
       />
     </div>
   )

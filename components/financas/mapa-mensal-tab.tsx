@@ -47,6 +47,7 @@ type Movimento = {
   urgente: boolean
   justificacaoUrgencia: string | null
   fornecedorNome?: string | null
+  updatedAt: Date
 }
 
 type PontoAssembleiaOpcao = { id: number; titulo: string; assembleiaData: string }
@@ -242,6 +243,7 @@ export function MapaMensalTab({
                       fracoes={fracoes}
                       fornecedores={fornecedores}
                       pontosAssembleia={pontosAssembleia}
+                      updatedAt={mv.updatedAt}
                     />
                   )}
                 </div>

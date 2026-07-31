@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from '@/components/ui/collapsible'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useConfirmarFecho } from '@/components/ui/use-confirmar-fecho'
 import { DESTINO_LABEL, MEIO_PAGAMENTO_LABEL, TIPO_MOVIMENTO_LABEL } from '@/lib/financas'
 import { ChevronDown, Plus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -55,6 +57,13 @@ export function NovoMovimentoDialog({
   const [urgente, setUrgente] = useState(false)
   const [justificacaoUrgencia, setJustificacaoUrgencia] = useState('')
   const [pending, startTransition] = useTransition()
+  const {
+    formRef,
+    onOpenChange,
+    avisoAbandonoAberto,
+    confirmarAbandono,
+    cancelarAbandono,
+  } = useConfirmarFecho(open, setOpen)
 
   const onSubmit = (formData: FormData) => {
     formData.set('tipo', tipo)
@@ -95,7 +104,8 @@ export function NovoMovimentoDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={<Button />}>
         <Plus className="h-4 w-4" />
         Novo movimento
@@ -107,7 +117,7 @@ export function NovoMovimentoDialog({
             Registe uma receita (quota) ou uma despesa do condomínio.
           </DialogDescription>
         </DialogHeader>
-        <form action={onSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} action={onSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <Label>Tipo</Label>
@@ -425,5 +435,15 @@ export function NovoMovimentoDialog({
         </form>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog
+      open={avisoAbandonoAberto}
+      onOpenChange={(o) => !o && cancelarAbandono()}
+      title="Fechar sem guardar?"
+      description="Preencheu campos deste formulário que ainda não foram guardados. Se fechar agora, esses dados perdem-se."
+      confirmLabel="Fechar sem guardar"
+      onConfirm={confirmarAbandono}
+      pending={false}
+    />
+    </>
   )
 }

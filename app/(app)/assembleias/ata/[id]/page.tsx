@@ -50,8 +50,28 @@ export default async function AtaPage({
         </div>
       </div>
 
-      <Card className="print:border-0 print:shadow-none">
-        <CardContent id="ata-conteudo" data-speech-content className="flex flex-col gap-6 p-8 print:p-0">
+      <Card
+        className={`relative overflow-hidden print:border-0 print:shadow-none ${
+          assembleia.estado !== 'aprovada' ? 'bg-amber-50/60' : ''
+        }`}
+      >
+        {assembleia.estado !== 'aprovada' && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-0 flex flex-wrap content-around justify-around gap-8 overflow-hidden opacity-[0.07]"
+          >
+            {Array.from({ length: 12 }).map((_, i) => (
+              <span
+                key={i}
+                className="whitespace-nowrap font-serif text-4xl font-bold text-amber-900 select-none"
+                style={{ transform: 'rotate(-25deg)' }}
+              >
+                RASCUNHO
+              </span>
+            ))}
+          </div>
+        )}
+        <CardContent id="ata-conteudo" data-speech-content className="relative z-10 flex flex-col gap-6 p-8 print:p-0">
           <CabecalhoDocumento
             condominio={condominio}
             titulo={`Ata de Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}${assembleia.numero ? ` nº ${assembleia.numero}` : ''}`}
