@@ -100,6 +100,12 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             aplicação ligada ao condomínio — condómino, inquilino,
             administrador, gestor, fornecedor ou auditor.
           </li>
+          <li>
+            <strong>NIF</strong>: Número de Identificação Fiscal — o número
+            que identifica uma pessoa ou empresa perante as Finanças em
+            Portugal. Vai encontrá-lo pedido em vários sítios da
+            aplicação (condomínio, frações, pagamentos).
+          </li>
         </ul>
 
         <Subtitulo>Acessibilidade</Subtitulo>
@@ -136,12 +142,21 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             Contactos de emergência (ex: porteiro, manutenção de elevadores) —
             visíveis a todos, geridos só por administradores/gestores.
           </li>
-          <li>Saldo atual, receitas e despesas da conta corrente.</li>
+          <li>
+            Saldo atual, receitas e despesas da &ldquo;conta corrente&rdquo;
+            — o dinheiro do dia a dia do condomínio (quotas recebidas,
+            despesas correntes pagas), diferente da conta pessoal de
+            ninguém em particular; é a conta partilhada de todo o prédio.
+          </li>
           <li>Quantas ocorrências ainda estão por resolver.</li>
           <li>Os avisos mais recentes, com um resumo do texto.</li>
           <li>
             Número de frações registadas, permilagem total, quotas por
-            receber e saldo do fundo de reserva.
+            receber e saldo do{' '}
+            <strong>fundo de reserva</strong> — uma poupança obrigatória
+            por lei, à parte da conta corrente, para despesas grandes e
+            imprevistas no futuro (ver &ldquo;Finanças&rdquo; para mais
+            detalhe).
           </li>
         </ul>
         <p className="text-xs text-muted-foreground">
@@ -190,6 +205,11 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           data e hora. Qualquer membro pode ver quantas confirmações já
           existem e quem confirmou.
         </p>
+        <p className="text-xs text-muted-foreground">
+          Não é obrigatório clicar — nada impede de continuar a usar a
+          aplicação sem confirmar. Serve só para o administrador saber quem
+          já viu um aviso importante, sem ter de perguntar um a um.
+        </p>
       </>
     ),
   },
@@ -203,6 +223,12 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           Use este módulo para pedir uma reparação ou reportar um problema
           no condomínio (por exemplo, uma luz fundida ou um elevador
           avariado).
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Se é fornecedor (ex: canalizador, eletricista), esta página só
+          lhe mostra os trabalhos que já lhe foram atribuídos pelo
+          administrador — não é aqui que aparecem trabalhos novos por
+          escolher. Ver &ldquo;Portal do fornecedor&rdquo;, mais abaixo.
         </p>
         <Subtitulo>Como reportar uma ocorrência</Subtitulo>
         <ol className="list-decimal pl-5">
@@ -250,8 +276,44 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         <Titulo>Assembleias</Titulo>
         <p>
           Acompanha todo o percurso de uma assembleia de condóminos, desde a
-          convocatória até à ata final.
+          convocatória até à ata final. É o módulo com mais vocabulário
+          jurídico da aplicação — cada termo é explicado abaixo, sem
+          pressupor que já o conhece.
         </p>
+        <Subtitulo>Algumas palavras que vai encontrar</Subtitulo>
+        <ul className="list-disc pl-5">
+          <li>
+            <strong>Convocatória</strong>: o aviso formal, enviado com
+            antecedência, a dizer quando e onde é a assembleia e o que vai
+            ser discutido.
+          </li>
+          <li>
+            <strong>Ordem de trabalhos</strong>: a lista dos assuntos
+            (pontos) que vão ser discutidos e votados nessa assembleia —
+            nada fora dessa lista pode ser deliberado.
+          </li>
+          <li>
+            <strong>Procuração</strong>: um documento em que um condómino
+            autoriza outra pessoa (outro condómino, um familiar, etc.) a
+            estar presente e votar em seu nome, quando ele próprio não pode
+            comparecer.
+          </li>
+          <li>
+            <strong>Quórum</strong>: o mínimo de peso (medido em
+            permilagem — ver &ldquo;Frações&rdquo;) que tem de estar
+            presente ou representado por procuração para a assembleia poder
+            deliberar validamente. Sem quórum suficiente, a assembleia não
+            pode votar.
+          </li>
+          <li>
+            <strong>Deliberação</strong>: a decisão tomada sobre um ponto
+            da ordem de trabalhos, depois de votado.
+          </li>
+          <li>
+            <strong>Ata</strong>: o registo oficial e definitivo do que foi
+            discutido e decidido na assembleia.
+          </li>
+        </ul>
         <Subtitulo>Como consultar</Subtitulo>
         <p>
           Abra &ldquo;Assembleias&rdquo; no menu lateral e clique numa
@@ -307,18 +369,40 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         </p>
         <Subtitulo>Comunicação de deliberações aos ausentes (para o administrador)</Subtitulo>
         <p>
-          Quando um ponto da ordem de trabalhos exigia unanimidade e foi
-          aprovado com o voto apenas dos condóminos presentes ou
-          representados (desde que estes representem, pelo menos, dois
-          terços do capital investido), a lei obriga a comunicar essa
-          deliberação às frações que estiveram ausentes, que dispõem depois
-          de 90 dias para responder por escrito — se não responderem, o
-          silêncio conta como aprovação. Nesses casos aparece um botão
-          &ldquo;Comunicação aos ausentes&rdquo; na página de detalhe da
-          assembleia, com a lista de frações a notificar, um botão para
-          imprimir a carta/email a enviar, e botões para registar a data de
-          envio e, mais tarde, a resposta (concordância ou discordância) de
-          cada fração.
+          Isto só se aplica a um caso específico, mas é importante não o
+          esquecer: um ponto da ordem de trabalhos que, por lei, precisava
+          da <strong>unanimidade</strong> de todos os condóminos (voto a
+          favor de 100% do <strong>capital investido</strong> do prédio —
+          a soma das permilagens de todas as frações, ver
+          &ldquo;Frações&rdquo; —, não só da maioria), mas que foi aprovado
+          só com o voto dos condóminos presentes ou representados nesse
+          dia — desde que estes representem, pelo menos, dois terços (2/3)
+          do capital investido total do prédio.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Exemplo: um prédio com 1000‰ no total. Numa assembleia
+          comparecem/representam-se frações que valem 750‰ (750‰ ≥ 2/3 de
+          1000‰, ou seja, cumpre o mínimo) e todas votam a favor de um
+          ponto que exigia unanimidade. As restantes frações, que valem
+          250‰, estiveram ausentes — a lei considera a deliberação
+          provisoriamente aprovada, mas obriga a comunicar formalmente a
+          decisão a essas frações ausentes.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          O administrador tem 30 dias após a assembleia para enviar esta
+          comunicação — a aplicação mostra esse prazo junto de cada fração
+          por notificar.
+        </p>
+        <p>
+          Depois de comunicada, cada fração ausente tem 90 dias para
+          responder por escrito se discorda — se não responder nesse
+          prazo, a lei considera que o seu silêncio conta como aprovação
+          (a deliberação torna-se definitiva). Nesses casos aparece um
+          botão &ldquo;Comunicação aos ausentes&rdquo; na página de
+          detalhe da assembleia, com a lista de frações a notificar, um
+          botão para imprimir a carta/email a enviar, e botões para
+          registar a data de envio e, mais tarde, a resposta (concordância
+          ou discordância) de cada fração.
         </p>
         <Subtitulo>Dossier de apoio (para quem tem acesso financeiro)</Subtitulo>
         <p>
@@ -346,7 +430,18 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         <p>
           O módulo mais completo da aplicação — só está disponível a quem
           tem acesso financeiro (administrador, gestor, condómino e
-          auditor; inquilinos e fornecedores não veem esta secção).
+          auditor; inquilinos e fornecedores não veem esta secção). É
+          também o mais técnico: cada separador abaixo é explicado com
+          calma, incluindo o vocabulário.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Cuidado com um nome que se repete com dois significados
+          diferentes: aqui, &ldquo;orçamento&rdquo; é o plano de despesas
+          do condomínio para o ano inteiro. Em &ldquo;Fornecedores&rdquo;,
+          um &ldquo;orçamento de obra&rdquo; é outra coisa — a proposta de
+          preço de uma empresa para um trabalho específico (ex: pintar a
+          fachada). São dois documentos sem relação direta, apesar do
+          nome parecido.
         </p>
         <Subtitulo>Separadores principais</Subtitulo>
         <ul className="list-disc pl-5">
@@ -357,49 +452,97 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           </li>
           <li>
             <strong>Dívidas por fração</strong>: quanto cada fração ainda
-            deve. O administrador pode &ldquo;Lançar juros de mora&rdquo;
-            sobre quotas em atraso, &ldquo;Dividir despesa por
-            frações&rdquo; para ratear uma despesa extraordinária (ex:
-            pintura da fachada) pelas frações por permilagem, criando a
-            dívida correspondente em cada uma — com opção de excluir as
-            frações isentas do elevador e de ligar a uma deliberação de
-            assembleia — ou consultar &ldquo;Antiguidade da dívida&rdquo;,
-            um relatório imprimível que mostra há quanto tempo cada dívida
-            existe (0–30, 31–60, 61–90, 91–180, 181–365 ou mais de 365
-            dias), útil para decidir a quem enviar uma interpelação
-            primeiro. Em &ldquo;Lembretes de cobrança&rdquo; pode enviar
-            por email um aviso informal (sem valor legal, ao contrário da
-            interpelação) às frações com dívida há mais de 30 ou 60 dias —
-            um 1º lembrete mais simples, um 2º mais firme já a mencionar a
-            interpelação formal como próximo passo. O envio é sempre uma
-            ação manual do administrador.
+            deve.
+            <ul className="list-disc pl-5">
+              <li>
+                &ldquo;Lançar juros de mora&rdquo; — um valor extra que se
+                soma à quota em atraso, como penalização pelo atraso; a
+                aplicação calcula o valor proporcionalmente aos dias de
+                atraso, mas <strong>não sugere nenhuma taxa</strong> — é o
+                administrador quem tem de saber (ou confirmar com um
+                jurista/contabilista) qual a taxa legal ou a definida no
+                regulamento do condomínio, e indicá-la ao lançar os juros.
+              </li>
+              <li>
+                &ldquo;Dividir despesa por frações&rdquo; — rateia uma
+                despesa extraordinária (ex: pintura da fachada) pelas
+                frações por permilagem, criando a dívida correspondente em
+                cada uma, com opção de excluir as frações isentas do
+                elevador (ver &ldquo;Frações&rdquo;) e de ligar a uma
+                deliberação de assembleia.
+              </li>
+              <li>
+                &ldquo;Antiguidade da dívida&rdquo; — um relatório
+                imprimível que mostra há quanto tempo cada dívida existe
+                (0–30, 31–60, 61–90, 91–180, 181–365 ou mais de 365 dias),
+                útil para decidir a quem enviar uma interpelação primeiro.
+              </li>
+              <li>
+                &ldquo;Lembretes de cobrança&rdquo; — envia por email um
+                aviso informal (sem valor legal, ao contrário da
+                interpelação) às frações com dívida há mais de 30 ou 60
+                dias: um 1º lembrete mais simples, um 2º mais firme já a
+                mencionar a interpelação formal como próximo passo. O envio
+                é sempre uma ação manual do administrador.
+              </li>
+            </ul>
           </li>
           <li>
             <strong>Adiantamentos</strong>: quando um condómino paga mais do
-            que devia, registe esse valor como crédito disponível
-            (&ldquo;Registar adiantamento&rdquo;). Esse crédito pode depois
-            ser aplicado a uma quota futura pendente (&ldquo;Aplicar a quota
-            pendente&rdquo;, marca-a automaticamente como paga) ou devolvido
-            (&ldquo;Devolver&rdquo;). Cada fração com crédito mostra o
-            histórico completo destes movimentos.
+            que devia (ex: a quota é 100€, mas pagou 150€), registe esse
+            valor a mais como crédito disponível (&ldquo;Registar
+            adiantamento&rdquo;). Esse crédito pode depois ser aplicado a
+            uma quota futura pendente (&ldquo;Aplicar a quota pendente&rdquo;,
+            marca-a automaticamente como paga, sem o condómino ter de pagar
+            outra vez) ou devolvido (&ldquo;Devolver&rdquo;). Cada fração
+            com crédito mostra o histórico completo destes movimentos.
           </li>
           <li>
-            <strong>Orçamentos</strong>: o orçamento anual do condomínio, a
-            partir do qual as quotas mensais são calculadas automaticamente
-            (divididas por permilagem, com isenção do elevador quando
-            aplicável). Pode indicar uma percentagem para o fundo de reserva
-            (sugestão de 10%, o mínimo exigido por lei) — ao gerar as quotas,
-            essa percentagem é separada automaticamente num movimento próprio
-            para o fundo de reserva, em vez de ter de o fazer à mão.
+            <strong>Orçamentos</strong>: o orçamento anual do condomínio —
+            uma estimativa de quanto vai gastar durante o ano (limpeza,
+            eletricidade das partes comuns, seguro, manutenção, etc.) — a
+            partir do qual as quotas mensais de cada fração são calculadas
+            automaticamente (repartidas proporcionalmente à permilagem, com
+            isenção do elevador quando aplicável — ver &ldquo;Frações&rdquo;).
+            <ul className="list-disc pl-5">
+              <li>
+                <strong>Fundo de reserva</strong>: pode indicar uma
+                percentagem do orçamento a reservar — uma poupança
+                obrigatória por lei (mínimo 10%, sugestão por omissão) para
+                despesas grandes e imprevistas no futuro (ex: arranjar o
+                telhado), separada do dinheiro do dia a dia. A aplicação
+                separa-a automaticamente ao gerar as quotas, num movimento
+                próprio.
+              </li>
+              <li>
+                Exemplo: um orçamento anual de 3.600€ dá 300€/mês;
+                reservando 10% (30€/mês) para o fundo de reserva, sobram
+                270€/mês repartidos pelas frações por permilagem.
+              </li>
+              <li>
+                Depois de guardar o orçamento, ainda é preciso um passo
+                manual para criar as quotas: no menu &ldquo;⋮&rdquo; junto
+                ao orçamento, escolha &ldquo;Gerar quotas mensais&rdquo; e
+                confirme a pré-visualização.
+              </li>
+            </ul>
           </li>
           <li>
-            <strong>Conciliação bancária</strong>: importar o extrato do
-            banco (ficheiro CSV) e confirmar quais os movimentos que já
-            correspondem a pagamentos registados.
+            <strong>Conciliação bancária</strong>: confirmar que o dinheiro
+            que entrou/saiu de verdade na conta do banco corresponde ao que
+            está registado na aplicação — útil para detetar um pagamento
+            que faltou registar ou um erro. Importe o extrato do banco
+            (ficheiro CSV, que se descarrega no site/app do próprio banco)
+            e confirme quais os movimentos que já correspondem a pagamentos
+            registados.
           </li>
           <li>
-            <strong>Exercícios e contas</strong>: o exercício financeiro
-            (normalmente um ano) e as contas bancárias/caixa do condomínio.
+            <strong>Exercícios e contas</strong>: o exercício financeiro é
+            o período (normalmente um ano civil) usado para organizar as
+            contas e produzir o balanço patrimonial — como um &ldquo;ano
+            contabilístico&rdquo; do condomínio. Aqui também se gerem as
+            contas bancárias/caixa do condomínio (ex: a conta à ordem no
+            banco, ou dinheiro físico em caixa).
           </li>
           <li>
             <strong>Documentos de fornecedor</strong>: faturas e outros
@@ -440,11 +583,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           decisão.
         </p>
         <p>
-          Para uma obra urgente decidida sem esperar por assembleia (art.
-          1427.º do Código Civil), marque &ldquo;Obra urgente&rdquo; e indique
-          a justificação — fica destacada na lista de despesas e também no
-          dossier de apoio à próxima assembleia, para o administrador prestar
-          contas.
+          A lei (art. 1427.º do Código Civil) permite ao administrador
+          mandar avançar, sem esperar pela assembleia, obras urgentes de
+          conservação cuja demora pudesse causar prejuízo ou pôr em risco a
+          segurança do prédio (ex: uma fuga de água grave, um cabo elétrico
+          exposto). Para registar uma despesa nessas condições, marque
+          &ldquo;Obra urgente&rdquo; e indique a justificação — fica
+          destacada na lista de despesas e também no dossier de apoio à
+          próxima assembleia, para o administrador prestar contas do que
+          decidiu e porquê.
         </p>
       </>
     ),
@@ -536,6 +683,13 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           (ex: limpeza, jardinagem, manutenção do elevador). Servem para
           associar despesas e documentos em Finanças.
         </p>
+        <p className="text-xs text-muted-foreground">
+          Cuidado: aqui, um &ldquo;orçamento de obra&rdquo; é a proposta de
+          preço de um fornecedor para um trabalho específico. É diferente
+          do &ldquo;orçamento&rdquo; do separador &ldquo;Finanças&rdquo;,
+          que é o plano de despesas anual de todo o condomínio — mesma
+          palavra, documentos sem relação direta.
+        </p>
         <Subtitulo>Como registar um fornecedor novo</Subtitulo>
         <p>
           Abra &ldquo;Fornecedores&rdquo; no menu lateral, clique em
@@ -577,12 +731,30 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           etc.), com a respetiva permilagem e proprietário. Só visível a
           quem tem acesso financeiro.
         </p>
+        <Subtitulo>O que é a permilagem</Subtitulo>
+        <p>
+          É o peso de cada fração no total do prédio, medido em milésimos
+          (de 0 a 1000). Normalmente já está definida no título de
+          propriedade de cada fração ou no regulamento do condomínio.
+          Serve para duas coisas: dividir as despesas de forma proporcional
+          (quem tem uma fração maior paga mais) e contar os votos numa
+          assembleia (ver &ldquo;Assembleias&rdquo;).
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Exemplo: um prédio com 3 frações — R/C Dto com 250‰, 1º Esq com
+          375‰ e 2º Dto com 375‰ (250 + 375 + 375 = 1000‰, o total do
+          prédio). Se uma despesa comum custar 300€, o R/C Dto paga 75€
+          (25% de 300€), e cada um dos outros dois paga 112,50€ (37,5%).
+        </p>
         <Subtitulo>Como registar uma fração nova</Subtitulo>
         <p>
           Clique em &ldquo;Nova fração&rdquo;, indique a identificação (ex:
           &ldquo;2º Esq&rdquo;), a permilagem e o nome do proprietário. Se a
-          fração não tiver acesso ao elevador (por exemplo, um rés-do-chão),
-          assinale a opção de isenção da parcela do elevador.
+          fração não tiver acesso ao elevador (por exemplo, um rés-do-chão
+          sem ligação direta ao elevador), assinale a opção de isenção da
+          parcela do elevador — essa fração deixa de entrar na divisão das
+          despesas de manutenção/eletricidade do elevador especificamente
+          (continua a pagar as restantes despesas comuns normalmente).
         </p>
         <p className="text-xs text-muted-foreground">
           A soma das permilagens de todas as frações nunca pode ultrapassar
@@ -631,22 +803,43 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           administrador) ou &ldquo;Aprovado&rdquo;. Visível a quem tem
           permissão de gestão ou consulta.
         </p>
+        <Subtitulo>Aprovar um pedido novo (para o administrador)</Subtitulo>
+        <p>
+          Quando alguém se junta ao condomínio com o código de convite (ver
+          &ldquo;Condomínio&rdquo;), aparece um cartão &ldquo;Pedidos de
+          acesso pendentes&rdquo; no topo desta página, com o nome, email e
+          data do pedido. Clique em &ldquo;Aprovar&rdquo; para lhe dar
+          acesso, ou &ldquo;Rejeitar&rdquo; para recusar o pedido. Enquanto
+          não aprovar, essa pessoa não vê nenhuma informação do condomínio.
+        </p>
+        <p>
+          Depois de aprovado, escolha o &ldquo;Perfil&rdquo; certo para
+          essa pessoa na lista principal (menu pendurado na coluna
+          &ldquo;Perfil&rdquo;): Condómino (proprietário de uma fração),
+          Inquilino (arrendatário, sem acesso a valores financeiros),
+          Empresa gestora ou Administrador (mesmos poderes de gestão),
+          Fornecedor (acesso mínimo, só ao que lhe for atribuído) ou
+          Auditor (vê tudo, mas não pode alterar nada). Não se esqueça
+          também de associar a conta à fração certa (ver abaixo).
+        </p>
         <p>
           Um administrador pode remover a conta de um condómino ou inquilino
           já aprovado (ícone de caixote do lixo, com confirmação) — não
           apaga a fração nem o histórico financeiro, só a conta de acesso.
           Útil, por exemplo, quando o proprietário de uma fração falece: o
           herdeiro cria conta nova com o código de convite, o administrador
-          liga-a à fração em &ldquo;Editar&rdquo;, e só depois remove a
-          conta antiga. Não é possível remover a própria conta por aqui.
+          liga-a à fração através do ícone de lápis (editar) junto ao nome,
+          e só depois remove a conta antiga. Não é possível remover a
+          própria conta por aqui.
         </p>
         <Subtitulo>Portal do fornecedor</Subtitulo>
         <p>
           Para uma conta com perfil &ldquo;Fornecedor&rdquo; ver, em
           &ldquo;Ocorrências&rdquo; e &ldquo;Fornecedores&rdquo;, só o que
           lhe diz respeito, associe-a à ficha correspondente em
-          &ldquo;Fornecedores&rdquo;: clique em &ldquo;Editar&rdquo; nessa
-          conta e escolha o fornecedor em &ldquo;Fornecedor associado&rdquo;.
+          &ldquo;Fornecedores&rdquo;: clique no ícone de lápis (editar)
+          nessa conta e escolha o fornecedor em &ldquo;Fornecedor
+          associado&rdquo;.
         </p>
       </>
     ),
@@ -667,7 +860,9 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           <li>
             Preencher os dados formais do edifício — número matricial,
             conservatória do registo predial, licença de habitação, projeto/
-            arquiteto e área de construção. Todos opcionais.
+            arquiteto e área de construção (referências do registo predial e
+            da câmara municipal; se não souber o que são, pode deixá-las em
+            branco). Todos opcionais.
           </li>
           <li>
             Registar o património do condomínio — bens como mobiliário,
@@ -728,12 +923,21 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           <li>Ver os seus próprios dados.</li>
           <li>Corrigir o seu nome e telefone.</li>
           <li>
-            Exportar todos os seus dados pessoais para um ficheiro (direito
-            previsto no RGPD).
+            Exportar todos os seus dados pessoais para um ficheiro — um
+            direito que qualquer pessoa tem por lei (RGPD, o Regulamento
+            Geral de Proteção de Dados europeu) sobre os seus próprios
+            dados, em qualquer aplicação ou serviço.
           </li>
           <li>
-            Ativar a autenticação em dois fatores (MFA) — um código extra ao
-            iniciar sessão, para maior segurança da sua conta.
+            Ativar a autenticação em dois fatores (MFA) — depois de
+            introduzir a palavra-passe, a aplicação pede também um código
+            extra antes de deixar entrar. Esse código é gerado por uma
+            aplicação de autenticação instalada no seu telemóvel (ex:
+            Google Authenticator ou Authy — gratuitas, disponíveis na loja
+            de aplicações do telemóvel), depois de ler o código QR mostrado
+            no ecrã com a câmara dessa aplicação. Mesmo que alguém descubra
+            a sua palavra-passe, não consegue entrar sem esse código —
+            maior segurança da sua conta.
           </li>
           <li>Eliminar a sua conta, com confirmação por email.</li>
         </ul>
