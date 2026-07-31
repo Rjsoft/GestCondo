@@ -6,6 +6,7 @@ import {
   ehOperadorPlataforma,
   getCondominioAtual,
   getCondominiosDoUtilizador,
+  getFracoesDoUtilizador,
   getMembroAtual,
   getSession,
   temPermissaoGestao,
@@ -47,10 +48,11 @@ export default async function AppLayout({
     )
   }
 
-  const [condominio, notificacoes, condominios] = await Promise.all([
+  const [condominio, notificacoes, condominios, fracoes] = await Promise.all([
     getCondominioAtual(membro.condominioId),
     getNotificacoes(),
     getCondominiosDoUtilizador(),
+    getFracoesDoUtilizador(membro.condominioId),
   ])
   const totalNotificacoes =
     notificacoes.mensagens.total + notificacoes.avisos.total + notificacoes.ocorrencias.total
@@ -68,6 +70,8 @@ export default async function AppLayout({
       condominioNome={condominio?.nome ?? 'Condomínio'}
       condominioId={membro.condominioId}
       condominios={condominios}
+      fracaoIdAtiva={membro.fracaoId}
+      fracoes={fracoes}
       contagensNav={{
         '/mensagens': notificacoes.mensagens.total,
         '/notificacoes': totalNotificacoes,

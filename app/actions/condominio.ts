@@ -27,7 +27,13 @@ import {
   documento,
 } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
-import { COOKIE_CONDOMINIO_ATIVO, requireAdmin, requireMembroAprovado, getSession } from '@/lib/session'
+import {
+  COOKIE_CONDOMINIO_ATIVO,
+  COOKIE_FRACAO_ATIVA,
+  requireAdmin,
+  requireMembroAprovado,
+  getSession,
+} from '@/lib/session'
 import type { MembroSessao } from '@/lib/perfis'
 import { paraData, paraDataOuNula, remapear, remapearOpcional } from '@/lib/importacao-condominio'
 import { and, eq, inArray } from 'drizzle-orm'
@@ -357,6 +363,48 @@ export async function definirCondominioAtivo(condominioId: number) {
 
   const cookieStore = await cookies()
   cookieStore.set(COOKIE_CONDOMINIO_ATIVO, String(condominioId), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  })
+  // A fração ativa (achado F04) pertence ao condomínio anterior — limpar
+  // para não "vazar" para o condomínio novo (getMembroAtual só voltaria a
+  // aplicá-la por coincidência se os ids de fração colidissem, o que não
+  // deve acontecer, mas mais vale não depender disso).
+  cookieStore.delete(COOKIE_FRACAO_ATIVA)
+
+  revalidatePath('/')
+}
+
+/**
+ * Define qual das linhas `membro` da conta fica ativa DENTRO do condomínio
+ * atual, quando a conta tem mais do que uma (achado F04 — condómino ou
+ * senhorio com várias frações no mesmo condomínio). Grava num cookie lido
+ * por `getMembroAtual()`. Valida sempre que a conta tem mesmo uma linha
+ * `membro` aprovada nessa fração, no condomínio atual — nunca confia num
+ * `fracaoId` vindo só do cliente.
+ */
+export async function definirFracaoAtiva(fracaoId: number) {
+  const membroAtual = await requireMembroAprovado()
+
+  const [pertence] = await db
+    .select({ id: membro.id })
+    .from(membro)
+    .where(
+      and(
+        eq(membro.userId, membroAtual.userId),
+        eq(membro.condominioId, membroAtual.condominioId),
+        eq(membro.fracaoId, fracaoId),
+        eq(membro.estado, 'aprovado'),
+      ),
+    )
+    .limit(1)
+  if (!pertence) throw new Error('A sua conta não está associada a esta fração')
+
+  const cookieStore = await cookies()
+  cookieStore.set(COOKIE_FRACAO_ATIVA, String(fracaoId), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

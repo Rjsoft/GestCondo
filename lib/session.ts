@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { condominio, membro, user } from '@/lib/db/schema'
+import { condominio, fracao, membro, user } from '@/lib/db/schema'
 import { and, asc, eq } from 'drizzle-orm'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -9,6 +9,11 @@ import { redirect } from 'next/navigation'
  * pertence a mais do que um condomínio) está ativa nesta sessão de
  * browser — ver `definirCondominioAtivo` em app/actions/condominio.ts. */
 export const COOKIE_CONDOMINIO_ATIVO = 'condominioAtivoId'
+/** Nome do cookie que guarda qual fração fica ativa quando a conta tem mais
+ * do que uma linha `membro` no MESMO condomínio (achado F04 — condómino ou
+ * senhorio com várias frações). Só relevante depois de já se saber qual é o
+ * condomínio ativo — ver `definirFracaoAtiva` em app/actions/condominio.ts. */
+export const COOKIE_FRACAO_ATIVA = 'fracaoAtivaId'
 import {
   type EstadoMembro,
   type MembroSessao,
@@ -59,14 +64,23 @@ export async function getSession() {
  * Uma conta pode ter mais do que uma linha `membro` (uma por condomínio a
  * que pertence, ex. empresa gestora) — ver `getCondominiosDoUtilizador`.
  *
- * Escolhe qual das linhas fica "ativa" nesta chamada por esta ordem:
- * 1. a indicada pelo cookie `condominioAtivoId` (só se ainda pertencer à
+ * Escolhe qual das linhas fica "ativa" nesta chamada em dois passos:
+ *
+ * Primeiro escolhe o CONDOMÍNIO, por esta ordem:
+ * 1. o indicado pelo cookie `condominioAtivoId` (só se ainda pertencer à
  *    conta e estiver aprovada — nunca confia cegamente no cookie);
  * 2. a primeira linha aprovada, se existir (evita prender uma conta no
  *    ecrã "aguarda aprovação" só porque a linha mais antiga está pendente
  *    noutro condomínio, quando já está aprovada nalgum);
  * 3. a primeira linha de todas, aprovada ou não (comportamento anterior,
  *    preservado para quem só tem uma linha pendente).
+ *
+ * Depois, DENTRO desse condomínio, desambigua por FRAÇÃO (achado F04 —
+ * condómino ou senhorio com várias frações no mesmo condomínio) pelo
+ * cookie `fracaoAtivaId`, quando há mais do que uma linha aprovada nesse
+ * condomínio — senão fica a linha já escolhida acima. Este segundo passo
+ * não pode depender de `condominioAtivoId` estar presente: a maioria das
+ * contas só pertence a um condomínio e nunca chega a definir esse cookie.
  *
  * Devolve `null` em dois casos distintos que os chamadores tratam de forma
  * diferente: (a) sem sessão válida, ou (b) sessão válida mas ainda sem
@@ -103,10 +117,27 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
   if (linhas.length === 0) return null
 
   const condominioAtivoId = Number(cookieStore.get(COOKIE_CONDOMINIO_ATIVO)?.value)
-  const linha =
+  const linhaBase =
     linhas.find((l) => l.membro.condominioId === condominioAtivoId && l.membro.estado === 'aprovado') ??
     linhas.find((l) => l.membro.estado === 'aprovado') ??
     linhas[0]
+
+  // Desambiguação por fração (achado F04) dentro do MESMO condomínio já
+  // escolhido acima — não pode depender só do cookie condominioAtivoId
+  // estar presente: a maioria das contas só pertence a um condomínio e
+  // nunca chega a definir esse cookie (só é gravado por
+  // definirCondominioAtivo, chamado a partir do seletor que só aparece com
+  // mais do que um condomínio), caso em que `linhaBase` já usou o segundo
+  // ou terceiro critério de fallback acima para chegar ao condomínio certo.
+  const candidatasMesmoCondominio = linhas.filter(
+    (l) => l.membro.condominioId === linhaBase.membro.condominioId && l.membro.estado === 'aprovado',
+  )
+  const fracaoAtivaIdCookie = cookieStore.get(COOKIE_FRACAO_ATIVA)?.value
+  const fracaoAtivaId = fracaoAtivaIdCookie ? Number(fracaoAtivaIdCookie) : null
+  const linha =
+    (fracaoAtivaId != null
+      ? candidatasMesmoCondominio.find((l) => l.membro.fracaoId === fracaoAtivaId)
+      : undefined) ?? linhaBase
   const { membro: existente, estadoSubscricao } = linha
 
   return {
@@ -131,6 +162,10 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
  * mostrar o seletor de "condomínio ativo" na barra lateral quando há mais
  * do que um (ver `components/app-shell.tsx`). Devolve lista vazia sem
  * sessão válida, em vez de lançar — chamado incondicionalmente no layout.
+ *
+ * `selectDistinct`: desde o achado F04, a conta pode ter mais do que uma
+ * linha `membro` no MESMO condomínio (uma por fração) — sem o distinct, o
+ * mesmo condomínio apareceria duplicado no seletor.
  */
 export async function getCondominiosDoUtilizador(): Promise<
   { condominioId: number; nome: string }[]
@@ -139,11 +174,40 @@ export async function getCondominiosDoUtilizador(): Promise<
   if (!session?.user) return []
 
   return db
-    .select({ condominioId: membro.condominioId, nome: condominio.nome })
+    .selectDistinct({ condominioId: membro.condominioId, nome: condominio.nome })
     .from(membro)
     .innerJoin(condominio, eq(membro.condominioId, condominio.id))
     .where(and(eq(membro.userId, session.user.id), eq(membro.estado, 'aprovado')))
     .orderBy(asc(condominio.nome))
+}
+
+/**
+ * Lista as frações da conta autenticada dentro de UM condomínio — para
+ * mostrar o seletor de "fração ativa" (achado F04) quando a conta tem mais
+ * do que uma linha `membro` aprovada nesse condomínio. Devolve lista vazia
+ * sem sessão válida ou sem mais do que uma fração (o chamador decide se
+ * vale a pena mostrar o seletor, mas evita expor frações de outra conta).
+ */
+export async function getFracoesDoUtilizador(
+  condominioId: number,
+): Promise<{ fracaoId: number; identificacao: string }[]> {
+  const session = await getSession()
+  if (!session?.user) return []
+
+  const linhas = await db
+    .select({ fracaoId: membro.fracaoId, identificacao: fracao.identificacao })
+    .from(membro)
+    .innerJoin(fracao, eq(membro.fracaoId, fracao.id))
+    .where(
+      and(
+        eq(membro.userId, session.user.id),
+        eq(membro.condominioId, condominioId),
+        eq(membro.estado, 'aprovado'),
+      ),
+    )
+    .orderBy(asc(fracao.identificacao))
+
+  return linhas.filter((l): l is { fracaoId: number; identificacao: string } => l.fracaoId != null)
 }
 
 /**

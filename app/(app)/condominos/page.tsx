@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/page-header'
 import { PerfilSelect } from '@/components/condominos/perfil-select'
 import { NivelGestorSelect } from '@/components/condominos/nivel-gestor-select'
 import { EditarMembroDialog } from '@/components/condominos/editar-membro-dialog'
+import { AssociarFracaoDialog } from '@/components/condominos/associar-fracao-dialog'
 import { MembroStatusActions } from '@/components/condominos/membro-status-actions'
 import { RemoverMembroButton } from '@/components/condominos/remover-membro-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -164,6 +165,14 @@ export default async function CondominosPage({
                           telefone={m.telefone}
                           fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
                           fornecedores={fornecedores.map((f) => ({ id: f.id, nome: f.nome }))}
+                        />
+                      )}
+                      {/* F04 — só faz sentido para quem já tem fração (condómino/inquilino). */}
+                      {podeGerir && (m.perfil === 'condomino' || m.perfil === 'inquilino') && (
+                        <AssociarFracaoDialog
+                          membroId={m.id}
+                          nome={m.nome}
+                          fracoes={fracoes.map((f) => ({ id: f.id, identificacao: f.identificacao }))}
                         />
                       )}
                       {podeGerir && m.id !== membro.id && (

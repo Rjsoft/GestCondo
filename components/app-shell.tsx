@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 import { CondominioSelector } from '@/components/condominio-selector'
+import { FracaoSelector } from '@/components/fracao-selector'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -124,6 +125,8 @@ export function AppShell({
   condominioNome,
   condominioId,
   condominios,
+  fracaoIdAtiva,
+  fracoes,
   contagensNav,
 }: {
   children: React.ReactNode
@@ -139,6 +142,13 @@ export function AppShell({
    * (empresa gestora), o nome do condomínio na barra lateral vira um
    * seletor em vez de texto estático (ver CondominioSelector). */
   condominios: { condominioId: number; nome: string }[]
+  /** F04 — id da fração da linha `membro` ativa (pode ser null: perfis sem
+   * fração, ex. admin/gestor/fornecedor/auditor). */
+  fracaoIdAtiva: number | null
+  /** Frações da conta DENTRO do condomínio ativo — quando tem mais do que
+   * uma (condómino/senhorio com várias frações), mostra um seletor de
+   * fração (ver FracaoSelector). Lista vazia/1 item: nada a mostrar. */
+  fracoes: { fracaoId: number; identificacao: string }[]
   /** Contagens para um badge junto à entrada de navegação, indexadas por
    * `href` (ex. não lidas em "Mensagens") — opcional, não obriga as
    * restantes entradas de NAV a mudar de forma. */
@@ -197,6 +207,9 @@ export function AppShell({
             <p className="truncate text-xs text-sidebar-foreground/60">
               {condominioNome}
             </p>
+          )}
+          {fracoes.length > 1 && fracaoIdAtiva != null && (
+            <FracaoSelector fracoes={fracoes} fracaoIdAtiva={fracaoIdAtiva} />
           )}
         </div>
       </div>

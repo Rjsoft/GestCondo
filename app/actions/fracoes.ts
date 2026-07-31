@@ -565,3 +565,83 @@ export async function atualizarMembro(formData: FormData) {
 
   revalidatePath('/condominos')
 }
+
+/**
+ * Associa uma SEGUNDA (ou mais) fração a uma conta já aprovada no mesmo
+ * condomínio (achado F04 — condómino ou senhorio com várias frações no
+ * mesmo condomínio, docs/audit/USABILITY_FINDINGS.md). Cria sempre uma
+ * linha `membro` NOVA, distinta da(s) já existente(s) para o mesmo
+ * `userId` — nunca reaproveita nem sobrescreve uma linha existente (isso é
+ * o que `atualizarMembro` já faz, para trocar a fração de UMA linha).
+ * A nova linha herda o perfil da linha de origem ("condomino" ou
+ * "inquilino" — os dois únicos perfis com sentido ligados a uma fração);
+ * bloqueado para admin/gestor/fornecedor/auditor, que não têm fração.
+ */
+export async function associarFracaoAdicional(formData: FormData) {
+  const admin = await requireAdmin()
+  const membroOrigemId = Number(formData.get('membroOrigemId'))
+  const fracaoId = Number(formData.get('fracaoId'))
+  if (!membroOrigemId || !fracaoId) throw new Error('Dados inválidos')
+
+  const [origem] = await db
+    .select()
+    .from(membro)
+    .where(
+      and(
+        eq(membro.id, membroOrigemId),
+        eq(membro.condominioId, admin.condominioId),
+        eq(membro.estado, 'aprovado'),
+      ),
+    )
+    .limit(1)
+  if (!origem) throw new Error('Membro não encontrado')
+  if (origem.perfil !== 'condomino' && origem.perfil !== 'inquilino') {
+    throw new Error('Só é possível associar frações extra a condóminos ou inquilinos')
+  }
+
+  const [fracaoValida] = await db
+    .select({ id: fracao.id, identificacao: fracao.identificacao })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!fracaoValida) throw new Error('Fração inválida')
+
+  // Verificação prévia por conveniência (mensagem clara); o índice único
+  // parcial membro_user_condominio_fracao_idx é a garantia real contra
+  // corrida (duas escritas concorrentes para a mesma conta+fração).
+  const [jaAssociada] = await db
+    .select({ id: membro.id })
+    .from(membro)
+    .where(
+      and(
+        eq(membro.userId, origem.userId),
+        eq(membro.condominioId, admin.condominioId),
+        eq(membro.fracaoId, fracaoId),
+      ),
+    )
+    .limit(1)
+  if (jaAssociada) throw new Error('Esta conta já está associada a esta fração')
+
+  const [novoMembro] = await db
+    .insert(membro)
+    .values({
+      condominioId: admin.condominioId,
+      userId: origem.userId,
+      nome: origem.nome,
+      email: origem.email,
+      perfil: origem.perfil,
+      estado: 'aprovado',
+      fracaoId,
+    })
+    .returning()
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'membro',
+    entidadeId: novoMembro.id,
+    detalhes: `${origem.nome}: associado à fração ${fracaoValida.identificacao} (conta já existente)`,
+  })
+
+  revalidatePath('/condominos')
+}

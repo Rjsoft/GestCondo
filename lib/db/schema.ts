@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import {
   pgTable,
   text,
@@ -207,9 +208,22 @@ export const membro = pgTable(
     createdAt: timestamp("createdAt").notNull().defaultNow(),
   },
   (t) => [
-    // Um utilizador só pode ter uma linha membro por condomínio (evita a
-    // corrida de duplicação descrita em SECURITY_AUDIT.md S10).
-    uniqueIndex("membro_user_condominio_idx").on(t.userId, t.condominioId),
+    // Um utilizador pode ter mais do que uma linha membro no mesmo
+    // condomínio, desde que cada uma esteja ligada a uma fração diferente
+    // (achado F04, docs/audit/USABILITY_FINDINGS.md — condómino/senhorio
+    // com várias frações). Dois índices únicos PARCIAIS em vez de um só:
+    // - com fracaoId: impede ligar a mesma fração duas vezes à mesma conta.
+    // - sem fracaoId (admin/gestor/fornecedor/auditor): preserva a proteção
+    //   original contra corrida de duplicação (SECURITY_AUDIT.md S10) — sem
+    //   a condição "IS NULL" explícita, o Postgres trata NULL como distinto
+    //   em índices únicos e duas linhas sem fração do mesmo utilizador
+    //   voltariam a poder duplicar-se por corrida.
+    uniqueIndex("membro_user_condominio_fracao_idx")
+      .on(t.userId, t.condominioId, t.fracaoId)
+      .where(sql`"fracaoId" IS NOT NULL`),
+    uniqueIndex("membro_user_condominio_sem_fracao_idx")
+      .on(t.userId, t.condominioId)
+      .where(sql`"fracaoId" IS NULL`),
     index("membro_condominio_idx").on(t.condominioId),
     index("membro_fracao_idx").on(t.fracaoId),
     index("membro_fornecedor_idx").on(t.fornecedorId),

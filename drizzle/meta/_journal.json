@@ -407,6 +407,13 @@
       "when": 1785501220424,
       "tag": "0057_strange_payback",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1785506476723,
+      "tag": "0058_membro_multi_fracao",
+      "breakpoints": true
     }
   ]
 }

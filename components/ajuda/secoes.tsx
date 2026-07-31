@@ -952,6 +952,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           e só depois remove a conta antiga. Não é possível remover a
           própria conta por aqui.
         </p>
+        <p>
+          Se a mesma pessoa for proprietária de mais do que uma fração no
+          mesmo condomínio, não precisa de criar uma segunda conta: no
+          ícone de edifício junto ao nome (&ldquo;Associar outra
+          fração&rdquo;), escolha a fração extra. A conta passa a ter
+          acesso a todas as frações associadas, com um seletor
+          &ldquo;Fração: ...&rdquo; a aparecer na barra lateral (por baixo
+          do nome do condomínio) para trocar entre elas.
+        </p>
         <Subtitulo>Portal do fornecedor</Subtitulo>
         <p>
           Para uma conta com perfil &ldquo;Fornecedor&rdquo; ver, em
