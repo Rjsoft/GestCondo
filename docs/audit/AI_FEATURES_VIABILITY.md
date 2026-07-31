@@ -1,6 +1,8 @@
 # Relatório de viabilidade — funcionalidades de IA para o GestCondo
 
-Data: 2026-07-31. **Nenhuma destas funcionalidades foi implementada.** Este é só um relatório de análise, pedido em paralelo ao trabalho de "Ler em voz alta" (`docs/RELATORIO_LEITURA_VOZ.md`). Auditoria técnica, não uma decisão de produto — a decisão de avançar (e com quê) fica ao utilizador.
+Data: 2026-07-31. Relatório de análise, pedido em paralelo ao trabalho de "Ler em voz alta" (`docs/RELATORIO_LEITURA_VOZ.md`). Auditoria técnica, não uma decisão de produto.
+
+**Atualização 2026-07-31:** os dois itens P0 (pesquisa melhorada e deteção de inconsistências — item 1 e item 8 abaixo), ambos deterministicamente sem IA como aqui recomendado, foram implementados. Ver `lib/pesquisa-ajuda.ts`/`app/actions/pesquisa.ts` e `lib/inconsistencias.ts`/`app/actions/inconsistencias.ts` (testados). Os restantes itens continuam por implementar.
 
 ## Como ler este relatório
 
@@ -33,7 +35,7 @@ Para cada funcionalidade: o que resolve, quem beneficia, se precisa mesmo de IA 
 
 ---
 
-## 1. Pesquisa melhorada na `/ajuda`
+## 1. Pesquisa melhorada na `/ajuda` — ✅ Implementado 2026-07-31
 
 **Problema concreto:** a pesquisa atual da app (`/pesquisa`) cobre avisos, documentos, ocorrências, condóminos e movimentos — não cobre o conteúdo de `/ajuda`. Um utilizador com uma pergunta ("como aprovo um condómino?") tem de adivinhar em que separador está a resposta.
 
@@ -158,7 +160,9 @@ Sobreposta com os itens 1 e 2 — não é uma funcionalidade à parte, é a téc
 
 ---
 
-## 8. Deteção preventiva de erros/inconsistências
+## 8. Deteção preventiva de erros/inconsistências — ✅ Implementado (parcial) 2026-07-31
+
+Implementadas 4 das verificações sugeridas (permilagem esquecida, movimentos possivelmente duplicados, atas por escrever, pontos de assembleia sem resultado) — ver `lib/inconsistencias.ts`. Não implementadas por não corresponderem a um estado real do schema atual (ver `FUNCTIONAL_GAPS.md`): "documentos sem associação" (a tabela `documento` nunca foi desenhada para exigir uma associação) e "totais que não coincidem"/"datas incompatíveis" (não identificado um caso concreto e real no schema atual que justifique a verificação, para não implementar uma condição especulativa).
 
 **Problema concreto:** totais que não batem certo, datas incompatíveis, frações sem permilagem, documentos sem associação, pagamentos duplicados, assembleias sem informação obrigatória.
 

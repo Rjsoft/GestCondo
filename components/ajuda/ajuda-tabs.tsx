@@ -4,10 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SECOES_AJUDA } from '@/components/ajuda/secoes'
 import { pararLeituraAoMudarSecao } from '@/components/leitura-voz/use-leitura-voz'
 
-export function AjudaTabs() {
+export function AjudaTabs({ secaoInicial }: { secaoInicial?: string }) {
+  const valorInicial = SECOES_AJUDA.some((s) => s.value === secaoInicial)
+    ? secaoInicial
+    : SECOES_AJUDA[0].value
+
   return (
     <Tabs
-      defaultValue={SECOES_AJUDA[0].value}
+      defaultValue={valorInicial}
       className="mt-4"
       onValueChange={() => pararLeituraAoMudarSecao()}
     >

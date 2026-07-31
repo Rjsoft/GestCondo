@@ -64,8 +64,8 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           <li>
             Se não souber onde uma coisa está guardada, use
             &ldquo;Pesquisa&rdquo; no menu lateral — procura ao mesmo tempo
-            em avisos, documentos, ocorrências, condóminos e movimentos
-            financeiros.
+            em avisos, documentos, ocorrências, condóminos, movimentos
+            financeiros e nesta própria Ajuda.
           </li>
           <li>
             &ldquo;Notificações&rdquo; no menu lateral junta, num só sítio,
@@ -157,6 +157,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             por lei, à parte da conta corrente, para despesas grandes e
             imprevistas no futuro (ver &ldquo;Finanças&rdquo; para mais
             detalhe).
+          </li>
+          <li>
+            Para administradores/gestores, quando há alguma coisa a
+            confirmar (ex: uma fração com a permilagem esquecida a 0‰, uma
+            assembleia realizada sem a ata escrita), aparece um cartão
+            &ldquo;Verificações&rdquo; no fundo da página, a listar cada
+            situação com um link direto para o sítio certo. Não bloqueia
+            nada — é só um lembrete; se estiver tudo em ordem, o cartão
+            nem aparece.
           </li>
         </ul>
         <p className="text-xs text-muted-foreground">

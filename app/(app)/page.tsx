@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao } from '@/lib/session'
 import { getContactosEmergencia } from '@/app/actions/contactos-emergencia'
+import { getInconsistencias } from '@/app/actions/inconsistencias'
 import { db } from '@/lib/db'
 import { aviso, fracao, movimento, ocorrencia } from '@/lib/db/schema'
 import { and, desc, eq, isNull } from 'drizzle-orm'
@@ -17,6 +18,7 @@ import {
   Megaphone,
   ArrowRight,
   Building2,
+  AlertTriangle,
 } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -25,35 +27,39 @@ export default async function DashboardPage() {
   // (ver lib/session.ts) — o painel só lhes mostra avisos e ocorrências.
   const veFinancas = temAcessoFinanceiro(membro)
 
-  const [movimentos, avisos, ocorrencias, fracoes, contactosEmergencia] = await Promise.all([
-    veFinancas
-      ? db
-          .select()
-          .from(movimento)
-          .where(
-            and(
-              eq(movimento.condominioId, membro.condominioId),
-              isNull(movimento.deletedAt),
-            ),
-          )
-      : Promise.resolve([] as (typeof movimento.$inferSelect)[]),
-    db
-      .select()
-      .from(aviso)
-      .where(and(eq(aviso.condominioId, membro.condominioId), isNull(aviso.deletedAt)))
-      .orderBy(desc(aviso.createdAt))
-      .limit(4),
-    db
-      .select()
-      .from(ocorrencia)
-      .where(and(eq(ocorrencia.condominioId, membro.condominioId), isNull(ocorrencia.deletedAt)))
-      .orderBy(desc(ocorrencia.createdAt))
-      .limit(5),
-    veFinancas
-      ? db.select().from(fracao).where(eq(fracao.condominioId, membro.condominioId))
-      : Promise.resolve([] as (typeof fracao.$inferSelect)[]),
-    getContactosEmergencia(),
-  ])
+  const gerePermissoes = temPermissaoGestao(membro)
+
+  const [movimentos, avisos, ocorrencias, fracoes, contactosEmergencia, inconsistencias] =
+    await Promise.all([
+      veFinancas
+        ? db
+            .select()
+            .from(movimento)
+            .where(
+              and(
+                eq(movimento.condominioId, membro.condominioId),
+                isNull(movimento.deletedAt),
+              ),
+            )
+        : Promise.resolve([] as (typeof movimento.$inferSelect)[]),
+      db
+        .select()
+        .from(aviso)
+        .where(and(eq(aviso.condominioId, membro.condominioId), isNull(aviso.deletedAt)))
+        .orderBy(desc(aviso.createdAt))
+        .limit(4),
+      db
+        .select()
+        .from(ocorrencia)
+        .where(and(eq(ocorrencia.condominioId, membro.condominioId), isNull(ocorrencia.deletedAt)))
+        .orderBy(desc(ocorrencia.createdAt))
+        .limit(5),
+      veFinancas
+        ? db.select().from(fracao).where(eq(fracao.condominioId, membro.condominioId))
+        : Promise.resolve([] as (typeof fracao.$inferSelect)[]),
+      getContactosEmergencia(),
+      gerePermissoes ? getInconsistencias() : Promise.resolve([]),
+    ])
 
   // Conta corrente do condomínio: exclui o fundo de reserva, que é
   // obrigatório por lei e é seguido à parte (ver app/actions/financas.ts).
@@ -235,6 +241,34 @@ export default async function DashboardPage() {
           ))}
         </CardContent>
       </Card>
+
+      {gerePermissoes && inconsistencias.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Verificações — {inconsistencias.length}{' '}
+              {inconsistencias.length === 1 ? 'ponto a rever' : 'pontos a rever'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              Situações que costumam ser esquecidas por engano — não impedem
+              nada, mas vale a pena confirmar.
+            </p>
+            {inconsistencias.map((inc, i) => (
+              <Link
+                key={i}
+                href={inc.href}
+                className="flex flex-col gap-0.5 rounded-lg border border-border p-3 hover:bg-muted"
+              >
+                <p className="font-medium text-foreground">{inc.titulo}</p>
+                <p className="text-sm text-muted-foreground">{inc.detalhe}</p>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -3,8 +3,13 @@ import { PageHeader } from '@/components/page-header'
 import { AjudaTabs } from '@/components/ajuda/ajuda-tabs'
 import { LeituraVozControls } from '@/components/leitura-voz/leitura-voz-controls'
 
-export default async function AjudaPage() {
+export default async function AjudaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ secao?: string }>
+}) {
   await requireMembroPagina()
+  const { secao } = await searchParams
 
   return (
     <div>
@@ -14,7 +19,7 @@ export default async function AjudaPage() {
       >
         <LeituraVozControls targetId="ajuda-conteudo" />
       </PageHeader>
-      <AjudaTabs />
+      <AjudaTabs secaoInicial={secao} />
     </div>
   )
 }

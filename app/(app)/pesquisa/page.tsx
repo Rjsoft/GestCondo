@@ -11,19 +11,33 @@ const CATEGORIAS: { chave: keyof Awaited<ReturnType<typeof pesquisaGlobal>>; tit
   { chave: 'ocorrencias', titulo: 'Ocorrências', href: '/ocorrencias' },
   { chave: 'condominos', titulo: 'Condóminos', href: '/condominos' },
   { chave: 'movimentos', titulo: 'Movimentos financeiros', href: '/financas' },
+  { chave: 'ajuda', titulo: 'Ajuda', href: '/ajuda' },
 ]
 
 function ListaResultados({ itens }: { itens: ResultadoPesquisa[] }) {
   return (
     <ul className="flex flex-col gap-2">
-      {itens.map((item, i) => (
-        <li key={i} className="text-sm">
-          <p className="font-medium text-foreground">{item.titulo}</p>
-          {item.subtitulo && (
-            <p className="truncate text-muted-foreground">{item.subtitulo}</p>
-          )}
-        </li>
-      ))}
+      {itens.map((item, i) => {
+        const conteudo = (
+          <>
+            <p className="font-medium text-foreground">{item.titulo}</p>
+            {item.subtitulo && (
+              <p className="truncate text-muted-foreground">{item.subtitulo}</p>
+            )}
+          </>
+        )
+        return (
+          <li key={i} className="text-sm">
+            {item.href ? (
+              <Link href={item.href} className="block rounded-md hover:underline">
+                {conteudo}
+              </Link>
+            ) : (
+              conteudo
+            )}
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -45,7 +59,7 @@ export default async function PesquisaPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Pesquisa"
-        description="Procure em avisos, documentos, ocorrências, condóminos e movimentos financeiros, tudo num só sítio."
+        description="Procure em avisos, documentos, ocorrências, condóminos, movimentos financeiros e na ajuda, tudo num só sítio."
       />
 
       <SearchInput placeholder="Pesquisar em toda a aplicação..." />
@@ -67,7 +81,7 @@ export default async function PesquisaPage({
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="font-serif text-base">{c.titulo}</CardTitle>
                 <Link
-                  href={`${c.href}?q=${encodeURIComponent(termo)}`}
+                  href={c.chave === 'ajuda' ? c.href : `${c.href}?q=${encodeURIComponent(termo)}`}
                   className="text-xs font-medium text-primary hover:underline"
                 >
                   Ver todos

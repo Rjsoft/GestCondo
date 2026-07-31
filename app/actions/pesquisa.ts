@@ -7,10 +7,12 @@ import { getMovimentosPaginado } from '@/app/actions/financas'
 import { getFracoes, getMembros } from '@/app/actions/fracoes'
 import { requireMembroAprovado, temConsultaGestao } from '@/lib/session'
 import { removerAcentos } from '@/lib/format'
+import { pesquisarSecoesAjuda } from '@/lib/pesquisa-ajuda'
+import { SECOES_AJUDA } from '@/components/ajuda/secoes'
 
 const LIMITE_POR_CATEGORIA = 5
 
-export type ResultadoPesquisa = { titulo: string; subtitulo: string }
+export type ResultadoPesquisa = { titulo: string; subtitulo: string; href?: string }
 
 export type PesquisaGlobalResultado = {
   avisos: ResultadoPesquisa[]
@@ -18,10 +20,15 @@ export type PesquisaGlobalResultado = {
   ocorrencias: ResultadoPesquisa[]
   condominos: ResultadoPesquisa[]
   movimentos: ResultadoPesquisa[]
+  ajuda: ResultadoPesquisa[]
 }
 
 function vazio(): PesquisaGlobalResultado {
-  return { avisos: [], documentos: [], ocorrencias: [], condominos: [], movimentos: [] }
+  return { avisos: [], documentos: [], ocorrencias: [], condominos: [], movimentos: [], ajuda: [] }
+}
+
+function normalizarParaPesquisa(s: string): string {
+  return removerAcentos(s.toLowerCase())
 }
 
 /**
@@ -65,6 +72,13 @@ export async function pesquisaGlobal(query: string): Promise<PesquisaGlobalResul
     condominos = [...deMembros, ...deFracoes].slice(0, LIMITE_POR_CATEGORIA)
   }
 
+  const ajuda: ResultadoPesquisa[] = pesquisarSecoesAjuda(
+    SECOES_AJUDA,
+    termo,
+    normalizarParaPesquisa,
+    LIMITE_POR_CATEGORIA,
+  ).map((r) => ({ titulo: r.label, subtitulo: r.trecho, href: `/ajuda?secao=${r.value}` }))
+
   return {
     avisos: avisosR.avisos
       .slice(0, LIMITE_POR_CATEGORIA)
@@ -79,5 +93,6 @@ export async function pesquisaGlobal(query: string): Promise<PesquisaGlobalResul
     movimentos: movimentosR.movimentos
       .slice(0, LIMITE_POR_CATEGORIA)
       .map((mv) => ({ titulo: mv.categoria, subtitulo: mv.descricao ?? '' })),
+    ajuda,
   }
 }
