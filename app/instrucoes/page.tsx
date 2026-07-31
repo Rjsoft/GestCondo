@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Building2 } from 'lucide-react'
 import { VoltarButton } from '@/components/voltar-button'
+import { LeituraVozControls } from '@/components/leitura-voz/leitura-voz-controls'
 
 export default function InstrucoesPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <VoltarButton />
+        <LeituraVozControls targetId="instrucoes-conteudo" />
       </div>
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -17,7 +19,7 @@ export default function InstrucoesPage() {
       </div>
 
       <Card>
-        <CardContent className="flex flex-col gap-6 p-8">
+        <CardContent id="instrucoes-conteudo" data-speech-content className="flex flex-col gap-6 p-8">
           <div>
             <h1 className="font-serif text-xl font-bold text-foreground">
               Como começar: criar o seu condomínio do zero

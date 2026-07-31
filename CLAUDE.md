@@ -17,6 +17,8 @@ Não repitas nada disto de memória — os ficheiros abaixo são a fonte de verd
 - `docs/CHECKLIST_TESTE_MANUAL.md` — checklist para o utilizador percorrer a app com dados reais, não substitui os testes automáticos.
 - `docs/GUIA_TESTE_NVDA.md` — guião para um utilizador externo (não técnico) testar toda a app com o NVDA. Resolve o achado A4/L4 pendente em `docs/audit/ACCESSIBILITY_AUDIT.md` (nunca houve teste real com leitor de ecrã, só revisão de código).
 - `docs/GUIA_NVDA_NARRADOR.md` — manual de utilização da app com NVDA/Narrador, escrito 2026-07-30 depois do primeiro teste real (dificuldade reportada em navegar só por teclado). Explica os padrões de teclado específicos da app (separadores com setas, diálogos, menus, campos de escolha) — atualizar sempre que um padrão de interface novo for introduzido (ex. um componente interativo novo em `components/ui/`).
+- `docs/RELATORIO_LEITURA_VOZ.md` — decisões técnicas, testes e limitações da funcionalidade "Ler em voz alta" (`/ajuda` e `/instrucoes`, `components/leitura-voz/`), 2026-07-31.
+- `docs/audit/AI_FEATURES_VIABILITY.md` — análise de viabilidade de funcionalidades de IA propostas (não implementadas), 2026-07-31 — consultar antes de propor ou implementar qualquer funcionalidade de IA nova.
 
 **Não usar como fonte de estado:** `AUDIT.md` é a auditoria inicial de 2026-07-06, **congelada como registo histórico em 2026-07-24**. Descreve um estado do projeto que já não existe (diz que não há multi-tenancy, assembleias, RGPD, auditoria, testes nem git — tudo isso existe hoje). Ler só para contexto histórico.
 
