@@ -66,6 +66,7 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 ## 7. Documentos e dados pessoais de terceiros
 
 - A funcionalidade de Documentos (`app/(app)/documentos/page.tsx`) passou a suportar **upload real desde 2026-07-09** (`documento.url`/`nomeFicheiro`), pelo que os ficheiros estão hoje alojados pela aplicação. Atas, faturas e contratos contêm frequentemente dados pessoais de condóminos (nomes, moradas, por vezes IBAN). Dos três requisitos identificados quando isto era hipotético: o **armazenamento privado está feito** (store dedicado `access: 'private'` + rota autenticada, desde 2026-07-22); **continuam por fazer** o controlo de acesso por documento (hoje é por categoria/página, não por ficheiro — ver `FUNCTIONAL_GAPS.md` secção 6) e a redação/anonimização em documentos partilhados com terceiros externos (ex. seguradora).
+- **Acesso convidado a uma ata, sem autenticação (2026-07-31, achado F13)**: primeira funcionalidade da app que expõe dados pessoais (nomes de representantes, votos, texto da ata) numa rota pública sem sessão (`/partilha/[token]`), a um destinatário externo escolhido pelo administrador. Mitigações: token de alta entropia, prazo obrigatório (máx. 90 dias), revogável, restrito só a atas já aprovadas, sem anexos, e registo (`acesso_convidado`) de quantas vezes/quando foi acedido. Ver `RAT.md` secção 4 para a base legal. **Por fazer**: mencionar explicitamente este fluxo na Política de Privacidade quando esta for revista (ver secção 8).
 
 ## 8. Textos legais em falta
 

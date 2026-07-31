@@ -1304,6 +1304,48 @@ export const assembleiaAnexo = pgTable(
   (t) => [index("assembleia_anexo_assembleia_idx").on(t.assembleiaId)],
 )
 
+// Acesso convidado, delimitado e temporário a UMA ata aprovada — achado F13
+// (docs/audit/USABILITY_FINDINGS.md). Gera um link público
+// (/partilha/[token]) que não exige conta nem sessão, para partilhar uma
+// ata com alguém fora do condomínio (ex. advogado, comprador de fração)
+// sem lhe dar acesso completo à aplicação. Deliberadamente restrito, na
+// primeira versão, a atas com `estado='aprovada'` (nunca um rascunho) —
+// ver validação em app/actions/acesso-convidado.ts. Não cobre documentos
+// arbitrários (`documento`): ficaria dependente de `/api/ficheiros`, que
+// exige sessão, e alargaria o âmbito além do caso concreto pedido.
+export const acessoConvidado = pgTable(
+  "acesso_convidado",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    assembleiaId: integer("assembleiaId")
+      .notNull()
+      .references(() => assembleia.id, { onDelete: "cascade" }),
+    criadoPorUserId: text("criadoPorUserId").notNull(),
+    token: text("token").notNull(),
+    // Nota livre só para o administrador se lembrar a quem foi enviado o
+    // link (ex. "Advogado Dr. Silva") — nunca mostrada na página pública.
+    descricao: text("descricao"),
+    expiraEm: timestamp("expiraEm").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    // Revogação manual antes do prazo — `revogadoEm` != null bloqueia o
+    // acesso mesmo que `expiraEm` ainda não tenha passado.
+    revogadoEm: timestamp("revogadoEm"),
+    // Contagem simples de utilização, mostrada ao administrador — não é
+    // auditoria detalhada por acesso (audit_log exige um actor com sessão,
+    // que não existe neste fluxo por definição).
+    numeroAcessos: integer("numeroAcessos").notNull().default(0),
+    ultimoAcessoEm: timestamp("ultimoAcessoEm"),
+  },
+  (t) => [
+    uniqueIndex("acesso_convidado_token_idx").on(t.token),
+    index("acesso_convidado_condominio_idx").on(t.condominioId),
+    index("acesso_convidado_assembleia_idx").on(t.assembleiaId),
+  ],
+)
+
 // Comunicação de uma deliberação que exigiu unanimidade (aprovada
 // provisoriamente por 2/3 do capital investido presente, art. 1432.º/8 CC)
 // a uma fração que esteve ausente da assembleia — distinta da convocatória

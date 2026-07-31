@@ -396,6 +396,17 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           estiver aprovada; depois de aprovada, ficam fixos tal como o resto
           da ata.
         </p>
+        <Subtitulo>Partilhar uma ata com alguém fora do condomínio (para o administrador)</Subtitulo>
+        <p>
+          Depois de a ata estar aprovada, o botão &ldquo;Partilhar&rdquo;
+          (na mesma página da ata) cria um link público — sem ser preciso
+          criar conta nem iniciar sessão — que mostra só essa ata, sem
+          anexos, até ao prazo que definir (por omissão, 30 dias). Útil para
+          entregar a um advogado, a um comprador de uma fração, ou a
+          qualquer outra pessoa fora do condomínio, sem lhe dar acesso ao
+          resto da aplicação. Pode revogar o link a qualquer momento antes
+          do prazo, e vê quantas vezes foi consultado.
+        </p>
         <Subtitulo>Comunicação de deliberações aos ausentes (para o administrador)</Subtitulo>
         <p>
           Isto só se aplica a um caso específico, mas é importante não o

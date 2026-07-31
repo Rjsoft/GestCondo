@@ -35,6 +35,7 @@ export type EntidadeAuditoria =
   | 'orcamentoObra'
   | 'fracaoCredito'
   | 'contrato'
+  | 'acessoConvidado'
 
 /** Um campo que mudou entre o estado anterior e o novo, para o histórico de
  * alterações mostrar "campo: de X para Y" em vez de só "algo mudou". */

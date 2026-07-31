@@ -50,6 +50,7 @@ const ENTIDADE_LABEL: Record<string, string> = {
   orcamentoObra: 'Orçamento de obra',
   fracaoCredito: 'Crédito de fração',
   contrato: 'Contrato',
+  acessoConvidado: 'Acesso convidado',
 }
 
 type CampoAlterado = { campo: string; label: string; antes: unknown; depois: unknown }

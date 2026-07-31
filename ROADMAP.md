@@ -132,7 +132,7 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 
 ---
 
-## Simulação de usabilidade/acessibilidade por personas (2026-07-31) — proposto, ainda não aprovado
+## Simulação de usabilidade/acessibilidade por personas (2026-07-31)
 
 Simulação técnica (não teste real) cobrindo toda a aplicação por personas — 30 personas
 (`docs/audit/USER_PERSONAS.md`), percursos simulados por tarefa
@@ -140,17 +140,16 @@ Simulação técnica (não teste real) cobrindo toda a aplicação por personas 
 (`docs/audit/ACCESSIBILITY_REVIEW.md`), revisão por perfil funcional
 (`docs/audit/ROLE_BASED_USAGE_REVIEW.md`), consolidada em 22 achados priorizados
 (`docs/audit/USABILITY_FINDINGS.md`) e um plano de melhorias por fases
-(`docs/audit/USABILITY_IMPROVEMENT_PLAN.md`). **Nenhum destes achados foi corrigido nem
-aprovado para desenvolvimento** — é uma proposta para decisão do utilizador.
+(`docs/audit/USABILITY_IMPROVEMENT_PLAN.md`).
 
-Achados de maior gravidade (5, todos "Alto"/"Alta"): falta deteção de movimento
-duplicado no momento de o lançar; indicador de condomínio ativo pouco visível para
-empresas gestoras multi-condomínio; papel `gestor` sem segregação entre colaborador
-operacional e gestor completo; modelo de dados não suporta um condómino com várias
-frações no mesmo condomínio; registo de deliberação de assembleia sem confirmação
-(inconsistente com a própria convenção deste projeto de usar `ConfirmDialog` em ações
-sensíveis). Detalhe completo, incluindo os 10 achados médios e 5 baixos, em
-`docs/audit/USABILITY_FINDINGS.md`.
+**Estado (2026-07-31): 20 dos 22 achados corrigidos e testados** (F01, F02, F05-F12,
+F14-F22 — inclui o lote de correções de esforço baixo/médio e o achado F13, acesso
+convidado a uma ata). **Por decidir**: F03 (segregar um nível "colaborador operacional"
+dentro do papel `gestor`) e F04 (suportar um condómino com várias frações no mesmo
+condomínio) — ambos analisados com plano técnico (ver histórico de conversa), adiados por
+serem os dois de maior risco: F04 em particular mexe no índice único de `membro` que já
+teve um incidente de segurança real (S10, `SECURITY_AUDIT.md`). Nenhum dos dois avança
+sem decisão explícita do utilizador.
 
 O teste real com NVDA já planeado (`docs/GUIA_TESTE_NVDA.md`) continua a ser a validação
 mais importante em falta — nenhuma conclusão de acessibilidade desta simulação substitui
