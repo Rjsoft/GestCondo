@@ -41,7 +41,7 @@ export function RegistarVotoDialog({
 }) {
   const [open, setOpen] = useState(false)
   const [fracaoId, setFracaoId] = useState('')
-  const [voto, setVoto] = useState('favor')
+  const [voto, setVoto] = useState('')
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (formData: FormData) => {
@@ -53,7 +53,7 @@ export function RegistarVotoDialog({
         toast.success('Voto registado')
         setOpen(false)
         setFracaoId('')
-        setVoto('favor')
+        setVoto('')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao registar')
       }
@@ -97,7 +97,9 @@ export function RegistarVotoDialog({
           <div className="flex flex-col gap-2">
             <Select value={voto} onValueChange={(value) => value && setVoto(value)}>
               <SelectTrigger>
-                <SelectValue>{(v: string | null) => (v ? VOTO_LABEL[v] : '')}</SelectValue>
+                <SelectValue placeholder="Selecione o voto">
+                  {(v: string | null) => (v ? VOTO_LABEL[v] : 'Selecione o voto')}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="favor">A favor</SelectItem>
@@ -108,7 +110,7 @@ export function RegistarVotoDialog({
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={pending || !fracaoId}>
+            <Button type="submit" disabled={pending || !fracaoId || !voto}>
               {pending ? 'A registar...' : 'Registar'}
             </Button>
           </DialogFooter>

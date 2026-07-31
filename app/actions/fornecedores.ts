@@ -9,6 +9,17 @@ import { revalidatePath } from 'next/cache'
 
 export async function getFornecedores() {
   const m = await requireMembroPagina()
+  // Um login com perfil "fornecedor" só deve ver a sua própria ficha — os
+  // restantes fornecedores do condomínio (contactos, NIF, notas internas)
+  // são dados comerciais de terceiros, incluindo concorrentes diretos.
+  if (m.perfil === 'fornecedor') {
+    if (!m.fornecedorId) return []
+    return db
+      .select()
+      .from(fornecedor)
+      .where(and(eq(fornecedor.condominioId, m.condominioId), eq(fornecedor.id, m.fornecedorId)))
+      .orderBy(asc(fornecedor.nome))
+  }
   return db
     .select()
     .from(fornecedor)

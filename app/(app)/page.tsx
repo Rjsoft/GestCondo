@@ -94,6 +94,7 @@ export default async function DashboardPage() {
         isAdmin={temPermissaoGestao(membro)}
       />
 
+      <h2 className="sr-only">Resumo financeiro e operacional</h2>
       <div
         className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${veFinancas ? 'lg:grid-cols-4' : ''}`}
       >
@@ -183,6 +184,7 @@ export default async function DashboardPage() {
                   value={`${fracoes
                     .reduce((s, f) => s + Number(f.permilagem), 0)
                     .toFixed(1)} ‰`}
+                  title="Permilagem: a percentagem (em milésimos) que cada fração representa no condomínio — usada para dividir quotas e para contar votos em assembleia. O total do condomínio deve ser 1000‰."
                 />
                 <Resumo
                   label="Quotas por receber"
@@ -305,13 +307,15 @@ function Resumo({
   label,
   value,
   valueClass,
+  title,
 }: {
   label: string
   value: string
   valueClass?: string
+  title?: string
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between" title={title}>
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className={`font-medium ${valueClass ?? 'text-foreground'}`}>
         {value}

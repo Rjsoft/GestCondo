@@ -130,4 +130,30 @@ Ver `SECURITY_AUDIT.md` e `GDPR_CHECKLIST.md`.
 11. ✅ Construir módulo de Assembleias — feito 2026-07-09: convocatória (com email automático aos condóminos aprovados), ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, deliberações, ata imutável após aprovação. **Verificado em runtime 2026-07-21**: ciclo completo testado manualmente contra a BD Neon real, incluindo a imutabilidade após aprovação da ata. Ver `FUNCTIONAL_GAPS.md` secção 2 para o detalhe. Confirmação de leitura e anexos à ata resolvidos 2026-07-26; falta videoconferência.
 12. ✅ Introduzir testes cobrindo isolamento multi-tenant e permissões — feito 2026-07-06 (`lib/perfis.test.ts` para permissões; `lib/db/tenant-isolation.dbtest.ts` para isolamento entre condomínios, corrido contra uma BD Neon real dentro de uma transação sempre revertida).
 
+---
+
+## Simulação de usabilidade/acessibilidade por personas (2026-07-31) — proposto, ainda não aprovado
+
+Simulação técnica (não teste real) cobrindo toda a aplicação por personas — 30 personas
+(`docs/audit/USER_PERSONAS.md`), percursos simulados por tarefa
+(`docs/audit/USABILITY_SIMULATION.md`), revisão de acessibilidade por análise de código
+(`docs/audit/ACCESSIBILITY_REVIEW.md`), revisão por perfil funcional
+(`docs/audit/ROLE_BASED_USAGE_REVIEW.md`), consolidada em 22 achados priorizados
+(`docs/audit/USABILITY_FINDINGS.md`) e um plano de melhorias por fases
+(`docs/audit/USABILITY_IMPROVEMENT_PLAN.md`). **Nenhum destes achados foi corrigido nem
+aprovado para desenvolvimento** — é uma proposta para decisão do utilizador.
+
+Achados de maior gravidade (5, todos "Alto"/"Alta"): falta deteção de movimento
+duplicado no momento de o lançar; indicador de condomínio ativo pouco visível para
+empresas gestoras multi-condomínio; papel `gestor` sem segregação entre colaborador
+operacional e gestor completo; modelo de dados não suporta um condómino com várias
+frações no mesmo condomínio; registo de deliberação de assembleia sem confirmação
+(inconsistente com a própria convenção deste projeto de usar `ConfirmDialog` em ações
+sensíveis). Detalhe completo, incluindo os 10 achados médios e 5 baixos, em
+`docs/audit/USABILITY_FINDINGS.md`.
+
+O teste real com NVDA já planeado (`docs/GUIA_TESTE_NVDA.md`) continua a ser a validação
+mais importante em falta — nenhuma conclusão de acessibilidade desta simulação substitui
+esse teste.
+
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.

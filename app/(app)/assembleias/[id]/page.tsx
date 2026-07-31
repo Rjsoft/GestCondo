@@ -248,7 +248,11 @@ export default async function AssembleiaDetalhePage({
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-sm">
+                <div
+                  className="grid grid-cols-3 gap-2 text-sm"
+                  role="group"
+                  aria-label={`Resultados da votação — ${p.titulo}`}
+                >
                   <div className="rounded-md bg-emerald-50 p-2 text-center">
                     <p className="text-xs text-muted-foreground">A favor</p>
                     <p className="font-medium text-emerald-700">
@@ -270,7 +274,7 @@ export default async function AssembleiaDetalhePage({
                 {isAdmin && editavel && (
                   <div className="flex flex-wrap items-center gap-2">
                     <RegistarVotoDialog pontoId={p.id} titulo={p.titulo} fracoes={fracoes} />
-                    {!p.resultado && <ResultadoBotoesClient pontoId={p.id} />}
+                    <ResultadoBotoesClient pontoId={p.id} resultadoAtual={p.resultado} />
                   </div>
                 )}
               </CardContent>

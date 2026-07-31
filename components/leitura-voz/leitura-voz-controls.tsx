@@ -58,21 +58,27 @@ export function LeituraVozControls({
 
   return (
     <div className="flex flex-col gap-2">
+      {parado && (
+        <p className="text-xs text-muted-foreground">
+          Já usa um leitor de ecrã (como o NVDA)? Pode preferir não usar este
+          botão — o seu leitor de ecrã já lê o conteúdo da página.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         {parado && (
-          <Button variant="outline" size="sm" onClick={iniciarSecao} aria-pressed={false}>
+          <Button variant="outline" size="sm" onClick={iniciarSecao}>
             <Volume2 className="h-4 w-4" />
             {label}
           </Button>
         )}
         {aLer && (
-          <Button variant="outline" size="sm" onClick={pausar} aria-pressed={true}>
+          <Button variant="outline" size="sm" onClick={pausar}>
             <Pause className="h-4 w-4" />
             Pausar
           </Button>
         )}
         {emPausa && (
-          <Button variant="outline" size="sm" onClick={retomar} aria-pressed={true}>
+          <Button variant="outline" size="sm" onClick={retomar}>
             <Play className="h-4 w-4" />
             Continuar
           </Button>
@@ -140,12 +146,6 @@ export function LeituraVozControls({
                 da voz depende do browser, do sistema operativo e das vozes
                 instaladas ou disponibilizadas pelo fabricante do seu
                 dispositivo.
-              </p>
-              <p className="mt-2">
-                Está a utilizar uma funcionalidade de leitura do browser. Caso
-                já use um leitor de ecrã (como o NVDA), poderá preferir manter
-                esta função desligada — o seu leitor de ecrã já lê o conteúdo
-                da página.
               </p>
               {ativarAtalho && (
                 <p className="mt-2">
