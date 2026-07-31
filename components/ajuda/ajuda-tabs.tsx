@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SECOES_AJUDA } from '@/components/ajuda/secoes'
+import { SecaoComSimplificacao } from '@/components/ajuda/secao-com-simplificacao'
 import { pararLeituraAoMudarSecao } from '@/components/leitura-voz/use-leitura-voz'
 
 export function AjudaTabs({ secaoInicial }: { secaoInicial?: string }) {
@@ -29,7 +30,11 @@ export function AjudaTabs({ secaoInicial }: { secaoInicial?: string }) {
             data-speech-content
             className="flex max-w-2xl flex-col gap-3 text-sm text-foreground"
           >
-            {s.conteudo}
+            {s.conteudoSimplificado ? (
+              <SecaoComSimplificacao original={s.conteudo} simplificado={s.conteudoSimplificado} />
+            ) : (
+              s.conteudo
+            )}
           </div>
         </TabsContent>
       ))}

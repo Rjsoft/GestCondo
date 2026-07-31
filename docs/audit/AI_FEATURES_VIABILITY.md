@@ -2,7 +2,7 @@
 
 Data: 2026-07-31. Relatório de análise, pedido em paralelo ao trabalho de "Ler em voz alta" (`docs/RELATORIO_LEITURA_VOZ.md`). Auditoria técnica, não uma decisão de produto.
 
-**Atualização 2026-07-31:** os dois itens P0 (pesquisa melhorada e deteção de inconsistências — item 1 e item 8 abaixo), ambos deterministicamente sem IA como aqui recomendado, foram implementados. Ver `lib/pesquisa-ajuda.ts`/`app/actions/pesquisa.ts` e `lib/inconsistencias.ts`/`app/actions/inconsistencias.ts` (testados). Os restantes itens continuam por implementar.
+**Atualização 2026-07-31:** os dois itens P0 (pesquisa melhorada e deteção de inconsistências — item 1 e item 8 abaixo), ambos deterministicamente sem IA como aqui recomendado, foram implementados. Ver `lib/pesquisa-ajuda.ts`/`app/actions/pesquisa.ts` e `lib/inconsistencias.ts`/`app/actions/inconsistencias.ts` (testados). Do P1, a explicação simplificada (item 4) também foi implementada, sem IA, só em Finanças e Assembleias. O assistente contextual (item 2) continua em avaliação — primeira funcionalidade da app a exigir um fornecedor de IA externo (Vercel AI Gateway, $5/mês grátis, depois preço exato do fornecedor sem margem), decisão ainda por fechar. Os restantes itens continuam por implementar.
 
 ## Como ler este relatório
 
@@ -93,7 +93,9 @@ Sobreposta com os itens 1 e 2 — não é uma funcionalidade à parte, é a téc
 
 ---
 
-## 4. Explicação simplificada ("Explicar de forma mais simples")
+## 4. Explicação simplificada ("Explicar de forma mais simples") — ✅ Implementado (parcial) 2026-07-31
+
+Implementado sem IA, exatamente como recomendado abaixo: texto reescrito à mão, alternado por um botão (`components/ajuda/secao-com-simplificacao.tsx`), sempre com acesso ao texto original. Aplicado só às 2 secções mais densas identificadas pela simulação de utilizadores leigos — Finanças e Assembleias (decisão do utilizador, para não duplicar esforço de reescrita nas restantes secções já bastante simplificadas nesta sessão).
 
 **Problema concreto:** mesmo depois da expansão de `/ajuda` desta sessão, algum texto pode continuar denso para um leigo total (ex: partes de Assembleias/Finanças).
 

@@ -4,6 +4,13 @@ export type SecaoAjuda = {
   value: string
   label: string
   conteudo: ReactNode
+  // Versão resumida e reescrita à mão (não gerada por IA), só para as
+  // secções mais densas — alterna com o texto completo através de
+  // SecaoComSimplificacao (components/ajuda/secao-com-simplificacao.tsx).
+  // Sempre disponível o texto original; nunca substitui, só oferece
+  // alternativa. Ver docs/audit/AI_FEATURES_VIABILITY.md, item P1
+  // "explicação simplificada".
+  conteudoSimplificado?: ReactNode
 }
 
 // Texto descritivo de cada módulo, escrito com base no que a funcionalidade
@@ -429,6 +436,40 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
         </p>
       </>
     ),
+    conteudoSimplificado: (
+      <>
+        <Titulo>Assembleias — resumo simples</Titulo>
+        <p>
+          É a reunião de todos os condóminos para decidir coisas em conjunto
+          — desde o aviso da reunião até à decisão final escrita.
+        </p>
+        <Subtitulo>As 4 etapas</Subtitulo>
+        <ol className="list-decimal pl-5">
+          <li>
+            O administrador marca a reunião (a &ldquo;convocatória&rdquo;) e
+            diz o que vai ser discutido. Chega um email a todos.
+          </li>
+          <li>
+            No dia, regista-se quem esteve presente (ou quem se fez
+            representar por outra pessoa, com uma autorização escrita).
+          </li>
+          <li>
+            Vota-se cada assunto da lista, um a um, e regista-se o
+            resultado.
+          </li>
+          <li>
+            Depois, escreve-se o resumo oficial do que foi decidido (a
+            &ldquo;ata&rdquo;) e aprova-se — a partir daí já não se pode
+            mudar.
+          </li>
+        </ol>
+        <p className="text-xs text-muted-foreground">
+          Há uma situação especial, mais rara, sobre avisar formalmente quem
+          faltou a uma decisão importante — se precisar disso, veja o texto
+          completo (botão acima).
+        </p>
+      </>
+    ),
   },
   {
     value: 'financas',
@@ -601,6 +642,42 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           destacada na lista de despesas e também no dossier de apoio à
           próxima assembleia, para o administrador prestar contas do que
           decidiu e porquê.
+        </p>
+      </>
+    ),
+    conteudoSimplificado: (
+      <>
+        <Titulo>Finanças — resumo simples</Titulo>
+        <p>
+          É onde se vê e regista todo o dinheiro do condomínio: quanto
+          entra, quanto sai, e quanto cada fração ainda deve.
+        </p>
+        <Subtitulo>O que precisa de saber para começar</Subtitulo>
+        <ul className="list-disc pl-5">
+          <li>
+            <strong>Movimentos</strong>: a lista de tudo o que entrou
+            (quotas pagas) e saiu (despesas) do condomínio.
+          </li>
+          <li>
+            <strong>Dívidas por fração</strong>: quem ainda não pagou, e
+            quanto.
+          </li>
+          <li>
+            <strong>Orçamento</strong>: o plano de despesas para o ano —
+            é a partir dele que a aplicação calcula, sozinha, quanto cada
+            fração paga por mês.
+          </li>
+          <li>
+            <strong>Fundo de reserva</strong>: uma poupança obrigatória por
+            lei, à parte do dinheiro do dia a dia, para despesas grandes e
+            imprevistas (ex: arranjar o telhado).
+          </li>
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          Há mais separadores para situações mais específicas (juros de
+          atraso, conciliação com o banco, faturas de fornecedores, balanço
+          do ano) — quando precisar de algum deles, veja o texto completo
+          (botão acima), que explica cada um com mais detalhe.
         </p>
       </>
     ),
