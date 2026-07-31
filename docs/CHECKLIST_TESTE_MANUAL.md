@@ -549,6 +549,8 @@ Os totais devem ser atualizados manualmente após cada execução.
 
 - [ ] A lista de condóminos e frações está atualizada (permilagens, proprietários)?
 - [ ] Um condómino sem acesso financeiro (ex. inquilino, se tiveres algum) não vê Finanças/Frações no menu?
+- [ ] **F04 — condómino/senhorio com várias frações:** se tiveres alguém proprietário de mais do que uma fração no mesmo condomínio, em "Condóminos" usa o ícone de edifício ("Associar outra fração") junto ao nome para ligar a segunda fração à conta já existente — confirma que passam a aparecer duas linhas na tabela para essa pessoa, uma por fração, sem criar conta nova.
+- [ ] **F04:** com essa conta (ou pedindo à pessoa), confirma que aparece um seletor "Fração: ..." na barra lateral, por baixo do nome do condomínio, e que trocar de fração aí muda a fração mostrada em "Os meus dados" e nos ecrãs relevantes dessa conta.
 
 ## Auditoria
 
