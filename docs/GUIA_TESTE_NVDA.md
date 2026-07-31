@@ -37,6 +37,7 @@ Não é preciso classificar gravidade nem sugerir a correção — isso fica par
 
 ## 1. Conta e autenticação
 
+- [ ] Antes de te registares, abre a página `/instrucoes` (link "Como começar", no ecrã de login/registo) — consegues ler o guia todo até ao fim sem te perderes? Alguma palavra nova (fração, permilagem, quota, fundo de reserva, código de convite) ficou por perceber, mesmo com a explicação dada ali?
 - [ ] Página de registo (`/sign-up`): todos os campos têm nome claro ao navegar por eles? A password pedida (mínimo 10 caracteres) é anunciada como requisito antes de errares?
 - [ ] Submeter o registo com um erro (ex. email já usado, password curada) — o erro é anunciado sem teres de procurar por ele?
 - [ ] Email de verificação — depois de confirmares, o login funciona sem confusão?
