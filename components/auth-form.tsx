@@ -307,6 +307,9 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         </p>
 
         <p className="mt-3 flex justify-center gap-3 text-xs text-muted-foreground">
+          <Link href="/instrucoes" className="underline-offset-4 hover:underline">
+            Como começar
+          </Link>
           <Link href="/privacidade" className="underline-offset-4 hover:underline">
             Privacidade
           </Link>
