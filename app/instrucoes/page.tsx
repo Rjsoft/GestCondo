@@ -146,11 +146,12 @@ export default function InstrucoesPage() {
               condomínio, não precisa de fazer nada para o gerar. Partilhe-o
               com os restantes moradores (por exemplo, por email ou no grupo
               do prédio) — no nosso exemplo, com o João e a Marta. Cada um
-              cria a sua própria conta em{' '}
+              cria a sua própria conta na{' '}
               <Link href="/sign-up" className="text-primary underline-offset-4 hover:underline">
-                sign-up
+                página de registo
               </Link>{' '}
-              e, no ecrã &ldquo;Falta só mais um passo&rdquo;, escolhe
+              (a mesma do passo 1) e, no ecrã &ldquo;Falta só mais um
+              passo&rdquo;, escolhe
               &ldquo;Tenho um código de convite&rdquo; em vez de criar um
               condomínio novo.
             </p>
