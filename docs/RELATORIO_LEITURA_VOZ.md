@@ -1,6 +1,6 @@
 # Relatório — "Ler em voz alta" (`/ajuda` e `/instrucoes`)
 
-Data: 2026-07-31. Funcionalidade nova, implementada e testada localmente; **ainda não em produção** (aguarda autorização de deploy).
+Data: 2026-07-31. Funcionalidade nova, implementada, testada localmente, revista por auditoria independente e **em produção desde 2026-07-31** (commit `10b3de8`, ver secção 9).
 
 ## 0. Correções feitas depois da revisão independente
 
@@ -15,7 +15,7 @@ Uma auditoria independente (agente sem contexto prévio, código-fonte e testes 
 
 ## 1. Resumo do que foi implementado
 
-Um botão "Ler esta secção" em `/ajuda` (por separador ativo) e "Ler a página" em `/instrucoes` (página única), com Iniciar / Pausar / Continuar / Parar / Reiniciar secção, controlo de velocidade (Lenta/Normal/Rápida), seleção de voz quando há mais do que uma voz portuguesa, destaque visual do bloco a ser lido, atalho de teclado, e uma explicação acessível "Sobre a leitura em voz alta". Usa exclusivamente a Web Speech API nativa do browser — sem dependências novas, sem serviços externos, sem dados enviados para fora do dispositivo.
+Um botão "Ler esta secção" em `/ajuda` (por separador ativo) e "Ler a página" em `/instrucoes` (página única), com Iniciar / Pausar / Continuar / Parar / Reiniciar secção, controlo de velocidade (Lenta/Normal/Rápida), seleção de voz quando há mais do que uma voz portuguesa, destaque visual do bloco a ser lido, atalho de teclado, e uma explicação acessível "Sobre a leitura em voz alta". Usa exclusivamente a Web Speech API nativa do browser — sem dependências novas, sem serviços externos integrados pela aplicação (ver secção 6 para a formulação exata sobre onde o processamento de voz pode efetivamente ocorrer).
 
 ## 2. Ficheiros criados e alterados
 
@@ -137,11 +137,11 @@ O texto do disclosure evita a afirmação categórica "nunca sai do dispositivo"
 
 ## 6. Segurança, privacidade e RGPD
 
-- Nenhuma dependência nova, nenhum SDK, nenhuma API de voz externa.
-- Nenhum dado enviado para o servidor da GestCondo nem para terceiros — só a Web Speech API nativa do browser.
-- Preferências (velocidade, voz) só em `localStorage`, nunca no servidor.
-- Sem telemetria de utilização.
-- Ver 4.11 para a formulação exata sobre onde o processamento de voz efetivamente ocorre.
+- Nenhuma dependência nova, nenhum SDK, nenhum fornecedor externo de voz integrado pela aplicação.
+- **Formulação rigorosa (não a afirmação categórica "nunca sai do dispositivo" que uma versão anterior deste relatório usava):** a GestCondo não envia o conteúdo lido para servidores próprios nem integra serviços externos de síntese de voz. A geração da voz é feita através da Web Speech API do browser e pode depender do browser, do sistema operativo e das vozes disponibilizadas pelo fabricante do dispositivo — nalguns casos, esse processamento de voz é feito localmente pelo sistema; noutros, o próprio browser/SO pode recorrer a um serviço de voz na nuvem do fabricante (ex: algumas vozes do Android/Chrome). Isso está fora do controlo e da visibilidade da aplicação.
+- Sem telemetria sobre conteúdo lido, secções lidas, voz escolhida, duração ou utilização do botão.
+- Preferências (velocidade, identificação da voz) só em `localStorage`, nunca enviadas ao servidor.
+- Ver 4.11 para o mesmo ponto com mais detalhe.
 
 ## 7. Testes
 
@@ -184,8 +184,39 @@ Não foi possível criar testes de DOM/integração automatizados: o projeto nã
 - Sem controlo sobre a suspensão de fala em segundo plano que alguns browsers/SO possam impor por si mesmos (ver 4.2).
 - Sem teste real em browsers/dispositivos além de Chrome/Windows, nem com um leitor de ecrã ativo (ver 7.3).
 
-## 9. Confirmações finais
+## 9. Confirmações finais e estado do deploy
 
 - Não foram adicionadas dependências, serviços externos nem telemetria.
-- Nenhuma alteração fora do âmbito desta funcionalidade (confirmado via `git status` antes de qualquer commit — só os ficheiros listados na secção 2, mais este relatório e o relatório de IA em separado).
-- **Não foi feito deploy.** Aguarda a revisão independente e autorização explícita, como pedido.
+- Nenhuma alteração fora do âmbito desta funcionalidade (confirmado via `git status` antes do commit — só os ficheiros listados na secção 2, mais este relatório e o relatório de IA em separado).
+- Commit `10b3de8` (branch `main`), push aceite, deploy automático do Vercel concluído com sucesso (`gestcondo.vercel.app`) — sem migrações, sem alteração de base de dados nem de variáveis de ambiente/configuração de deploy.
+
+## 10. Smoke test em produção (depois do deploy)
+
+Feito em `https://gestcondo.vercel.app/instrucoes`, via browser Chrome real controlado por automação (não um dispositivo físico — distinção feita explicitamente onde relevante).
+
+**Confirmado com teste real (clique/tecla física simulada ao nível do sistema, não `.click()` por JavaScript):**
+- Página abre sem erros de consola; botão só aparece depois da hidratação no cliente (por desenho — nunca existe no HTML do servidor, para não arriscar uma inconsistência de hidratação).
+- Iniciar, Pausar, Continuar, Parar, Reiniciar secção — todos confirmados a mudar o estado corretamente.
+- Mudar a velocidade (`Rápida`) a meio de uma leitura em pausa: retoma automaticamente a leitura com a nova velocidade, `aria-pressed` atualizado corretamente no botão certo.
+- Seletor de voz: confirmadas 7 vozes portuguesas disponíveis nesta máquina (`Microsoft Helia`, `Google português do Brasil`, `Chrome OS português de Portugal`, 4× `Google português de Portugal`), a pt-PT do sistema escolhida por omissão.
+- Hiperligações dentro de frases confirmadas presentes no texto realmente enviado à API de voz (capturado diretamente antes da chamada a `speechSynthesis.speak`) — o bug corrigido não voltou.
+- Destaque visual a mover-se bloco a bloco, com contraste adequado em modo claro e escuro (ver abaixo).
+- Scroll manual durante a leitura: a posição da página manteve-se exatamente onde o utilizador a deixou (testado a 1600px de distância do bloco a ser lido), sem ser puxada de volta pelo acompanhamento automático — confirma a suspensão de scroll a funcionar.
+- Atalho `Alt+Shift+R`: inicia/pausa corretamente com uma tecla real.
+- Atalho corretamente ignorado com foco num campo de texto criado para o teste (estado da leitura não se alterou).
+- Disclosure "Sobre a leitura em voz alta" abre com o texto completo, legível, sem overflow nem sobreposição no cabeçalho.
+- Nenhum erro de consola em toda a sessão de testes.
+
+**Confirmado por simulação no browser (não um dispositivo real):**
+- Modo escuro: ativado manualmente (`document.documentElement.classList.add('dark')`, o mecanismo real que o tema da aplicação usaria) — contraste do destaque e de todos os controlos claramente legível.
+
+**Observação menor, não considerada um bug de produção:** ao testar um cenário artificial (chamar `speechSynthesis.cancel()` diretamente pela consola, em vez de clicar em "Parar"), o destaque visual e o estado interno ficaram temporariamente desalinhados do áudio real — porque a aplicação ignora deliberadamente os erros `'canceled'`/`'interrupted'` do `SpeechSynthesisUtterance` (ver 4.4), assumindo que esses casos já foram tratados pela própria aplicação. Um utilizador real nunca despoleta isto diretamente; ao clicar no botão "Parar" real nesse mesmo estado artificial, a aplicação recuperou de forma completa e correta. Fica registado como um cenário residual (ex: se o sistema operativo alguma vez cancelar a fala por razões fora do controlo da aplicação) sem plano de correção nesta fase, por não ser acionável por um utilizador através da própria interface.
+
+**Não verificável com as ferramentas de automação disponíveis nesta sessão (não é o mesmo que "não tentado"):**
+- Viewport móvel: a ferramenta de redimensionar a janela não alterou o viewport efetivo da página (`window.innerWidth` manteve-se em 1920px mesmo depois do pedido de redimensionamento) — não foi possível confirmar o layout móvel nem por simulação nem por dispositivo real.
+- Zoom a 200%: sem uma forma fiável de o aplicar através das ferramentas de automação disponíveis (atalhos de zoom do browser não suportados pela ferramenta).
+- Navegação só por Tab com foco visível: as teclas Tab enviadas pela automação não moveram o foco do browser de forma detetável (`document.activeElement` manteve-se em `<body>`) — limitação da ferramenta de automação, não uma tentativa falhada de verificar e desistir. O clique real e o atalho de teclado real foram confirmados a funcionar; a navegação por Tab em si (que depende dos componentes `Button`/`Select` já usados em toda a aplicação) não foi confirmada visualmente nesta sessão.
+
+**Não testado nesta sessão (fora do âmbito do que as ferramentas disponíveis permitem):**
+- `/ajuda` autenticada ao vivo — mesma razão já explicada na secção 7.3 (exigiria conta nova → email real).
+- Edge, Firefox, Safari, Chrome Android, dispositivo móvel físico, NVDA ativo.
