@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 
 export type SecaoAjuda = {
   value: string
@@ -45,6 +46,14 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           finanças, avisos, assembleias, ocorrências e documentos. Cada
           condomínio só vê os seus próprios dados — nunca os de outro
           condomínio.
+        </p>
+        <p>
+          Se está a começar um condomínio do zero e quer um guia passo a
+          passo (desde criar o condomínio até à primeira quota), consulte{' '}
+          <Link href="/instrucoes" className="text-primary underline-offset-4 hover:underline">
+            Como começar do zero
+          </Link>
+          .
         </p>
 
         <Subtitulo>Como me movimento na aplicação</Subtitulo>
