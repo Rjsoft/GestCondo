@@ -9,6 +9,7 @@ import { PrioridadeBadge } from '@/components/badges'
 import { Card, CardContent } from '@/components/ui/card'
 import { SearchInput } from '@/components/ui/search-input'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { LeituraVozControls } from '@/components/leitura-voz/leitura-voz-controls'
 import { formatDataHora } from '@/lib/format'
 import { Megaphone } from 'lucide-react'
 
@@ -47,23 +48,31 @@ export default async function AvisosPage({
       ) : (
         <>
           <div className="flex flex-col gap-3">
-            {avisos.map((a) => (
+            {avisos.map((a, i) => (
               <Card key={a.id}>
                 <CardContent className="flex items-start justify-between gap-4 p-5">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium text-foreground">{a.titulo}</h3>
-                      <PrioridadeBadge prioridade={a.prioridade} />
+                    <div id={`aviso-conteudo-${a.id}`} data-speech-content>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-medium text-foreground">{a.titulo}</h3>
+                        <PrioridadeBadge prioridade={a.prioridade} />
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                        {a.conteudo}
+                      </p>
                     </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
-                      {a.conteudo}
-                    </p>
                     <p className="mt-3 text-xs text-muted-foreground">
                       {a.autorNome} · {formatDataHora(a.createdAt)}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3">
                       <ConfirmarLeituraAvisoButton avisoId={a.id} confirmado={a.jaConfirmei} />
                       <ConfirmacoesAvisoDialog avisoId={a.id} total={a.totalConfirmacoes} />
+                      <LeituraVozControls
+                        targetId={`aviso-conteudo-${a.id}`}
+                        label="Ler este aviso"
+                        mostrarInfo={i === 0}
+                        ativarAtalho={false}
+                      />
                     </div>
                   </div>
                   {isAdmin && <AvisoActions id={a.id} />}

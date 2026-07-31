@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { ImprimirButton } from '@/components/imprimir-button'
 import { VoltarButton } from '@/components/voltar-button'
 import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
+import { LeituraVozControls } from '@/components/leitura-voz/leitura-voz-controls'
 import { formatDataHora } from '@/lib/format'
 
 const TIPO_LABEL: Record<string, string> = {
@@ -41,13 +42,16 @@ export default async function AtaPage({
 
   return (
     <div className="mx-auto max-w-2xl print:max-w-none">
-      <div className="mb-4 flex justify-between print:hidden">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
         <VoltarButton />
-        <ImprimirButton />
+        <div className="flex flex-wrap items-center gap-2">
+          <LeituraVozControls targetId="ata-conteudo" label="Ler a ata" />
+          <ImprimirButton />
+        </div>
       </div>
 
       <Card className="print:border-0 print:shadow-none">
-        <CardContent className="flex flex-col gap-6 p-8 print:p-0">
+        <CardContent id="ata-conteudo" data-speech-content className="flex flex-col gap-6 p-8 print:p-0">
           <CabecalhoDocumento
             condominio={condominio}
             titulo={`Ata de Assembleia ${TIPO_LABEL[assembleia.tipo] ?? assembleia.tipo}${assembleia.numero ? ` nº ${assembleia.numero}` : ''}`}

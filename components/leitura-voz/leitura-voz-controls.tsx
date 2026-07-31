@@ -19,7 +19,21 @@ const LABEL_ESTADO: Record<string, string> = {
   error: 'Parado',
 }
 
-export function LeituraVozControls({ targetId }: { targetId: string }) {
+export function LeituraVozControls({
+  targetId,
+  label = 'Ler esta secção',
+  mostrarInfo = true,
+  ativarAtalho = true,
+}: {
+  targetId: string
+  /** Texto do botão principal — ex: "Ler este aviso", "Ler a ata". */
+  label?: string
+  /** Esconde o disclosure "Sobre a leitura em voz alta" — usar false quando
+   * há várias instâncias na mesma página (ex: uma por aviso da lista), para
+   * não repetir a mesma explicação dezenas de vezes. */
+  mostrarInfo?: boolean
+  ativarAtalho?: boolean
+}) {
   const {
     estado,
     erro,
@@ -34,7 +48,7 @@ export function LeituraVozControls({ targetId }: { targetId: string }) {
     reiniciarSecao,
     definirVelocidade,
     definirVoz,
-  } = useLeituraVoz(targetId)
+  } = useLeituraVoz(targetId, ativarAtalho)
 
   if (estado === 'indisponivel') return null
 
@@ -48,7 +62,7 @@ export function LeituraVozControls({ targetId }: { targetId: string }) {
         {parado && (
           <Button variant="outline" size="sm" onClick={iniciarSecao} aria-pressed={false}>
             <Volume2 className="h-4 w-4" />
-            Ler esta secção
+            {label}
           </Button>
         )}
         {aLer && (
@@ -69,9 +83,9 @@ export function LeituraVozControls({ targetId }: { targetId: string }) {
               <Square className="h-4 w-4" />
               Parar
             </Button>
-            <Button variant="ghost" size="sm" onClick={reiniciarSecao} title="Reiniciar a leitura desta secção desde o início">
+            <Button variant="ghost" size="sm" onClick={reiniciarSecao} title="Reiniciar a leitura desde o início">
               <RotateCcw className="h-4 w-4" />
-              Reiniciar secção
+              Reiniciar
             </Button>
           </>
         )}
@@ -112,34 +126,38 @@ export function LeituraVozControls({ targetId }: { targetId: string }) {
           </label>
         )}
 
-        <Collapsible>
-          <CollapsibleTrigger>
-            <Info className="h-3.5 w-3.5" />
-            Sobre a leitura em voz alta
-          </CollapsibleTrigger>
-          <CollapsiblePanel className="max-w-md text-xs text-muted-foreground">
-            <p>
-              Lê em voz alta o conteúdo desta secção, usando a funcionalidade
-              de voz já incluída no seu browser — não é enviado nenhum texto
-              para a GestCondo nem para nenhum serviço externo. O
-              processamento da voz depende do browser, do sistema operativo
-              e das vozes instaladas ou disponibilizadas pelo fabricante do
-              seu dispositivo.
-            </p>
-            <p className="mt-2">
-              Está a utilizar uma funcionalidade de leitura do browser. Caso
-              já use um leitor de ecrã (como o NVDA), poderá preferir manter
-              esta função desligada — o seu leitor de ecrã já lê o conteúdo
-              da página.
-            </p>
-            <p className="mt-2">
-              Atalho de teclado: <strong>Alt+Shift+R</strong> inicia, pausa
-              ou continua a leitura (não funciona dentro de campos de
-              texto). A funcionalidade continua totalmente utilizável só com
-              Tab e clique, sem usar o atalho.
-            </p>
-          </CollapsiblePanel>
-        </Collapsible>
+        {mostrarInfo && (
+          <Collapsible>
+            <CollapsibleTrigger>
+              <Info className="h-3.5 w-3.5" />
+              Sobre a leitura em voz alta
+            </CollapsibleTrigger>
+            <CollapsiblePanel className="max-w-md text-xs text-muted-foreground">
+              <p>
+                Lê em voz alta o conteúdo, usando a funcionalidade de voz já
+                incluída no seu browser — não é enviado nenhum texto para a
+                GestCondo nem para nenhum serviço externo. O processamento
+                da voz depende do browser, do sistema operativo e das vozes
+                instaladas ou disponibilizadas pelo fabricante do seu
+                dispositivo.
+              </p>
+              <p className="mt-2">
+                Está a utilizar uma funcionalidade de leitura do browser. Caso
+                já use um leitor de ecrã (como o NVDA), poderá preferir manter
+                esta função desligada — o seu leitor de ecrã já lê o conteúdo
+                da página.
+              </p>
+              {ativarAtalho && (
+                <p className="mt-2">
+                  Atalho de teclado: <strong>Alt+Shift+R</strong> inicia, pausa
+                  ou continua a leitura (não funciona dentro de campos de
+                  texto). A funcionalidade continua totalmente utilizável só
+                  com Tab e clique, sem usar o atalho.
+                </p>
+              )}
+            </CollapsiblePanel>
+          </Collapsible>
+        )}
       </div>
 
       <div className="sr-only" role="status" aria-live="polite">

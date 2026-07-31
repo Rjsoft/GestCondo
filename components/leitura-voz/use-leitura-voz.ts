@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useId, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import {
   construirSequenciaBlocosComIndices,
   escolherMelhorVoz,
@@ -17,6 +17,13 @@ import {
 
 const CHAVE_PREFERENCIAS = 'gestcondo:leitura-voz:preferencias'
 const EVENTO_PARAR = 'leitura-voz:parar-secao'
+// Páginas com várias instâncias (ex: um botão "Ler este aviso" por aviso da
+// lista) precisam de garantir que só uma lê de cada vez — o motor de voz do
+// browser já só permite uma fala real em simultâneo, mas sem isto cada
+// instância React não saberia que outra assumiu, ficando com o botão e o
+// destaque presos no estado antigo (mesmo problema, por analogia, do que
+// aconteceu com EVENTO_PARAR — ver relatório).
+const EVENTO_INICIAR = 'leitura-voz:iniciar-secao'
 const CLASSES_REALCE = ['outline-2', 'outline-offset-2', 'outline-primary', 'bg-primary/10', 'rounded']
 const SELETOR_BLOCOS = 'h1, h2, h3, h4, p, li'
 // Deliberadamente sem "a[href]": uma ligação dentro de uma frase (ex: "abra
@@ -227,6 +234,7 @@ export type EstadoUI = 'indisponivel' | EstadoLeitura
 export function useLeituraVoz(targetId: string, ativarAtalho = true) {
   const suportado = useSuportaLeituraVoz()
   const vozesNativas = useVozesDisponiveis()
+  const instanciaId = useId()
 
   const [estado, dispatch] = useReducer(reduzirEstadoLeitura, 'idle')
   const preferencias = useLeituraVozPreferencias()
@@ -266,15 +274,23 @@ export function useLeituraVoz(targetId: string, ativarAtalho = true) {
     dispatch({ tipo: 'PARAR' })
   }, [limparRealce, suportado])
 
-  // Cancela ao desmontar (sair da rota) e ao ouvir o evento de "mudou de
-  // secção" disparado por quem gere os separadores — decisão deliberada de
-  // não depender de onend/onerror para repor o estado (ver relatório):
-  // pararTudo() repõe tudo diretamente e de forma síncrona.
+  // Cancela ao desmontar (sair da rota), ao ouvir o evento de "mudou de
+  // secção" disparado por quem gere os separadores, e ao ouvir outra
+  // instância a começar a ler (ex: outro botão "Ler este aviso" na mesma
+  // página) — decisão deliberada de não depender de onend/onerror para
+  // repor o estado (ver relatório): pararTudo() repõe tudo diretamente e
+  // de forma síncrona.
   useEffect(() => {
     const aoParar = () => pararTudo()
+    const aoIniciarOutra = (ev: Event) => {
+      const detalhe = (ev as CustomEvent<{ instanciaId: string }>).detail
+      if (detalhe?.instanciaId !== instanciaId) pararTudo()
+    }
     window.addEventListener(EVENTO_PARAR, aoParar)
+    window.addEventListener(EVENTO_INICIAR, aoIniciarOutra)
     return () => {
       window.removeEventListener(EVENTO_PARAR, aoParar)
+      window.removeEventListener(EVENTO_INICIAR, aoIniciarOutra)
       // Invalida a sessão antes de cancelar — sem isto, um onend/onerror
       // nativo que chegue atrasado (a API confirma o cancelamento de forma
       // assíncrona, por vezes com atraso real) podia encontrar sessaoRef
@@ -283,7 +299,7 @@ export function useLeituraVoz(targetId: string, ativarAtalho = true) {
       sessaoRef.current += 1
       if (suportado) window.speechSynthesis.cancel()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao montar/desmontar; pararTudo já é estável
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao montar/desmontar; pararTudo e instanciaId (useId) já são estáveis
   }, [])
 
   const acompanharScroll = useCallback((el: HTMLElement) => {
@@ -373,6 +389,12 @@ export function useLeituraVoz(targetId: string, ativarAtalho = true) {
       ({ bloco, indiceOriginal }) => ({ el: resultado.elementos[indiceOriginal], bloco }),
     )
 
+    // Avisa qualquer outra instância montada na página (ex: outro botão
+    // "Ler este aviso") para parar primeiro — o motor de voz do browser só
+    // permite uma fala real de cada vez; sem isto, a instância anterior
+    // ficaria com o botão/destaque presos, mesmo com o áudio já a mudar.
+    window.dispatchEvent(new CustomEvent(EVENTO_INICIAR, { detail: { instanciaId } }))
+
     setErro(null)
     scrollSuspensoRef.current = false
     blocosRef.current = pares
@@ -382,7 +404,7 @@ export function useLeituraVoz(targetId: string, ativarAtalho = true) {
     window.speechSynthesis.cancel()
     dispatch({ tipo: 'INICIAR' })
     falarBloco(0, sessaoAtual)
-  }, [falarBloco, suportado, targetId])
+  }, [falarBloco, instanciaId, suportado, targetId])
 
   const pausar = useCallback(() => {
     if (!suportado) return

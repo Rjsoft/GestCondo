@@ -197,7 +197,9 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           Abra &ldquo;Avisos&rdquo; no menu lateral. Todos os avisos aparecem
           numa lista, com o texto completo já visível — não precisa de
           clicar em mais nada para o ler. Pode usar o campo de pesquisa no
-          topo da página para encontrar um aviso antigo.
+          topo da página para encontrar um aviso antigo. Junto de cada aviso
+          há também um botão &ldquo;Ler este aviso&rdquo;, que o lê em voz
+          alta — útil se preferir ouvir em vez de ler.
         </p>
         <Subtitulo>Como criar um aviso (só administrador/gestor)</Subtitulo>
         <ol className="list-decimal pl-5">
@@ -335,7 +337,9 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           Abra &ldquo;Assembleias&rdquo; no menu lateral e clique numa
           assembleia da lista para ver os detalhes: data, local, ordem de
           trabalhos, quem esteve presente e o resultado de cada ponto
-          discutido.
+          discutido. Na página da ata (depois de a assembleia ter
+          acontecido) há um botão &ldquo;Ler a ata&rdquo;, que lê o
+          documento em voz alta.
         </p>
         <Subtitulo>O que acontece em cada etapa (para o administrador)</Subtitulo>
         <ol className="list-decimal pl-5">
