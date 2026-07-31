@@ -6,9 +6,9 @@ import { registarAuditoria } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
 import {
-  requireAdmin,
   requireMembroAprovado,
   requireMembroComEscrita,
+  requireOperacionalOuAdmin,
   temConsultaGestao,
   temPermissaoGestao,
 } from '@/lib/session'
@@ -133,7 +133,7 @@ async function aplicarMudancaEstadoOcorrencia(
   id: number,
   condicaoBase: ReturnType<typeof and>,
   estado: string,
-  actor: Awaited<ReturnType<typeof requireAdmin>>,
+  actor: Awaited<ReturnType<typeof requireOperacionalOuAdmin>>,
 ) {
   if (!ESTADOS.includes(estado)) throw new Error('Estado inválido')
 
@@ -182,8 +182,8 @@ async function aplicarMudancaEstadoOcorrencia(
 }
 
 export async function atualizarEstadoOcorrencia(id: number, estado: string) {
-  // Apenas admin/gestor gerem livremente o estado das ocorrências.
-  const admin = await requireAdmin()
+  // F03: admin, gestor completo, ou colaborador operacional podem tratar ocorrências.
+  const admin = await requireOperacionalOuAdmin()
   await aplicarMudancaEstadoOcorrencia(
     id,
     and(eq(ocorrencia.id, id), eq(ocorrencia.condominioId, admin.condominioId)),
@@ -249,8 +249,8 @@ export async function recusarOcorrenciaFornecedor(id: number, motivo: string) {
  * nenhuma ligação a despesas ou fluxo de aprovação (fica para depois).
  */
 export async function atribuirFornecedorOcorrencia(id: number, fornecedorId: number | null) {
-  // Mesma guarda de atualizarEstadoOcorrencia — só admin/gestor.
-  const admin = await requireAdmin()
+  // F03: mesma guarda de atualizarEstadoOcorrencia — admin, gestor completo, ou colaborador operacional.
+  const admin = await requireOperacionalOuAdmin()
 
   let fornecedorNome: string | null = null
   if (fornecedorId !== null) {

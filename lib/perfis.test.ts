@@ -5,11 +5,13 @@ import {
   temAcessoFinanceiro,
   temConsultaGestao,
   temPermissaoGestao,
+  temPermissaoOperacional,
   type MembroSessao,
+  type NivelGestor,
   type Perfil,
 } from './perfis'
 
-function membro(perfil: Perfil, isSuperAdmin = false): MembroSessao {
+function membro(perfil: Perfil, isSuperAdmin = false, nivelGestor: NivelGestor = 'completo'): MembroSessao {
   return {
     id: 1,
     condominioId: 1,
@@ -17,6 +19,7 @@ function membro(perfil: Perfil, isSuperAdmin = false): MembroSessao {
     nome: 'Teste',
     email: 'teste@exemplo.pt',
     perfil,
+    nivelGestor,
     estado: 'aprovado',
     fracaoId: null,
     fornecedorId: null,
@@ -52,6 +55,49 @@ describe('temPermissaoGestao (admin ou gestor podem escrever em qualquer módulo
   it('super admin tem sempre permissão de gestão, independentemente do perfil', () => {
     for (const perfil of PERFIS) {
       expect(temPermissaoGestao(membro(perfil, true))).toBe(true)
+    }
+  })
+
+  it('achado F03: um gestor de nível "operacional" NÃO tem permissão de gestão completa', () => {
+    expect(temPermissaoGestao(membro('gestor', false, 'operacional'))).toBe(false)
+  })
+
+  it('achado F03: um gestor de nível "completo" continua a ter permissão de gestão', () => {
+    expect(temPermissaoGestao(membro('gestor', false, 'completo'))).toBe(true)
+  })
+
+  it('achado F03: nivelGestor é irrelevante para o perfil "admin" (sempre gestão completa)', () => {
+    expect(temPermissaoGestao(membro('admin', false, 'operacional'))).toBe(true)
+  })
+})
+
+describe('temPermissaoOperacional (achado F03 — admin, qualquer gestor, ou super admin)', () => {
+  const esperado: Record<Perfil, boolean> = {
+    admin: true,
+    gestor: true,
+    condomino: false,
+    inquilino: false,
+    fornecedor: false,
+    auditor: false,
+  }
+
+  for (const perfil of PERFIS) {
+    it(`${perfil} → ${esperado[perfil]}`, () => {
+      expect(temPermissaoOperacional(membro(perfil))).toBe(esperado[perfil])
+    })
+  }
+
+  it('gestor de nível "operacional" tem permissão operacional', () => {
+    expect(temPermissaoOperacional(membro('gestor', false, 'operacional'))).toBe(true)
+  })
+
+  it('gestor de nível "completo" também tem permissão operacional (é um superconjunto)', () => {
+    expect(temPermissaoOperacional(membro('gestor', false, 'completo'))).toBe(true)
+  })
+
+  it('super admin tem sempre permissão operacional, independentemente do perfil', () => {
+    for (const perfil of PERFIS) {
+      expect(temPermissaoOperacional(membro(perfil, true))).toBe(true)
     }
   })
 })

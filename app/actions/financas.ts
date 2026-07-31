@@ -9,7 +9,7 @@ import { ESCALOES_ANTIGUIDADE, calcularAntiguidadeDivida } from '@/lib/antiguida
 import { NIVEIS_LEMBRETE, calcularEstadoLembretes } from '@/lib/lembrete-cobranca'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { sendEmail } from '@/lib/email'
-import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
+import { requireAcessoFinanceiro, requireAdmin, requireOperacionalOuAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, getTableColumns, gte, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -746,7 +746,8 @@ async function validarAssembleiaPonto(condominioId: number, assembleiaPontoId: n
 }
 
 export async function criarMovimento(formData: FormData) {
-  const admin = await requireAdmin()
+  // F03: um colaborador operacional pode lançar despesas/receitas.
+  const admin = await requireOperacionalOuAdmin()
 
   const tipo = String(formData.get('tipo') || 'despesa')
   const categoria = String(formData.get('categoria') || '').trim()
@@ -843,7 +844,8 @@ export async function criarMovimento(formData: FormData) {
  * `alternarPago`/`marcarComoPago`, não por aqui.
  */
 export async function atualizarMovimento(formData: FormData) {
-  const admin = await requireAdmin()
+  // F03: um colaborador operacional pode corrigir uma despesa/receita já lançada.
+  const admin = await requireOperacionalOuAdmin()
 
   const id = Number(formData.get('id'))
   const categoria = String(formData.get('categoria') || '').trim()
@@ -978,7 +980,8 @@ export async function eliminarMovimento(id: number) {
  * sentido enquanto o movimento não voltar a ser pago.
  */
 export async function alternarPago(id: number, pago: boolean) {
-  const admin = await requireAdmin()
+  // F03: um colaborador operacional pode marcar um movimento como pago/pendente.
+  const admin = await requireOperacionalOuAdmin()
 
   const [atual] = await db
     .select()
@@ -1021,7 +1024,8 @@ export async function marcarComoPago(
   id: number,
   detalhe: { meioPagamento?: string; referenciaMb?: string; dataLiquidacao?: string },
 ) {
-  const admin = await requireAdmin()
+  // F03: um colaborador operacional pode registar o detalhe de um pagamento.
+  const admin = await requireOperacionalOuAdmin()
 
   const [atual] = await db
     .select()

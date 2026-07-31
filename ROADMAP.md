@@ -142,14 +142,15 @@ Simulação técnica (não teste real) cobrindo toda a aplicação por personas 
 (`docs/audit/USABILITY_FINDINGS.md`) e um plano de melhorias por fases
 (`docs/audit/USABILITY_IMPROVEMENT_PLAN.md`).
 
-**Estado (2026-07-31): 20 dos 22 achados corrigidos e testados** (F01, F02, F05-F12,
-F14-F22 — inclui o lote de correções de esforço baixo/médio e o achado F13, acesso
-convidado a uma ata). **Por decidir**: F03 (segregar um nível "colaborador operacional"
-dentro do papel `gestor`) e F04 (suportar um condómino com várias frações no mesmo
-condomínio) — ambos analisados com plano técnico (ver histórico de conversa), adiados por
-serem os dois de maior risco: F04 em particular mexe no índice único de `membro` que já
-teve um incidente de segurança real (S10, `SECURITY_AUDIT.md`). Nenhum dos dois avança
-sem decisão explícita do utilizador.
+**Estado (2026-07-31): 21 dos 22 achados corrigidos e testados** (F01-F03, F05-F12,
+F14-F22 — inclui o lote de correções de esforço baixo/médio, o achado F13 (acesso
+convidado a uma ata) e o F03 (nível "colaborador operacional" dentro do papel `gestor` —
+`membro.nivelGestor`, `temPermissaoOperacional()` em `lib/perfis.ts`, aplicado a
+Finanças/Documentos/Ocorrências; testado em runtime com uma conta de teste operacional).
+**Por decidir**: F04 (suportar um condómino com várias frações no mesmo condomínio) —
+analisado com plano técnico (ver histórico de conversa), adiado por ser o de maior risco:
+mexe no índice único de `membro` que já teve um incidente de segurança real (S10,
+`SECURITY_AUDIT.md`). Não avança sem decisão explícita do utilizador.
 
 O teste real com NVDA já planeado (`docs/GUIA_TESTE_NVDA.md`) continua a ser a validação
 mais importante em falta — nenhuma conclusão de acessibilidade desta simulação substitui

@@ -83,6 +83,7 @@ export function MapaMensalTab({
   fornecedores,
   pontosAssembleia,
   isAdmin,
+  podeOperar,
 }: {
   dadosIniciais: LinhaMapaMensal[]
   anoInicial: number
@@ -90,6 +91,8 @@ export function MapaMensalTab({
   fornecedores: { id: number; nome: string }[]
   pontosAssembleia: PontoAssembleiaOpcao[]
   isAdmin: boolean
+  /** F03 — ver components/financas/financas-tabs.tsx. */
+  podeOperar: boolean
 }) {
   const [ano, setAno] = useState(anoInicial)
   const [dados, setDados] = useState(dadosIniciais)
@@ -222,7 +225,7 @@ export function MapaMensalTab({
                       <Receipt className="h-4 w-4" />
                     </Button>
                   )}
-                  {isAdmin && (
+                  {podeOperar && (
                     <MovimentoActions
                       id={mv.id}
                       pago={mv.pago}
@@ -244,6 +247,7 @@ export function MapaMensalTab({
                       fornecedores={fornecedores}
                       pontosAssembleia={pontosAssembleia}
                       updatedAt={mv.updatedAt}
+                      podeEliminar={isAdmin}
                     />
                   )}
                 </div>

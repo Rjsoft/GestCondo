@@ -165,6 +165,7 @@ export async function registarEventoAutenticacao(
           nome: m.nome,
           email: m.email,
           perfil: m.perfil as MembroSessao['perfil'],
+          nivelGestor: m.nivelGestor as MembroSessao['nivelGestor'],
           estado: m.estado as MembroSessao['estado'],
           fracaoId: m.fracaoId,
           fornecedorId: m.fornecedorId,

@@ -1,5 +1,11 @@
 import { notFound } from 'next/navigation'
-import { requireMembroPagina, temAcessoFinanceiro, temPermissaoGestao, getCondominioAtual } from '@/lib/session'
+import {
+  requireMembroPagina,
+  temAcessoFinanceiro,
+  temPermissaoGestao,
+  temPermissaoOperacional,
+  getCondominioAtual,
+} from '@/lib/session'
 import {
   getMapaMensalQuotas,
   getMapaSaldos,
@@ -37,6 +43,9 @@ export default async function FinancasPage({
   const membro = await requireMembroPagina()
   if (!temAcessoFinanceiro(membro)) notFound()
   const isAdmin = temPermissaoGestao(membro)
+  // F03: colaborador operacional (gestor nível "operacional") — só pode
+  // lançar/editar movimentos e marcar como pago, nada mais em Finanças.
+  const podeOperar = temPermissaoOperacional(membro)
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
@@ -190,6 +199,7 @@ export default async function FinancasPage({
           assembleiaData: p.assembleiaData.toISOString(),
         }))}
         isAdmin={isAdmin}
+        podeOperar={podeOperar}
         criterioRateio={criterioRateio}
       />
     </div>

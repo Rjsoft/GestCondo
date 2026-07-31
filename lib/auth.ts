@@ -82,6 +82,7 @@ export const auth = betterAuth({
               nome: m.nome,
               email: m.email,
               perfil: (m.perfil as MembroSessao['perfil']) ?? 'condomino',
+              nivelGestor: (m.nivelGestor as MembroSessao['nivelGestor']) ?? 'completo',
               estado: (m.estado as MembroSessao['estado']) ?? 'aprovado',
               fracaoId: m.fracaoId,
               fornecedorId: m.fornecedorId,

@@ -34,7 +34,6 @@ import {
   PERFIL_LABEL,
   PERFIS_ACESSO_FINANCEIRO,
   PERFIS_CONSULTA_GESTAO,
-  PERFIS_GESTAO,
   type Perfil,
 } from '@/lib/perfis'
 
@@ -42,7 +41,12 @@ type NavItem = {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
-  visivel?: (perfil: Perfil, isSuperAdmin: boolean, isOperadorPlataforma: boolean) => boolean
+  visivel?: (
+    perfil: Perfil,
+    isSuperAdmin: boolean,
+    isOperadorPlataforma: boolean,
+    podeGerirCompleto: boolean,
+  ) => boolean
 }
 
 const NAV: NavItem[] = [
@@ -96,7 +100,11 @@ const NAV: NavItem[] = [
     href: '/condominio',
     label: 'Condomínio',
     icon: Settings,
-    visivel: (perfil, isSuperAdmin) => isSuperAdmin || PERFIS_GESTAO.includes(perfil),
+    // F03: usa `podeGerirCompleto` (calculado com temPermissaoGestao, que já
+    // sabe distinguir um gestor de nível "operacional"), não `PERFIS_GESTAO`
+    // diretamente — essa lista não sabe nada sobre nivelGestor.
+    visivel: (_perfil, _isSuperAdmin, _isOperadorPlataforma, podeGerirCompleto) =>
+      podeGerirCompleto,
   },
   {
     href: '/plataforma',
@@ -110,6 +118,7 @@ export function AppShell({
   children,
   nome,
   perfil,
+  podeGerirCompleto,
   isSuperAdmin,
   isOperadorPlataforma,
   condominioNome,
@@ -120,6 +129,8 @@ export function AppShell({
   children: React.ReactNode
   nome: string
   perfil: Perfil
+  /** F03 — ver NAV["/condomínio"].visivel abaixo. */
+  podeGerirCompleto: boolean
   isSuperAdmin: boolean
   isOperadorPlataforma: boolean
   condominioNome: string
@@ -156,7 +167,7 @@ export function AppShell({
   }, [pathname])
 
   const items = NAV.filter(
-    (i) => !i.visivel || i.visivel(perfil, isSuperAdmin, isOperadorPlataforma),
+    (i) => !i.visivel || i.visivel(perfil, isSuperAdmin, isOperadorPlataforma, podeGerirCompleto),
   )
 
   const iniciais = nome

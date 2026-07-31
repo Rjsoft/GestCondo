@@ -8,9 +8,13 @@
 /**
  * Papéis de um `membro` dentro de UM condomínio (ver lib/db/schema.ts):
  * - admin: administrador do condomínio (eleito em assembleia ou residente).
- * - gestor: empresa de administração profissional — mesmos poderes que
- *   "admin" nesse condomínio; distinto apenas para efeitos de rótulo e
- *   relatórios (a mesma empresa pode ser "gestor" em vários condomínios).
+ * - gestor: empresa de administração profissional. Tem dois níveis
+ *   (`MembroSessao.nivelGestor`, achado F03): "completo" (mesmos poderes
+ *   que "admin" nesse condomínio) ou "operacional" (só as ações listadas
+ *   em `temPermissaoOperacional` abaixo — lançar despesas, carregar
+ *   documentos, tratar ocorrências; sem acesso a condóminos, fornecedores,
+ *   frações, assembleias nem dados do condomínio). Novo `membro` com
+ *   `perfil='gestor'` nasce "completo" por omissão.
  * - condomino: proprietário de uma fração.
  * - inquilino: arrendatário — sem acesso a dados financeiros/patrimoniais.
  * - fornecedor: prestador de serviço externo — acesso mínimo hoje; o fluxo
@@ -49,6 +53,16 @@ export const PERFIL_LABEL: Record<Perfil, string> = {
   auditor: 'Auditor',
 }
 
+/** Só relevante para `perfil: 'gestor'` — ver comentário em `Perfil` acima. */
+export type NivelGestor = 'completo' | 'operacional'
+
+export const NIVEIS_GESTOR: NivelGestor[] = ['completo', 'operacional']
+
+export const NIVEL_GESTOR_LABEL: Record<NivelGestor, string> = {
+  completo: 'Completo',
+  operacional: 'Operacional (só despesas, documentos e ocorrências)',
+}
+
 // Administram o condomínio (podem escrever em qualquer módulo). Exportado
 // para reutilização na UI (ex. visibilidade de itens de navegação).
 export const PERFIS_GESTAO: Perfil[] = ['admin', 'gestor']
@@ -73,6 +87,8 @@ export type MembroSessao = {
   nome: string
   email: string
   perfil: Perfil
+  /** Só relevante quando `perfil === 'gestor'` (achado F03) — ver `Perfil`. */
+  nivelGestor: NivelGestor
   estado: EstadoMembro
   /** Fração de que este membro é proprietário (perfil condomino) ou
    * arrendatário (perfil inquilino). `null` se ainda não associado. */
@@ -92,8 +108,24 @@ export type MembroSessao = {
   condominioSuspenso: boolean
 }
 
-/** Tem poderes de administração do condomínio (admin, gestor, ou super admin). */
+/** Tem poderes de administração COMPLETA do condomínio (admin, gestor de
+ * nível "completo", ou super admin) — achado F03: exclui deliberadamente
+ * um gestor de nível "operacional", que só tem os poderes mais restritos
+ * de `temPermissaoOperacional` abaixo. */
 export function temPermissaoGestao(m: MembroSessao): boolean {
+  if (m.isSuperAdmin) return true
+  if (m.perfil === 'admin') return true
+  return m.perfil === 'gestor' && m.nivelGestor === 'completo'
+}
+
+/** Tem poderes operacionais (achado F03, docs/audit/USABILITY_FINDINGS.md):
+ * administração completa, OU um gestor de nível "operacional" — usar só
+ * nas poucas ações que um colaborador júnior deve poder fazer sozinho
+ * (lançar/editar despesas, marcar como pago, carregar documentos, tratar
+ * ocorrências). Nunca usar para condóminos, fornecedores, frações,
+ * assembleias, dados do condomínio, permissões ou eliminações — isso
+ * continua a exigir `temPermissaoGestao`. */
+export function temPermissaoOperacional(m: MembroSessao): boolean {
   return m.isSuperAdmin || PERFIS_GESTAO.includes(m.perfil)
 }
 

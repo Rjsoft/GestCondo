@@ -12,6 +12,7 @@ import {
 } from '@/lib/fracoes'
 import { getMapaSaldos } from '@/app/actions/financas'
 import {
+  NIVEIS_GESTOR,
   PERFIS,
   requireAcessoFinanceiro,
   requireAdmin,
@@ -394,6 +395,37 @@ export async function atualizarPerfilMembro(id: number, perfil: string) {
     entidadeId: id,
     detalhes: `${antes.nome}: Perfil alterado de "${antes.perfil}" para "${perfil}"`,
     alteracoes: [{ campo: 'perfil', label: 'Perfil', antes: antes.perfil, depois: perfil }],
+  })
+
+  revalidatePath('/condominos')
+}
+
+/** Achado F03 — só relevante para `perfil: 'gestor'`; ignorado nos
+ * restantes (mas não bloqueado: evita um erro estranho se a UI mudar o
+ * perfil e o nível na mesma operação numa ordem imprevisível). */
+export async function atualizarNivelGestorMembro(id: number, nivelGestor: string) {
+  const admin = await requireAdmin()
+  if (!NIVEIS_GESTOR.includes(nivelGestor as (typeof NIVEIS_GESTOR)[number])) {
+    throw new Error('Nível inválido')
+  }
+  const condicao = and(eq(membro.id, id), eq(membro.condominioId, admin.condominioId))
+  const [antes] = await db
+    .select({ nome: membro.nome, perfil: membro.perfil, nivelGestor: membro.nivelGestor })
+    .from(membro)
+    .where(condicao)
+    .limit(1)
+  if (!antes) throw new Error('Membro não encontrado')
+  if (antes.nivelGestor === nivelGestor) return
+
+  await db.update(membro).set({ nivelGestor }).where(condicao)
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'membro',
+    entidadeId: id,
+    detalhes: `${antes.nome}: Nível de gestor alterado de "${antes.nivelGestor}" para "${nivelGestor}"`,
+    alteracoes: [{ campo: 'nivelGestor', label: 'Nível', antes: antes.nivelGestor, depois: nivelGestor }],
   })
 
   revalidatePath('/condominos')

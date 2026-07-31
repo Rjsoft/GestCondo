@@ -933,6 +933,16 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           também de associar a conta à fração certa (ver abaixo).
         </p>
         <p>
+          Para uma conta com Perfil &ldquo;Empresa gestora&rdquo;, aparece
+          ainda um segundo menu, &ldquo;Nível&rdquo;: &ldquo;Completo&rdquo;
+          (mesmos poderes de um administrador) ou &ldquo;Operacional&rdquo;
+          (para um colaborador — pode registar e editar movimentos,
+          documentos e ocorrências do dia a dia, mas não pode eliminar
+          movimentos, alterar o condomínio, condóminos ou fornecedores).
+          Útil para dar acesso a um funcionário sem lhe dar controlo total
+          sobre o condomínio.
+        </p>
+        <p>
           Um administrador pode remover a conta de um condómino ou inquilino
           já aprovado (ícone de caixote do lixo, com confirmação) — não
           apaga a fração nem o histórico financeiro, só a conta de acesso.

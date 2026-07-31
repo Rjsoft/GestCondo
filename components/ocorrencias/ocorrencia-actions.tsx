@@ -33,6 +33,7 @@ export function OcorrenciaActions({
   id,
   estado,
   isAdmin,
+  podeOperar,
   isOwner,
   isFornecedorResponsavel,
   fornecedorId,
@@ -41,6 +42,10 @@ export function OcorrenciaActions({
   id: number
   estado: string
   isAdmin: boolean
+  /** F03 — admin, gestor completo, ou colaborador operacional. Controla os
+   * seletores de estado/fornecedor; a eliminação continua reservada a
+   * `isAdmin` (ou ao próprio autor, já tratado do lado do servidor). */
+  podeOperar: boolean
   isOwner: boolean
   /** O chamador é o fornecedor a quem esta ocorrência está atribuída
    * (portal do fornecedor) — mostra aceitar/recusar/concluir em vez dos
@@ -110,7 +115,7 @@ export function OcorrenciaActions({
     })
   }
 
-  if (!isAdmin && !isOwner && !isFornecedorResponsavel) return null
+  if (!podeOperar && !isOwner && !isFornecedorResponsavel) return null
 
   if (isFornecedorResponsavel && !isAdmin) {
     return (
@@ -140,7 +145,7 @@ export function OcorrenciaActions({
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      {isAdmin && (
+      {podeOperar && (
         <Select
           value={estado}
           onValueChange={(value) => value && mudarEstado(value)}
@@ -160,7 +165,7 @@ export function OcorrenciaActions({
           </SelectContent>
         </Select>
       )}
-      {isAdmin && (
+      {podeOperar && (
         <Select
           value={fornecedorId ? String(fornecedorId) : SEM_FORNECEDOR}
           onValueChange={(value) => value && mudarFornecedor(value)}

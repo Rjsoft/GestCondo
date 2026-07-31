@@ -30,6 +30,7 @@ function membro(perfil: MembroSessao['perfil'], condominioId: number): MembroSes
     nome: 'Teste',
     email: 'teste@exemplo.pt',
     perfil,
+    nivelGestor: 'completo',
     estado: 'aprovado',
     fracaoId: null,
     fornecedorId: null,

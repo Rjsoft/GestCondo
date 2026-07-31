@@ -1,4 +1,4 @@
-import { requireMembroPagina, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, temPermissaoGestao, temPermissaoOperacional } from '@/lib/session'
 import { getDocumentos } from '@/app/actions/documentos'
 import { PageHeader } from '@/components/page-header'
 import { NovoDocumentoDialog } from '@/components/documentos/novo-documento-dialog'
@@ -27,6 +27,8 @@ export default async function DocumentosPage({
 }) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
+  // F03: colaborador operacional pode carregar documentos, nada mais aqui.
+  const podeOperar = temPermissaoOperacional(membro)
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
@@ -38,7 +40,7 @@ export default async function DocumentosPage({
         title="Documentos"
         description="Atas, regulamentos e outros documentos do condomínio."
       >
-        {isAdmin && <NovoDocumentoDialog />}
+        {podeOperar && <NovoDocumentoDialog />}
       </PageHeader>
 
       <div className="mb-4">

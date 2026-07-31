@@ -12,11 +12,13 @@ export const COOKIE_CONDOMINIO_ATIVO = 'condominioAtivoId'
 import {
   type EstadoMembro,
   type MembroSessao,
+  type NivelGestor,
   type Perfil,
   podeEscrever,
   temAcessoFinanceiro,
   temConsultaGestao,
   temPermissaoGestao,
+  temPermissaoOperacional,
 } from '@/lib/perfis'
 
 // Reexportado para não obrigar a mudar todos os imports existentes de
@@ -25,6 +27,8 @@ import {
 // este ficheiro importa `@/lib/db` (Node/`pg`), que não pode ir para o
 // bundle do browser.
 export {
+  NIVEIS_GESTOR,
+  NIVEL_GESTOR_LABEL,
   PERFIL_LABEL,
   PERFIS,
   PERFIS_ACESSO_FINANCEIRO,
@@ -34,8 +38,10 @@ export {
   temAcessoFinanceiro,
   temConsultaGestao,
   temPermissaoGestao,
+  temPermissaoOperacional,
   type EstadoMembro,
   type MembroSessao,
+  type NivelGestor,
   type Perfil,
 } from '@/lib/perfis'
 
@@ -110,6 +116,7 @@ export async function getMembroAtual(): Promise<MembroSessao | null> {
     nome: existente.nome,
     email: existente.email,
     perfil: (existente.perfil as Perfil) ?? 'condomino',
+    nivelGestor: (existente.nivelGestor as NivelGestor) ?? 'completo',
     estado: (existente.estado as EstadoMembro) ?? 'aprovado',
     fracaoId: existente.fracaoId,
     fornecedorId: existente.fornecedorId,
@@ -195,6 +202,24 @@ export async function requireAdmin(): Promise<MembroSessao> {
     throw new Error('O acesso a este condomínio está suspenso. Contacte o suporte.')
   }
   if (!temPermissaoGestao(m)) throw new Error('Apenas administradores')
+  return m
+}
+
+/**
+ * Helper para server actions: exige poderes OPERACIONAIS (achado F03) —
+ * administração completa, ou um gestor de nível "operacional". Usar só
+ * nas poucas ações que um colaborador júnior deve poder fazer sozinho
+ * (lançar/editar despesas, marcar como pago, carregar documentos, tratar
+ * ocorrências) — ver `temPermissaoOperacional` em `lib/perfis.ts` para a
+ * lista do que isto NUNCA deve cobrir.
+ */
+export async function requireOperacionalOuAdmin(): Promise<MembroSessao> {
+  const m = await getMembroAtual()
+  if (!m) throw new Error('Não autorizado')
+  if (m.condominioSuspenso && !m.isOperadorPlataforma) {
+    throw new Error('O acesso a este condomínio está suspenso. Contacte o suporte.')
+  }
+  if (!temPermissaoOperacional(m)) throw new Error('Apenas administradores')
   return m
 }
 

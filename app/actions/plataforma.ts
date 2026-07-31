@@ -72,6 +72,7 @@ export async function alterarEstadoSubscricao(
     nome: operador.nome,
     email: operador.email,
     perfil: 'admin',
+    nivelGestor: 'completo',
     estado: 'aprovado',
     fracaoId: null,
     fornecedorId: null,

@@ -41,6 +41,7 @@ export function MovimentoActions({
   fornecedores,
   pontosAssembleia,
   updatedAt,
+  podeEliminar,
 }: {
   id: number
   pago: boolean
@@ -62,6 +63,9 @@ export function MovimentoActions({
   fornecedores: FornecedorOpcao[]
   pontosAssembleia: PontoAssembleiaOpcao[]
   updatedAt: Date
+  /** F03 — eliminar continua reservado a admin/gestor completo, mesmo para
+   * quem já pode editar/marcar como pago (colaborador operacional). */
+  podeEliminar: boolean
 }) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -126,23 +130,27 @@ export function MovimentoActions({
               )}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem
-            onClick={() => setConfirmOpen(true)}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            Eliminar
-          </DropdownMenuItem>
+          {podeEliminar && (
+            <DropdownMenuItem
+              onClick={() => setConfirmOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+              Eliminar
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
-      <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title="Eliminar movimento"
-        description="O movimento deixa de aparecer nas listagens e nos saldos. Por obrigação legal de retenção de dados financeiros, o registo não é apagado fisicamente da base de dados."
-        onConfirm={remover}
-        pending={pending}
-      />
+      {podeEliminar && (
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Eliminar movimento"
+          description="O movimento deixa de aparecer nas listagens e nos saldos. Por obrigação legal de retenção de dados financeiros, o registo não é apagado fisicamente da base de dados."
+          onConfirm={remover}
+          pending={pending}
+        />
+      )}
       <MarcarPagoDialog id={id} open={marcarPagoOpen} onOpenChange={setMarcarPagoOpen} />
       <EditarMovimentoDialog
         id={id}

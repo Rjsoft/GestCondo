@@ -8,6 +8,7 @@ import {
   getCondominiosDoUtilizador,
   getMembroAtual,
   getSession,
+  temPermissaoGestao,
 } from '@/lib/session'
 import { getNotificacoes } from '@/app/actions/notificacoes'
 import { Toaster } from '@/components/ui/sonner'
@@ -58,6 +59,10 @@ export default async function AppLayout({
     <AppShell
       nome={membro.nome}
       perfil={membro.perfil}
+      // F03: um gestor de nível "operacional" não vê "Condomínio" na barra
+      // lateral (a própria página já bloqueava; isto evita mostrar um link
+      // que dava 404). Ver components/app-shell.tsx.
+      podeGerirCompleto={temPermissaoGestao(membro)}
       isSuperAdmin={membro.isSuperAdmin}
       isOperadorPlataforma={membro.isOperadorPlataforma}
       condominioNome={condominio?.nome ?? 'Condomínio'}

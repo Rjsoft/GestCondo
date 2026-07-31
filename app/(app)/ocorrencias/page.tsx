@@ -1,4 +1,4 @@
-import { requireMembroPagina, podeEscrever, temPermissaoGestao } from '@/lib/session'
+import { requireMembroPagina, podeEscrever, temPermissaoGestao, temPermissaoOperacional } from '@/lib/session'
 import { getOcorrencias } from '@/app/actions/ocorrencias'
 import { getFornecedores } from '@/app/actions/fornecedores'
 import { PageHeader } from '@/components/page-header'
@@ -18,6 +18,8 @@ export default async function OcorrenciasPage({
 }) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
+  // F03: colaborador operacional pode mudar estado e atribuir fornecedor.
+  const podeOperar = temPermissaoOperacional(membro)
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
@@ -88,6 +90,7 @@ export default async function OcorrenciasPage({
                   id={o.id}
                   estado={o.estado}
                   isAdmin={isAdmin}
+                  podeOperar={podeOperar}
                   isOwner={o.userId === membro.userId}
                   isFornecedorResponsavel={
                     membro.perfil === 'fornecedor' &&

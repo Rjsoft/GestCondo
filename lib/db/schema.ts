@@ -180,6 +180,12 @@ export const membro = pgTable(
     nome: text("nome").notNull(),
     email: text("email").notNull(),
     perfil: text("perfil").notNull().default("condomino"),
+    // Só relevante quando perfil='gestor' (achado F03,
+    // docs/audit/USABILITY_FINDINGS.md) — segrega um colaborador
+    // operacional (só despesas, documentos e ocorrências, ver
+    // lib/perfis.ts:temPermissaoOperacional) de um gestor completo (mesmos
+    // poderes de admin). Ignorado para os restantes perfis.
+    nivelGestor: text("nivelGestor").notNull().default("completo"), // "completo" | "operacional"
     estado: text("estado").notNull().default("aprovado"),
     // Ligação real à fração (substituiu, em 2026-07-07, um campo de texto
     // livre sem qualquer validação). Um "condomino" com fracaoId=X é o

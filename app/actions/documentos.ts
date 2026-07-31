@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { confirmacaoLeitura, documento, documentoVersao } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
 import { apagarFicheiro, guardarFicheiro } from '@/lib/storage'
-import { requireAdmin, requireMembroAprovado, temConsultaGestao } from '@/lib/session'
+import { requireAdmin, requireMembroAprovado, requireOperacionalOuAdmin, temConsultaGestao } from '@/lib/session'
 import { confirmarLeitura, getConfirmacoesLeitura } from '@/lib/confirmacao-leitura'
 import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -114,7 +114,8 @@ export async function getConfirmacoesLeituraDocumento(id: number) {
 }
 
 export async function criarDocumento(formData: FormData) {
-  const admin = await requireAdmin()
+  // F03: um colaborador operacional pode carregar documentos.
+  const admin = await requireOperacionalOuAdmin()
 
   const titulo = String(formData.get('titulo') || '').trim()
   const categoria = String(formData.get('categoria') || 'ata')

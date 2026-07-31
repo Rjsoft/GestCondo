@@ -8,6 +8,7 @@ import { getFracoes, getMembros } from '@/app/actions/fracoes'
 import { getFornecedores } from '@/app/actions/fornecedores'
 import { PageHeader } from '@/components/page-header'
 import { PerfilSelect } from '@/components/condominos/perfil-select'
+import { NivelGestorSelect } from '@/components/condominos/nivel-gestor-select'
 import { EditarMembroDialog } from '@/components/condominos/editar-membro-dialog'
 import { MembroStatusActions } from '@/components/condominos/membro-status-actions'
 import { RemoverMembroButton } from '@/components/condominos/remover-membro-button'
@@ -22,7 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatData, removerAcentos } from '@/lib/format'
-import { PERFIL_LABEL, type Perfil } from '@/lib/session'
+import { NIVEL_GESTOR_LABEL, PERFIL_LABEL, type NivelGestor, type Perfil } from '@/lib/session'
 import { UserCheck } from 'lucide-react'
 
 export default async function CondominosPage({
@@ -133,11 +134,21 @@ export default async function CondominosPage({
                     {m.fornecedorId ? (fornecedorPorId.get(m.fornecedorId) ?? '—') : '—'}
                   </TableCell>
                   <TableCell>
-                    {podeGerir ? (
-                      <PerfilSelect id={m.id} perfil={m.perfil} />
-                    ) : (
-                      PERFIL_LABEL[m.perfil as Perfil]
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {podeGerir ? (
+                        <PerfilSelect id={m.id} perfil={m.perfil} />
+                      ) : (
+                        PERFIL_LABEL[m.perfil as Perfil]
+                      )}
+                      {m.perfil === 'gestor' &&
+                        (podeGerir ? (
+                          <NivelGestorSelect id={m.id} nivelGestor={m.nivelGestor} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {NIVEL_GESTOR_LABEL[m.nivelGestor as NivelGestor]}
+                          </span>
+                        ))}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {formatData(m.createdAt)}

@@ -187,6 +187,7 @@ export function FinancasTabs({
   pontosAssembleia,
   balancoPatrimonialInicial,
   isAdmin,
+  podeOperar,
   criterioRateio,
 }: {
   movimentos: Movimento[]
@@ -218,6 +219,10 @@ export function FinancasTabs({
   pontosAssembleia: PontoAssembleiaOpcao[]
   balancoPatrimonialInicial: Awaited<ReturnType<typeof getBalancoPatrimonial>> | null
   isAdmin: boolean
+  /** F03 — admin, gestor completo, ou colaborador operacional. Só usado no
+   * separador Movimentos (lançar/editar/marcar como pago); tudo o resto
+   * nesta componente continua a usar `isAdmin`. */
+  podeOperar: boolean
   criterioRateio: CriterioRateio
 }) {
   return (
@@ -244,7 +249,7 @@ export function FinancasTabs({
               Relatório (PDF)
             </Button>
             <ExportarCsvButton movimentos={movimentosCsv} />
-            {isAdmin && (
+            {podeOperar && (
               <NovoMovimentoDialog
                 fracoes={fracoes}
                 fornecedores={fornecedores}
@@ -281,14 +286,14 @@ export function FinancasTabs({
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead className="w-10" />
-                  {isAdmin && <TableHead className="w-10" />}
+                  {podeOperar && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {movimentos.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 9 : 8}
+                      colSpan={podeOperar ? 9 : 8}
                       className="py-10 text-center text-muted-foreground"
                     >
                       {pesquisaMovimentos
@@ -396,7 +401,7 @@ export function FinancasTabs({
                         </Button>
                       )}
                     </TableCell>
-                    {isAdmin && (
+                    {podeOperar && (
                       <TableCell>
                         <MovimentoActions
                           id={m.id}
@@ -419,6 +424,7 @@ export function FinancasTabs({
                           fornecedores={fornecedores}
                           pontosAssembleia={pontosAssembleia}
                           updatedAt={m.updatedAt}
+                          podeEliminar={isAdmin}
                         />
                       </TableCell>
                     )}
@@ -586,6 +592,7 @@ export function FinancasTabs({
           fornecedores={fornecedores}
           pontosAssembleia={pontosAssembleia}
           isAdmin={isAdmin}
+          podeOperar={podeOperar}
         />
       </TabsContent>
 
