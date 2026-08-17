@@ -56,6 +56,10 @@ A Maria, em `/condominos`, vê o pedido em "Pedidos de acesso pendentes" → "Ap
 ### 8. Publicar o primeiro aviso
 `/avisos` → "Novo aviso" → título, conteúdo, prioridade "Normal" → "Publicar aviso". Confirmado como o João (sessão separada, condómino): vê o aviso no Painel e o resumo financeiro correto (saldo/receitas iguais ao que a Maria vê).
 
+## Verificação adicional: edição inline de rubrica
+
+Antes de encerrar, a única funcionalidade desta sessão ainda sem teste ao vivo — o ícone de lápis em "Gerir rubricas" (`atualizarOrcamentoRubrica`) — foi testada na conta da Maria: criar rubrica "Limpeza" (3000 €) → editar para 3500 € → confirmar toast "Valor atualizado" → recarregar a página → valor 3500 € mantido → eliminar a rubrica de teste. Funciona como esperado, sem divergências.
+
 ## Nota de limpeza
 
-Todos os dados desta simulação (condomínio "Edifício Jasmim, Nº 25", as duas contas, as 9 frações, o orçamento, os 216 movimentos, o aviso) ficam na BD de desenvolvimento — não foram eliminados no fim desta sessão. Seguem a mesma prática já registada em memória ("manter contas de teste em dev") — apagar só quando pedido.
+Todos os dados desta simulação (condomínio "Edifício Jasmim, Nº 25", as duas contas, as 9 frações, o orçamento, os 216 movimentos, o aviso) foram eliminados da BD de desenvolvimento em 2026-08-17, depois de confirmada a verificação acima — via SQL Editor (branch `development`), `delete from condominio where id = 1582` (cascade cobre todas as 27 tabelas com `condominioId`, confirmado antes via `pg_constraint`) seguido de `delete from "user" where email in (...)` para as duas contas fictícias (cascade para `account`/`session`/`twoFactor`). Verificado com contagem pós-eliminação: 0 registos restantes em ambas as tabelas.
