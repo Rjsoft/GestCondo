@@ -29,6 +29,7 @@ import { getExercicios } from '@/app/actions/exercicios'
 import { getBalancoPatrimonial, getSaldosContas } from '@/app/actions/contas-financeiras'
 import { getDocumentosFornecedor } from '@/app/actions/documentos-fornecedor'
 import { getSaldosCredito } from '@/app/actions/creditos'
+import { getProcessosCobranca } from '@/app/actions/cobranca'
 import { PageHeader } from '@/components/page-header'
 import { FinancasTabs } from '@/components/financas/financas-tabs'
 import { Card, CardContent } from '@/components/ui/card'
@@ -71,6 +72,7 @@ export default async function FinancasPage({
     pontosAssembleia,
     resumoFinanceiro,
     condominioAtual,
+    processosCobranca,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -91,6 +93,7 @@ export default async function FinancasPage({
     getPontosAprovadosParaQuota(),
     getResumoFinanceiro(),
     getCondominioAtual(membro.condominioId),
+    getProcessosCobranca(),
   ])
   const criterioRateio = condominioAtual?.criterioRateio === 'partes_iguais' ? 'partes_iguais' : 'permilagem'
 
@@ -201,6 +204,7 @@ export default async function FinancasPage({
         isAdmin={isAdmin}
         podeOperar={podeOperar}
         criterioRateio={criterioRateio}
+        processosCobranca={processosCobranca.map((p) => ({ id: p.id, fracaoId: p.fracaoId, estado: p.estado }))}
       />
     </div>
   )

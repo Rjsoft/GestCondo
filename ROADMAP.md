@@ -181,4 +181,17 @@ Encontrou e corrigiu um bug real (elevador cobrado a mais do orçamento aprovado
 `lib/rateio.ts`) e acrescentou edição inline de rubricas orçamentais. Detalhe completo em
 `docs/audit/SIMULACAO_COMPRADOR_NOVO.md`.
 
+**Workflow de estados de cobrança de dívidas (2026-08-17)**: fecha o P1 de
+`FUNCTIONAL_GAPS.md` secção 3 — liga as peças soltas já existentes (juros de mora,
+interpelação, declaração de dívida, antiguidade da dívida, lembretes informais) através
+de um processo de cobrança por fração com estado explícito (`em_atraso` → ... →
+`regularizado`/`encerrado`/`cancelado`), plano prestacional (acompanhamento
+administrativo, nunca escreve em `movimento`) e prova histórica de emissão de
+documentos (snapshot + hash, imune a alterações posteriores). Migração `0059`, novo
+`app/actions/cobranca.ts`, `/financas/processos-cobranca`. Testado com 13 testes
+unitários (`lib/cobranca.test.ts`) e 6 de integração real (`lib/db/cobranca.dbtest.ts`,
+incl. confirmação de que nenhuma escrita altera `movimento`) e verificado em runtime
+(dev) ciclo completo. Ver `FUNCTIONAL_GAPS.md` secção 3 para o detalhe completo,
+incluindo o que ficou deliberadamente fora de âmbito.
+
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.

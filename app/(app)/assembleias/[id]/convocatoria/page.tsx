@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ImprimirButton } from '@/components/imprimir-button'
 import { VoltarButton } from '@/components/voltar-button'
 import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
-import { formatData, formatDataHora } from '@/lib/format'
+import { BlocoAssinaturaAdministracao } from '@/components/print/bloco-assinatura-administracao'
+import { formatDataHora } from '@/lib/format'
 
 const TIPO_LABEL: Record<string, string> = {
   ordinaria: 'Ordinária',
@@ -159,15 +160,7 @@ export default async function ConvocatoriaPage({
             </ul>
           </div>
 
-          <div className="mt-4 flex flex-col gap-8 text-sm text-foreground">
-            <p>{formatData(agora)}</p>
-            <div>
-              <div className="w-64 border-b border-foreground" />
-              <p className="mt-1 text-xs text-muted-foreground">
-                O Administrador do Condomínio
-              </p>
-            </div>
-          </div>
+          <BlocoAssinaturaAdministracao data={agora} />
         </CardContent>
       </Card>
     </div>

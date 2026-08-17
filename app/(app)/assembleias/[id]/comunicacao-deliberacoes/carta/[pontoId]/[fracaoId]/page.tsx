@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ImprimirButton } from '@/components/imprimir-button'
 import { VoltarButton } from '@/components/voltar-button'
 import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
+import { BlocoAssinaturaAdministracao } from '@/components/print/bloco-assinatura-administracao'
 import { formatData } from '@/lib/format'
 
 const TIPO_LABEL: Record<string, string> = {
@@ -107,16 +108,7 @@ export default async function CartaComunicacaoDeliberacaoPage({
             </p>
           </div>
 
-          <div className="mt-4 flex flex-col gap-8 text-sm text-foreground">
-            <p>{formatData(new Date())}</p>
-            <div>
-              <div className="h-10" />
-              <div className="w-64 border-b border-foreground" />
-              <p className="mt-1 text-xs text-muted-foreground">
-                A Administração do Condomínio
-              </p>
-            </div>
-          </div>
+          <BlocoAssinaturaAdministracao />
 
           <p className="border-t border-border pt-4 text-center text-xs text-muted-foreground">
             Enviar por email ou por carta registada com aviso de receção (ou

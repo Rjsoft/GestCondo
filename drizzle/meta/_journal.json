@@ -414,6 +414,13 @@
       "when": 1785506476723,
       "tag": "0058_membro_multi_fracao",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1786986135472,
+      "tag": "0059_giant_roughhouse",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getDeclaracaoDivida } from '@/app/actions/financas'
 import { getCondominioAtual, requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
-import { ImprimirButton } from '@/components/imprimir-button'
+import { EmitirDocumentoButton } from '@/components/financas/emitir-documento-button'
 import { VoltarButton } from '@/components/voltar-button'
 import {
   Table,
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CabecalhoDocumento } from '@/components/print/cabecalho-documento'
+import { BlocoAssinaturaAdministracao } from '@/components/print/bloco-assinatura-administracao'
 import { formatEuro, formatData } from '@/lib/format'
 
 export default async function DeclaracaoDividaPage({
@@ -40,7 +41,28 @@ export default async function DeclaracaoDividaPage({
     <div className="mx-auto max-w-2xl print:max-w-none">
       <div className="mb-4 flex justify-between print:hidden">
         <VoltarButton />
-        <ImprimirButton />
+        <EmitirDocumentoButton fracaoId={id} tipo="declaracao_divida" />
+      </div>
+
+      <div className="mb-4 rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground print:hidden">
+        <p className="font-medium text-foreground">
+          Vai usar esta declaração numa escritura de compra e venda?
+        </p>
+        <p className="mt-1">
+          A lei não exige que a assinatura do administrador seja reconhecida por um notário
+          (não há essa previsão no artigo 1424º-A do Código Civil), mas alguns cartórios pedem
+          esse reconhecimento na prática, mesmo sem essa exigência legal — confirme antes com o
+          notário ou conservatória escolhidos. Uma alternativa hoje já válida é assinar o PDF
+          gerado com a{' '}
+          <strong>Assinatura Qualificada do Cartão de Cidadão ou da Chave Móvel Digital</strong>{' '}
+          (disponível em autenticacao.gov.pt ou na app oficial &ldquo;gov.pt&rdquo;) — tem o
+          mesmo valor legal de uma assinatura reconhecida (artigo 3º, n.os 2 e 5, do
+          Decreto-Lei n.º 12/2021). Saiba mais em{' '}
+          <a href="/ajuda?secao=financas" className="text-primary underline-offset-4 hover:underline">
+            Ajuda
+          </a>
+          .
+        </p>
       </div>
 
       <Card className="print:border-0 print:shadow-none">
@@ -124,6 +146,8 @@ export default async function DeclaracaoDividaPage({
               <span className="font-serif font-bold text-red-600">{formatEuro(totalDivida)}</span>
             </div>
           </div>
+
+          <BlocoAssinaturaAdministracao />
 
           <p className="text-center text-xs text-muted-foreground">
             Declaração emitida pelo administrador do condomínio a pedido do condómino, nos termos

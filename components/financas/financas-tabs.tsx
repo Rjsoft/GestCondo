@@ -39,6 +39,8 @@ import {
 import { formatEuro, formatData } from '@/lib/format'
 import { TIPO_SEGURO_LABEL } from '@/lib/financas'
 import type { CriterioRateio } from '@/lib/rateio'
+import { ESTADO_LABELS, type EstadoCobranca } from '@/lib/cobranca'
+import { AbrirProcessoCobrancaDialog } from '@/components/financas/abrir-processo-cobranca-dialog'
 
 type Movimento = {
   id: number
@@ -189,6 +191,7 @@ export function FinancasTabs({
   isAdmin,
   podeOperar,
   criterioRateio,
+  processosCobranca,
 }: {
   movimentos: Movimento[]
   movimentosCsv: Movimento[]
@@ -224,7 +227,12 @@ export function FinancasTabs({
    * nesta componente continua a usar `isAdmin`. */
   podeOperar: boolean
   criterioRateio: CriterioRateio
+  /** Processos de cobrança não terminais, por fração (achado 2026-08-17,
+   * ver FUNCTIONAL_GAPS.md secção 3) — se não houver nenhum para uma
+   * fração, mostra "Abrir processo" em vez do estado. */
+  processosCobranca: { id: number; fracaoId: number; estado: string }[]
 }) {
+  const processoPorFracao = new Map(processosCobranca.map((p) => [p.fracaoId, p]))
   return (
     <Tabs defaultValue="movimentos" className="mt-4">
       <TabsList>
@@ -454,6 +462,10 @@ export function FinancasTabs({
               <FileText className="h-4 w-4" />
               Lembretes de cobrança
             </Button>
+            <Button variant="outline" render={<Link href="/financas/processos-cobranca" />} nativeButton={false}>
+              <FileText className="h-4 w-4" />
+              Processos de cobrança
+            </Button>
             <DividirDespesaDialog
               fracoes={fracoes}
               pontosAssembleia={pontosAssembleia}
@@ -499,7 +511,7 @@ export function FinancasTabs({
                       {formatEuro(s.emDivida)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -519,6 +531,18 @@ export function FinancasTabs({
                             <FileText className="h-4 w-4" />
                             Interpelação
                           </Button>
+                        )}
+                        {processoPorFracao.has(s.fracaoId) ? (
+                          <Badge
+                            variant="outline"
+                            render={
+                              <Link href={`/financas/processos-cobranca/${processoPorFracao.get(s.fracaoId)!.id}`} />
+                            }
+                          >
+                            {ESTADO_LABELS[processoPorFracao.get(s.fracaoId)!.estado as EstadoCobranca]}
+                          </Badge>
+                        ) : (
+                          <AbrirProcessoCobrancaDialog fracaoId={s.fracaoId} identificacao={s.identificacao} />
                         )}
                       </div>
                     </TableCell>

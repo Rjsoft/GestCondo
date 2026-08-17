@@ -187,9 +187,27 @@ export function AtaConteudo({
           </div>
         )}
 
+        {assembleia.estado === 'aprovada' && (
+          <div className="mt-2 grid grid-cols-1 gap-8 text-sm text-foreground sm:grid-cols-2">
+            <div>
+              <div className="h-10" />
+              <div className="border-b border-foreground" />
+              <p className="mt-1 text-xs text-muted-foreground">O Presidente da Mesa da Assembleia</p>
+            </div>
+            <div>
+              <div className="h-10" />
+              <div className="border-b border-foreground" />
+              <p className="mt-1 text-xs text-muted-foreground">O Secretário</p>
+            </div>
+          </div>
+        )}
+
         <p className="text-center text-xs text-muted-foreground">
           Documento gerado automaticamente pelo GestCondo a partir do registo de presenças e
-          votação da assembleia.
+          votação da assembleia. Depois de aprovada, esta ata pode ser assinada manualmente
+          (impressa) ou digitalmente através da Assinatura Qualificada do Cartão de
+          Cidadão/Chave Móvel Digital (ver Ajuda), com o mesmo valor legal de uma assinatura
+          reconhecida (art. 3º, n.os 2 e 5, do Decreto-Lei n.º 12/2021).
         </p>
       </CardContent>
     </Card>

@@ -529,6 +529,15 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             deve.
             <ul className="list-disc pl-5">
               <li>
+                &ldquo;Declaração&rdquo; — gera a declaração de encargos e
+                dívidas exigida por lei para a venda de uma fração (ver
+                &ldquo;Registar uma transmissão&rdquo; em
+                &ldquo;Frações&rdquo; para o detalhe sobre assinatura e
+                escritura). &ldquo;Interpelação&rdquo; (só visível havendo
+                dívida) — carta formal a pedir o pagamento, com prazo
+                escolhido.
+              </li>
+              <li>
                 &ldquo;Lançar juros de mora&rdquo; — um valor extra que se
                 soma à quota em atraso, como penalização pelo atraso; a
                 aplicação calcula o valor proporcionalmente aos dias de
@@ -558,6 +567,35 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
                 dias: um 1º lembrete mais simples, um 2º mais firme já a
                 mencionar a interpelação formal como próximo passo. O envio
                 é sempre uma ação manual do administrador.
+              </li>
+              <li>
+                &ldquo;Processos de cobrança&rdquo; — para cada fração com
+                dívida, permite acompanhar em que ponto está a cobrança
+                (ex: &ldquo;Em atraso&rdquo;, &ldquo;Interpelação
+                formal&rdquo;, &ldquo;Acordo prestacional&rdquo;,
+                &ldquo;Enviado para advogado&rdquo;), mudando de estado
+                manualmente conforme a situação real evolui. Se houver um
+                acordo de pagamento em várias vezes, pode criar um{' '}
+                <strong>plano prestacional</strong>{' '}
+                (as datas e valores combinados){' '}
+                e ir marcando cada prestação como
+                &ldquo;cumprida&rdquo; à medida que o condómino paga.
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Importante: este plano é só um registo de acompanhamento —
+                  marcar uma prestação como cumprida <strong>não</strong>{' '}
+                  marca nenhuma quota como paga em Movimentos. Isso continua
+                  a fazer-se lá, como sempre. Por isso a página mostra sempre
+                  lado a lado a dívida real (o que consta em Movimentos) e o
+                  total do plano combinado — se não baterem certo, a
+                  aplicação avisa, mas não impede de continuar (pode
+                  acontecer, por exemplo, se o condómino negociar um desconto).
+                  Por este motivo, também não é possível marcar um processo
+                  como &ldquo;Regularizado&rdquo; enquanto ainda houver
+                  dívida real por pagar — nesse caso, use
+                  &ldquo;Encerrado&rdquo; com um motivo, se precisar de
+                  fechar o processo mesmo assim (ex: dívida considerada
+                  incobrável).
+                </p>
               </li>
             </ul>
           </li>
@@ -898,6 +936,43 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           novo titular) e, se necessário, emitir a declaração de dívida em
           &ldquo;Finanças&rdquo;.
         </p>
+        <Subtitulo>A declaração de dívida na escritura — o que precisa de saber</Subtitulo>
+        <p>
+          Em &ldquo;Finanças&rdquo; → &ldquo;Dívidas por fração&rdquo;, o botão
+          &ldquo;Declaração&rdquo; gera a &ldquo;Declaração de Encargos e
+          Dívidas&rdquo;, exigida por lei (artigo 1424º-A do Código Civil)
+          como documento obrigatório da escritura de venda de uma fração. Três
+          pontos importantes, confirmados numa pesquisa jurídica feita em
+          2026-08-17 (detalhe completo em{' '}
+          <code>docs/audit/VALIDADE_JURIDICA_DOCUMENTOS.md</code>, para quem
+          quiser o pormenor técnico):
+        </p>
+        <ul className="list-disc pl-5">
+          <li>
+            A lei <strong>não exige</strong> que a assinatura do administrador
+            seja reconhecida por um notário — mas, na prática, alguns
+            cartórios pedem esse reconhecimento mesmo sem essa exigência
+            legal. Confirme sempre com o notário ou conservatória escolhidos
+            antes de assumir que o documento vai ser aceite sem mais nada.
+          </li>
+          <li>
+            O documento tem dois campos de assinatura em branco —
+            &ldquo;Administração Externa&rdquo; e &ldquo;Administração Interna
+            do Condomínio&rdquo; — porque alguns condomínios têm uma empresa
+            de administração e um condómino/administrador interno em
+            simultâneo, outros só um dos dois. Preencha só o(s) campo(s) que
+            se aplicar ao seu condomínio.
+          </li>
+          <li>
+            Uma alternativa já válida hoje é imprimir/guardar o documento em
+            PDF e assiná-lo digitalmente com a <strong>Assinatura
+            Qualificada do Cartão de Cidadão ou da Chave Móvel Digital</strong>{' '}
+            (disponível em autenticacao.gov.pt ou na app oficial
+            &ldquo;gov.pt&rdquo;) — tem, por lei, o mesmo valor de uma
+            assinatura reconhecida por notário (artigo 3º, n.os 2 e 5, do
+            Decreto-Lei n.º 12/2021).
+          </li>
+        </ul>
       </>
     ),
   },

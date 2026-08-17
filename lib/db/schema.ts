@@ -623,6 +623,123 @@ export const lembreteCobranca = pgTable(
   (t) => [index("lembrete_cobranca_fracao_idx").on(t.fracaoId)],
 )
 
+// Processo de cobrança por fração — liga as peças soltas já existentes
+// (lembretes informais, interpelação, plano prestacional) num único estado
+// visível (lib/cobranca.ts). Nunca lê nem escreve em `movimento` — é
+// acompanhamento administrativo, não um segundo motor financeiro (achado
+// 2026-08-17, ver FUNCTIONAL_GAPS.md secção 3). No máximo um processo não
+// terminal por fração de cada vez, garantido pelo índice único parcial
+// abaixo (mesmo padrão do F04, membro_multi_fracao). Sem eliminação em
+// nenhuma server action — um processo aberto por engano fecha-se com
+// estado "cancelado" e nota, nunca apagando a linha.
+export const processoCobranca = pgTable(
+  "processo_cobranca",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    // "em_atraso" | "lembrete_informal" | "interpelacao_formal" | "negociacao"
+    // | "acordo_prestacional" | "enviado_advogado" | "processo_judicial"
+    // | "regularizado" | "encerrado" | "cancelado" — os três últimos são
+    // terminais (lib/cobranca.ts:ESTADOS_TERMINAIS); uma vez atingidos, só
+    // abrindo um processo novo, nunca reabrindo este.
+    estado: text("estado").notNull().default("em_atraso"),
+    notas: text("notas"), // inclui a justificação de encerrado/cancelado
+    abertoPorUserId: text("abertoPorUserId").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("processo_cobranca_fracao_idx").on(t.fracaoId),
+    uniqueIndex("processo_cobranca_fracao_aberto_idx")
+      .on(t.fracaoId)
+      .where(sql`estado not in ('regularizado', 'encerrado', 'cancelado')`),
+  ],
+)
+
+// Histórico imutável de transições de estado de um processo de cobrança —
+// nenhuma server action faz UPDATE nem DELETE sobre esta tabela (mesmo
+// princípio insert-only de audit_log). É a fonte primária da timeline
+// mostrada na página de detalhe do processo.
+export const processoCobrancaTransicao = pgTable(
+  "processo_cobranca_transicao",
+  {
+    id: serial("id").primaryKey(),
+    processoCobrancaId: integer("processoCobrancaId")
+      .notNull()
+      .references(() => processoCobranca.id, { onDelete: "cascade" }),
+    estadoAnterior: text("estadoAnterior"), // null só na linha de abertura
+    estadoNovo: text("estadoNovo").notNull(),
+    userId: text("userId").notNull(),
+    autorNome: text("autorNome").notNull(),
+    nota: text("nota"),
+    data: timestamp("data").notNull().defaultNow(),
+  },
+  (t) => [index("processo_cobranca_transicao_processo_idx").on(t.processoCobrancaId)],
+)
+
+// Plano prestacional de um processo de cobrança — acompanhamento
+// administrativo do acordo de pagamento faseado, independente de
+// `movimento`. "cumprida" não significa que a quota original foi marcada
+// como paga em Finanças — só que o administrador confirma ter recebido
+// esta prestação do acordo. A verdade financeira continua a ser sempre
+// `movimento`/saldos; este plano pode divergir dela (ver
+// lib/cobranca.ts:calcularDivergenciaPlano, mostrado sempre na UI).
+export const prestacao = pgTable(
+  "prestacao",
+  {
+    id: serial("id").primaryKey(),
+    processoCobrancaId: integer("processoCobrancaId")
+      .notNull()
+      .references(() => processoCobranca.id, { onDelete: "cascade" }),
+    numero: integer("numero").notNull(),
+    dataPrevista: timestamp("dataPrevista").notNull(),
+    valor: numeric("valor", { precision: 10, scale: 2 }).notNull(),
+    estado: text("estado").notNull().default("pendente"), // "pendente" | "cumprida"
+    cumpridaEm: timestamp("cumpridaEm"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("prestacao_processo_idx").on(t.processoCobrancaId)],
+)
+
+// Prova histórica de emissão de uma interpelação formal ou declaração de
+// dívida — snapshot dos dados usados no documento no momento da emissão,
+// para que uma alteração posterior ao proprietário ou à dívida da fração
+// nunca altere retroativamente o que foi emitido. Nunca eliminado.
+// `processoCobrancaId` é opcional: a declaração de dívida (art. 1424º-A,
+// para venda de fração) pode ser emitida sem existir nenhum processo de
+// cobrança aberto.
+export const documentoCobrancaEmitido = pgTable(
+  "documento_cobranca_emitido",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    processoCobrancaId: integer("processoCobrancaId").references(() => processoCobranca.id, {
+      onDelete: "set null",
+    }),
+    tipo: text("tipo").notNull(), // "interpelacao" | "declaracao_divida"
+    userId: text("userId").notNull(),
+    autorNome: text("autorNome").notNull(),
+    destinatario: text("destinatario").notNull(), // proprietário no momento da emissão
+    valorDivida: numeric("valorDivida", { precision: 10, scale: 2 }).notNull(),
+    prazoDias: integer("prazoDias"), // só interpelação
+    templateVersao: text("templateVersao").notNull(), // ex: "interpelacao-v1"
+    snapshotJson: text("snapshotJson").notNull(), // dívidas discriminadas + dados usados no documento
+    snapshotHash: text("snapshotHash").notNull(), // sha256 do snapshotJson
+    emitidoEm: timestamp("emitidoEm").notNull().defaultNow(),
+  },
+  (t) => [index("documento_cobranca_emitido_fracao_idx").on(t.fracaoId)],
+)
+
 // Linha importada de um extrato bancário (CSV), para conciliação com
 // `movimento`. Só cobre a conta corrente (destino "geral") — o fundo de
 // reserva, muitas vezes noutra conta bancária, fica de fora por agora.
