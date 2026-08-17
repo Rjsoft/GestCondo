@@ -153,6 +153,19 @@ conta+condomínio quando cada uma tem fração diferente; seletor de fração na
 uma conta já aprovada; testado em runtime com uma conta de teste com duas frações,
 incluindo troca entre elas).
 
+**Schema em produção confirmado 2026-08-17** — as 4 migrações geradas nesta sessão
+(`0055_charming_lester`, F08 — coluna `movimento.updatedAt`, controlo otimista de
+concorrência; `0056_neat_malice`, F13 — tabela `acesso_convidado`; `0057_strange_payback`,
+F03 — coluna `membro.nivelGestor`; `0058_membro_multi_fracao`, F04 — os dois índices
+parciais acima) foram verificadas diretamente em produção (Neon, branch `production`,
+consulta a `information_schema`/`pg_indexes`, não só à bookkeeping do drizzle): tabela,
+colunas e índices novos confirmados presentes, `membro_user_condominio_idx` (índice antigo
+substituído pela 0058) confirmado ausente. **Sem incidente** — ao contrário das ocorrências
+anteriores descritas em `TECHNICAL_DEBT.md` D8. **Nota de precisão**: o `created_at` do
+drizzle reflete a data de *geração* da migração (2026-07-31), não a de aplicação a
+produção — não há registo da data exata em que foram promovidas; a única data confirmada é
+a desta verificação.
+
 O teste real com NVDA já planeado (`docs/GUIA_TESTE_NVDA.md`) continua a ser a validação
 mais importante em falta — nenhuma conclusão de acessibilidade desta simulação substitui
 esse teste.
