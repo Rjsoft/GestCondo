@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import {
   copiarRubricasOrcamentoAnterior,
   criarOrcamentoRubrica,
@@ -55,10 +55,16 @@ export function GerirRubricasDialog({
     })
   }
 
-  const abrir = (novoAberto: boolean) => {
-    onOpenChange(novoAberto)
-    if (novoAberto && !carregado) carregar()
-  }
+  // Carrega no useEffect, não em onOpenChange do <Dialog>: este diálogo é
+  // aberto de fora (orcamento-actions.tsx), sem DialogTrigger próprio — um
+  // Dialog controlado do Base UI só chama onOpenChange para transições que
+  // ele próprio pede (Escape, clique fora, botão fechar), não quando o
+  // consumidor muda `open` diretamente, pelo que a carga nunca disparava
+  // na abertura (achado 2026-08-17, verificado em produção).
+  useEffect(() => {
+    if (open && !carregado) carregar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const somaAtual = rubricas.reduce((s, r) => s + Number(r.valorOrcamentado), 0)
 
@@ -112,7 +118,7 @@ export function GerirRubricasDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={abrir}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Rubricas — Orçamento {ano}</DialogTitle>
