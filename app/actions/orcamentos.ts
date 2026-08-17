@@ -383,6 +383,73 @@ export async function criarOrcamentoRubrica(formData: FormData) {
   return { id: nova.id, avisoExcedeOrcamento }
 }
 
+/**
+ * Copia as rubricas do orçamento anterior (o mais recente com `ano` menor,
+ * não necessariamente `ano - 1`, para tolerar anos sem orçamento) como
+ * ponto de partida editável — mesma categoria e valor, sem qualquer
+ * reajuste automático (decisão do utilizador, 2026-08-17). Bloqueia se o
+ * orçamento de destino já tiver rubricas, para nunca duplicar em cima de
+ * dados já lançados — mesmo padrão de `gerarQuotasOrcamento`.
+ */
+export async function copiarRubricasOrcamentoAnterior(orcamentoId: number) {
+  const admin = await requireAdmin()
+
+  const [orc] = await db
+    .select({ id: orcamento.id, ano: orcamento.ano })
+    .from(orcamento)
+    .where(and(eq(orcamento.id, orcamentoId), eq(orcamento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!orc) throw new Error('Orçamento não encontrado')
+
+  const [jaTemRubricas] = await db
+    .select({ id: orcamentoRubrica.id })
+    .from(orcamentoRubrica)
+    .where(eq(orcamentoRubrica.orcamentoId, orcamentoId))
+    .limit(1)
+  if (jaTemRubricas) {
+    throw new Error(
+      'Este orçamento já tem rubricas. Elimine-as manualmente antes de copiar de novo.',
+    )
+  }
+
+  const [orcamentoAnterior] = await db
+    .select({ id: orcamento.id, ano: orcamento.ano })
+    .from(orcamento)
+    .where(and(eq(orcamento.condominioId, admin.condominioId), lt(orcamento.ano, orc.ano)))
+    .orderBy(desc(orcamento.ano))
+    .limit(1)
+  if (!orcamentoAnterior) {
+    throw new Error('Não existe nenhum orçamento anterior para copiar')
+  }
+
+  const rubricasAnteriores = await db
+    .select({ categoria: orcamentoRubrica.categoria, valorOrcamentado: orcamentoRubrica.valorOrcamentado })
+    .from(orcamentoRubrica)
+    .where(eq(orcamentoRubrica.orcamentoId, orcamentoAnterior.id))
+  if (rubricasAnteriores.length === 0) {
+    throw new Error(`O orçamento de ${orcamentoAnterior.ano} não tem rubricas definidas`)
+  }
+
+  await db.insert(orcamentoRubrica).values(
+    rubricasAnteriores.map((r) => ({
+      orcamentoId,
+      categoria: r.categoria,
+      valorOrcamentado: r.valorOrcamentado,
+    })),
+  )
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'orcamento',
+    entidadeId: orcamentoId,
+    detalhes: `${rubricasAnteriores.length} rubrica(s) copiada(s) do orçamento de ${orcamentoAnterior.ano}`,
+  })
+
+  revalidatePath('/financas')
+  return { quantidade: rubricasAnteriores.length, anoOrigem: orcamentoAnterior.ano }
+}
+
 export async function eliminarOrcamentoRubrica(id: number) {
   const admin = await requireAdmin()
 

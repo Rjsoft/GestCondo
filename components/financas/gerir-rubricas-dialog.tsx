@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import {
+  copiarRubricasOrcamentoAnterior,
   criarOrcamentoRubrica,
   eliminarOrcamentoRubrica,
   getOrcamentoRubricas,
@@ -96,6 +97,20 @@ export function GerirRubricasDialog({
     })
   }
 
+  const copiarDoAnterior = () => {
+    startTransition(async () => {
+      try {
+        const { quantidade, anoOrigem } = await copiarRubricasOrcamentoAnterior(orcamentoId)
+        toast.success(
+          `${quantidade} rubrica(s) copiada(s) do orçamento de ${anoOrigem} — reveja os valores antes de continuar`,
+        )
+        carregar()
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro ao copiar rubricas')
+      }
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={abrir}>
       <DialogContent>
@@ -109,7 +124,19 @@ export function GerirRubricasDialog({
 
         <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
           {carregado && rubricas.length === 0 && (
-            <p className="py-2 text-sm text-muted-foreground">Ainda não há rubricas definidas.</p>
+            <div className="flex flex-col gap-2 py-2">
+              <p className="text-sm text-muted-foreground">Ainda não há rubricas definidas.</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="self-start"
+                disabled={pending}
+                onClick={copiarDoAnterior}
+              >
+                Copiar rubricas do orçamento anterior
+              </Button>
+            </div>
           )}
           {rubricas.map((r) => (
             <div
