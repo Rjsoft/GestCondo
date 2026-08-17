@@ -49,22 +49,40 @@ describe('calcularQuotasMensais', () => {
 
   it('isenta do elevador quem está marcado, rateando o resto pelas restantes', () => {
     // R/C isento de elevador; dois pisos com direito a elevador, permilagem
-    // igual entre os três. Parcela geral: por permilagem entre os três.
-    // Parcela elevador: só entre os dois com direito, 50/50.
+    // igual entre os três. valorAnualElevador é uma FATIA de valorAnualGeral
+    // (descontada, não acrescentada) — achado 2026-08-17: o total cobrado ao
+    // longo do ano tem de continuar a ser valorAnualGeral, tal como aprovado
+    // em assembleia, não valorAnualGeral + valorAnualElevador.
+    // Resto (geral): 1200 - 600 = 600, dividido 300/350/350 de 1000.
+    // Elevador: 600, só entre os dois com direito, 50/50.
     const fracoes = [
       { id: 1, permilagem: 300, isentaElevador: true }, // R/C
       { id: 2, permilagem: 350, isentaElevador: false },
       { id: 3, permilagem: 350, isentaElevador: false },
     ]
     const resultado = calcularQuotasMensais(fracoes, 1200, 600)
-    // Geral: 1200/12 = 100/mês total, dividido 300/350/350 de 1000.
     const rc = resultado.find((r) => r.fracaoId === 1)!
     const piso2 = resultado.find((r) => r.fracaoId === 2)!
     const piso3 = resultado.find((r) => r.fracaoId === 3)!
 
-    expect(rc.valorMensal).toBeCloseTo((1200 * 0.3) / 12, 2) // só parte geral
-    expect(piso2.valorMensal).toBeCloseTo((1200 * 0.35) / 12 + (600 * 0.5) / 12, 2)
-    expect(piso3.valorMensal).toBeCloseTo((1200 * 0.35) / 12 + (600 * 0.5) / 12, 2)
+    expect(rc.valorMensal).toBeCloseTo((600 * 0.3) / 12, 2) // só parte geral (resto)
+    expect(piso2.valorMensal).toBeCloseTo((600 * 0.35) / 12 + (600 * 0.5) / 12, 2)
+    expect(piso3.valorMensal).toBeCloseTo((600 * 0.35) / 12 + (600 * 0.5) / 12, 2)
+
+    // Regressão: o total cobrado a todas as frações tem de bater certo com
+    // o orçamento anual aprovado, nunca ultrapassá-lo.
+    const totalMensal = resultado.reduce((s, r) => s + r.valorMensal, 0)
+    expect(totalMensal).toBeCloseTo(1200 / 12, 2)
+  })
+
+  it('rejeita um valor de elevador maior do que o valor anual do orçamento', () => {
+    const fracoes = [
+      { id: 1, permilagem: 500, isentaElevador: false },
+      { id: 2, permilagem: 500, isentaElevador: false },
+    ]
+    expect(() => calcularQuotasMensais(fracoes, 1000, 1500)).toThrow(
+      /não pode exceder o valor anual/,
+    )
   })
 
   it('lança erro se todas as frações estiverem isentas do elevador mas há valor a ratear', () => {
@@ -102,6 +120,7 @@ describe('calcularQuotasMensais', () => {
   })
 
   it('partes_iguais + isenção de elevador: parcela geral por igual entre todas, elevador por igual só entre as com direito', () => {
+    // Resto (geral): 1200 - 600 = 600, dividido em partes iguais pelas 3.
     const fracoes = [
       { id: 1, permilagem: 300, isentaElevador: true }, // R/C
       { id: 2, permilagem: 350, isentaElevador: false },
@@ -112,9 +131,9 @@ describe('calcularQuotasMensais', () => {
     const piso2 = resultado.find((r) => r.fracaoId === 2)!
     const piso3 = resultado.find((r) => r.fracaoId === 3)!
 
-    expect(rc.valorMensal).toBeCloseTo(1200 / 3 / 12, 2) // só parte geral, 1/3 cada
-    expect(piso2.valorMensal).toBeCloseTo(1200 / 3 / 12 + 600 / 2 / 12, 2)
-    expect(piso3.valorMensal).toBeCloseTo(1200 / 3 / 12 + 600 / 2 / 12, 2)
+    expect(rc.valorMensal).toBeCloseTo(600 / 3 / 12, 2) // só parte geral (resto), 1/3 cada
+    expect(piso2.valorMensal).toBeCloseTo(600 / 3 / 12 + 600 / 2 / 12, 2)
+    expect(piso3.valorMensal).toBeCloseTo(600 / 3 / 12 + 600 / 2 / 12, 2)
   })
 })
 

@@ -6,7 +6,7 @@ import { registarAuditoria } from '@/lib/audit'
 import { aplicarPercentagemReserva, calcularQuotasMensais } from '@/lib/rateio'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
 import { requireAcessoFinanceiro, requireAdmin } from '@/lib/session'
-import { and, desc, eq, gte, isNull, lt } from 'drizzle-orm'
+import { and, desc, eq, gte, isNull, lt, ne } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export async function getOrcamentos() {
@@ -35,6 +35,9 @@ export async function criarOrcamento(formData: FormData) {
   }
   if (valorAnualElevadorRaw && Number(valorAnualElevadorRaw) < 0) {
     throw new Error('O valor do elevador não pode ser negativo')
+  }
+  if (valorAnualElevadorRaw && Number(valorAnualElevadorRaw) > Number(valorAnual)) {
+    throw new Error('O valor do elevador não pode exceder o valor anual do orçamento')
   }
   if (
     percentagemFundoReservaRaw &&
@@ -448,6 +451,54 @@ export async function copiarRubricasOrcamentoAnterior(orcamentoId: number) {
 
   revalidatePath('/financas')
   return { quantidade: rubricasAnteriores.length, anoOrigem: orcamentoAnterior.ano }
+}
+
+/**
+ * Corrige o valor de uma rubrica já criada — sem isto, uma subida anual
+ * (ex. mensalidade da empresa gestora) obrigava a eliminar e recriar a
+ * rubrica. Categoria não é editável aqui (mantém o escopo mínimo); para
+ * mudar a categoria, eliminar e criar de novo continua a ser o caminho.
+ */
+export async function atualizarOrcamentoRubrica(id: number, valorOrcamentado: string) {
+  const admin = await requireAdmin()
+
+  if (!valorOrcamentado || Number(valorOrcamentado) <= 0) {
+    throw new Error('Indique um valor orçamentado válido')
+  }
+
+  const [rubrica] = await db
+    .select({
+      id: orcamentoRubrica.id,
+      categoria: orcamentoRubrica.categoria,
+      valorOrcamentado: orcamentoRubrica.valorOrcamentado,
+      orcamentoId: orcamentoRubrica.orcamentoId,
+      valorAnual: orcamento.valorAnual,
+    })
+    .from(orcamentoRubrica)
+    .innerJoin(orcamento, eq(orcamentoRubrica.orcamentoId, orcamento.id))
+    .where(and(eq(orcamentoRubrica.id, id), eq(orcamento.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!rubrica) throw new Error('Rubrica não encontrada')
+
+  const outras = await db
+    .select({ valorOrcamentado: orcamentoRubrica.valorOrcamentado })
+    .from(orcamentoRubrica)
+    .where(and(eq(orcamentoRubrica.orcamentoId, rubrica.orcamentoId), ne(orcamentoRubrica.id, id)))
+  const somaOutras = outras.reduce((s, r) => s + Number(r.valorOrcamentado), 0)
+  const avisoExcedeOrcamento = somaOutras + Number(valorOrcamentado) > Number(rubrica.valorAnual)
+
+  await db.update(orcamentoRubrica).set({ valorOrcamentado }).where(eq(orcamentoRubrica.id, id))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'orcamento',
+    entidadeId: rubrica.orcamentoId,
+    detalhes: `Rubrica atualizada: ${rubrica.categoria} — ${rubrica.valorOrcamentado} € → ${valorOrcamentado} €`,
+  })
+
+  revalidatePath('/financas')
+  return { avisoExcedeOrcamento }
 }
 
 export async function eliminarOrcamentoRubrica(id: number) {

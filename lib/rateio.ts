@@ -23,7 +23,12 @@ function pesoRateio(f: { permilagem: number }, criterio: CriterioRateio): number
  * rateada só pelas frações que não estejam isentas (`isentaElevador`) —
  * caso comum em Portugal quando o rés-do-chão não usa o elevador (art.
  * 1424º n.º4 CC) — com o mesmo critério (permilagem ou partes iguais) entre
- * as frações com direito.
+ * as frações com direito. `valorAnualElevador` é uma **fatia dentro** de
+ * `valorAnualGeral` (descontada do "resto" rateado entre todas), não um
+ * valor acrescentado — o total cobrado ao longo do ano permanece
+ * `valorAnualGeral`, tal como aprovado em assembleia (achado 2026-08-17:
+ * antes desta correção, o elevador era somado por cima, cobrando a mais do
+ * que o orçamento aprovado).
  */
 export function calcularQuotasMensais(
   fracoes: { id: number; permilagem: number; isentaElevador?: boolean }[],
@@ -31,6 +36,10 @@ export function calcularQuotasMensais(
   valorAnualElevador = 0,
   criterioRateio: CriterioRateio = 'permilagem',
 ): { fracaoId: number; valorMensal: number }[] {
+  if (valorAnualElevador > valorAnualGeral) {
+    throw new Error('O valor do elevador não pode exceder o valor anual do orçamento')
+  }
+
   const totalPeso = fracoes.reduce((s, f) => s + pesoRateio(f, criterioRateio), 0)
   if (totalPeso <= 0) {
     throw new Error(
@@ -48,8 +57,10 @@ export function calcularQuotasMensais(
     )
   }
 
+  const valorAnualResto = valorAnualGeral - valorAnualElevador
+
   return fracoes.map((f) => {
-    const quotaGeral = (valorAnualGeral * (pesoRateio(f, criterioRateio) / totalPeso)) / 12
+    const quotaGeral = (valorAnualResto * (pesoRateio(f, criterioRateio) / totalPeso)) / 12
     const quotaElevador =
       valorAnualElevador > 0 && !f.isentaElevador
         ? (valorAnualElevador * (pesoRateio(f, criterioRateio) / totalPesoElevador)) / 12

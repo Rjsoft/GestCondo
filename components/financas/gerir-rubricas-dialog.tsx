@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import {
+  atualizarOrcamentoRubrica,
   copiarRubricasOrcamentoAnterior,
   criarOrcamentoRubrica,
   eliminarOrcamentoRubrica,
@@ -19,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatEuro } from '@/lib/format'
-import { X } from 'lucide-react'
+import { Check, Pencil, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 type Rubrica = { id: number; categoria: string; valorOrcamentado: string }
@@ -41,6 +42,8 @@ export function GerirRubricasDialog({
   const [carregado, setCarregado] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [valor, setValor] = useState('')
+  const [editandoId, setEditandoId] = useState<number | null>(null)
+  const [valorEdicao, setValorEdicao] = useState('')
   const [pending, startTransition] = useTransition()
 
   const carregar = () => {
@@ -103,12 +106,40 @@ export function GerirRubricasDialog({
     })
   }
 
+  const iniciarEdicao = (r: Rubrica) => {
+    setEditandoId(r.id)
+    setValorEdicao(r.valorOrcamentado)
+  }
+
+  const cancelarEdicao = () => {
+    setEditandoId(null)
+    setValorEdicao('')
+  }
+
+  const guardarEdicao = (id: number) => {
+    startTransition(async () => {
+      try {
+        const { avisoExcedeOrcamento } = await atualizarOrcamentoRubrica(id, valorEdicao)
+        if (avisoExcedeOrcamento) {
+          toast.warning('Valor atualizado — mas a soma das rubricas já ultrapassa o valor anual do orçamento.')
+        } else {
+          toast.success('Valor atualizado')
+        }
+        setEditandoId(null)
+        setValorEdicao('')
+        carregar()
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro ao atualizar rubrica')
+      }
+    })
+  }
+
   const copiarDoAnterior = () => {
     startTransition(async () => {
       try {
         const { quantidade, anoOrigem } = await copiarRubricasOrcamentoAnterior(orcamentoId)
         toast.success(
-          `${quantidade} rubrica(s) copiada(s) do orçamento de ${anoOrigem} — reveja os valores antes de continuar`,
+          `${quantidade} rubrica(s) copiada(s) do orçamento de ${anoOrigem} — reveja os valores (ícone de lápis) antes de continuar`,
         )
         carregar()
       } catch (e) {
@@ -144,27 +175,81 @@ export function GerirRubricasDialog({
               </Button>
             </div>
           )}
-          {rubricas.map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"
-            >
-              <span>{r.categoria}</span>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{formatEuro(Number(r.valorOrcamentado))}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  disabled={pending}
-                  onClick={() => remover(r.id)}
-                >
-                  <X className="h-3 w-3" />
-                  <span className="sr-only">Eliminar rubrica</span>
-                </Button>
+          {rubricas.map((r) =>
+            editandoId === r.id ? (
+              <div
+                key={r.id}
+                className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-sm"
+              >
+                <span>{r.categoria}</span>
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    autoFocus
+                    className="h-7 w-24"
+                    value={valorEdicao}
+                    onChange={(e) => setValorEdicao(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') guardarEdicao(r.id)
+                      if (e.key === 'Escape') cancelarEdicao()
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={pending || !valorEdicao}
+                    onClick={() => guardarEdicao(r.id)}
+                  >
+                    <Check className="h-3 w-3" />
+                    <span className="sr-only">Guardar</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={pending}
+                    onClick={cancelarEdicao}
+                  >
+                    <X className="h-3 w-3" />
+                    <span className="sr-only">Cancelar</span>
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              <div
+                key={r.id}
+                className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"
+              >
+                <span>{r.categoria}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{formatEuro(Number(r.valorOrcamentado))}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={pending}
+                    onClick={() => iniciarEdicao(r)}
+                  >
+                    <Pencil className="h-3 w-3" />
+                    <span className="sr-only">Editar valor</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={pending}
+                    onClick={() => remover(r.id)}
+                  >
+                    <X className="h-3 w-3" />
+                    <span className="sr-only">Eliminar rubrica</span>
+                  </Button>
+                </div>
+              </div>
+            ),
+          )}
           {rubricas.length > 0 && (
             <div className="flex items-center justify-between px-3 pt-1 text-sm text-muted-foreground">
               <span>Soma das rubricas</span>
