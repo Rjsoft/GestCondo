@@ -138,6 +138,19 @@ export default function InstrucoesPage() {
               No nosso exemplo: R/C Dto tem 250‰, 1º Esq tem 375‰ e 2º Dto
               tem 375‰ — 250 + 375 + 375 = 1000‰, o total do prédio.
             </p>
+            <p className="text-xs text-muted-foreground">
+              E se houver lojas, ou frações que não usam o elevador? É
+              muito comum um prédio ter lojas no rés-do-chão, sem acesso ao
+              elevador — regista-as como qualquer outra fração (identificação,
+              permilagem, proprietário). Depois, marque essas frações como
+              &ldquo;isentas de elevador&rdquo;: pode fazê-lo ao criar a
+              fração (em &ldquo;Mais opções&rdquo;, há uma caixa para
+              assinalar) ou mais tarde, na lista de &ldquo;Frações&rdquo;,
+              clicando no menu &ldquo;⋮&rdquo; dessa linha e escolhendo
+              &ldquo;Isentar de elevador&rdquo;. Isto só tem efeito quando,
+              no passo 6, indicar um valor anual do elevador no orçamento —
+              essas frações deixam de pagar essa parcela.
+            </p>
           </section>
 
           <section className="flex flex-col gap-2 text-sm text-foreground">
@@ -206,6 +219,16 @@ export default function InstrucoesPage() {
               proporcionalmente à permilagem: R/C Dto (250‰) paga 67,50
               €/mês, e 1º Esq e 2º Dto (375‰ cada) pagam 101,25 €/mês cada
               uma.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Se o prédio tiver elevador: no campo opcional &ldquo;Valor
+              anual do elevador&rdquo;, indique quanto desse orçamento anual
+              é a manutenção do elevador (ex: dos 3.600 € totais, 600 € são
+              do elevador). Esse valor não se soma ao orçamento — é uma
+              parte dele, só paga pelas frações que não marcou como
+              &ldquo;isentas de elevador&rdquo; no passo 5. O resto do
+              orçamento continua a ser repartido por permilagem entre
+              todas as frações, incluindo as isentas.
             </p>
             <p className="text-xs text-muted-foreground">
               Importante: guardar o orçamento ainda não cria as quotas.

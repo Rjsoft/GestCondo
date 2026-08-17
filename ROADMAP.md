@@ -172,4 +172,13 @@ O teste real com NVDA já planeado (`docs/GUIA_TESTE_NVDA.md`) continua a ser a 
 mais importante em falta — nenhuma conclusão de acessibilidade desta simulação substitui
 esse teste.
 
+**Simulação real de um comprador novo (2026-08-17)**: diferente da simulação por personas
+acima (leitura de código), esta foi execução real, clique a clique, em desenvolvimento —
+registo → onboarding → condomínio → 9 frações (6 apartamentos + 3 lojas, isenção de
+elevador) → orçamento anual → quotas → convite de condómino → aviso. Confirma que o guia
+público `/instrucoes` corresponde ao comportamento real da aplicação, sem divergências.
+Encontrou e corrigiu um bug real (elevador cobrado a mais do orçamento aprovado, ver
+`lib/rateio.ts`) e acrescentou edição inline de rubricas orçamentais. Detalhe completo em
+`docs/audit/SIMULACAO_COMPRADOR_NOVO.md`.
+
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.
