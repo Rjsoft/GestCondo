@@ -181,9 +181,9 @@ Encontrou e corrigiu um bug real (elevador cobrado a mais do orçamento aprovado
 `lib/rateio.ts`) e acrescentou edição inline de rubricas orçamentais. Detalhe completo em
 `docs/audit/SIMULACAO_COMPRADOR_NOVO.md`.
 
-**Workflow de estados de cobrança de dívidas (2026-08-17)**: fecha o P1 de
-`FUNCTIONAL_GAPS.md` secção 3 — liga as peças soltas já existentes (juros de mora,
-interpelação, declaração de dívida, antiguidade da dívida, lembretes informais) através
+**Workflow de estados de cobrança de dívidas (2026-08-17), em produção desde 2026-08-17**:
+fecha o P1 de `FUNCTIONAL_GAPS.md` secção 3 — liga as peças soltas já existentes (juros de
+mora, interpelação, declaração de dívida, antiguidade da dívida, lembretes informais) através
 de um processo de cobrança por fração com estado explícito (`em_atraso` → ... →
 `regularizado`/`encerrado`/`cancelado`), plano prestacional (acompanhamento
 administrativo, nunca escreve em `movimento`) e prova histórica de emissão de
@@ -193,5 +193,26 @@ unitários (`lib/cobranca.test.ts`) e 6 de integração real (`lib/db/cobranca.d
 incl. confirmação de que nenhuma escrita altera `movimento`) e verificado em runtime
 (dev) ciclo completo. Ver `FUNCTIONAL_GAPS.md` secção 3 para o detalhe completo,
 incluindo o que ficou deliberadamente fora de âmbito.
+
+**Promoção a produção (2026-08-17)**: o push do commit `a37d77e` para `main` foi
+automaticamente bloqueado pelo gate de build (`scripts/check-pending-migrations.mjs`,
+ver `TECHNICAL_DEBT.md` D8) por a migração `0059` ainda não estar aplicada em
+produção — funcionou exatamente como desenhado, sem incidente, a versão anterior
+continuou a servir tráfego sem interrupção. Snapshot manual criado em produção antes de
+migrar (o anterior, de 2026-07-31, foi eliminado primeiro — limite do plano Free).
+`drizzle-kit migrate` falhou de forma inexplicada contra produção (processo terminava
+sem erro nem sucesso, mesmo com ligação direta `pg` a funcionar em segundos) —
+aplicada a migração manualmente por SQL direto (as 4 `CREATE TABLE`, sem alterações a
+tabelas existentes) dentro de uma transação, seguido do registo da linha de bookkeeping
+em `drizzle.__drizzle_migrations` com o mesmo hash de dev (mesmo procedimento de
+recurso já documentado em `docs/PROCEDIMENTO_MIGRACAO_PRODUCAO.md`/`CLAUDE.md`).
+Confirmado por comparação direta de hashes: dev e produção com as mesmas 60 migrações,
+sem divergência. Redeploy manual do mesmo commit concluído com sucesso (`READY`).
+Smoke test em produção real: `/financas` → "Dívidas por fração" (botão "Processos de
+cobrança" visível) e `/financas/processos-cobranca` carregam sem erro, com dados reais.
+**Achado de processo**: `pnpm db:check-drift` (`scripts/check-migration-drift.mjs`) tem
+um bug na leitura de `.env.local` que impediu correr a verificação oficial nesta sessão
+— contornado com uma comparação manual equivalente; o script fica por corrigir, não
+avaliado nesta sessão.
 
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.
