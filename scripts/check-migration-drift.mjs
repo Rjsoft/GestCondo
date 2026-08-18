@@ -15,11 +15,21 @@
 import fs from 'fs'
 import pg from 'pg'
 
+// Remove um BOM UTF-8 (U+FEFF) e espaço em branco à volta — ferramentas
+// Windows (ex. `Out-File -Encoding utf8` do PowerShell, usado ao guardar a
+// connection string de produção copiada da Neon) escrevem esse BOM por
+// omissão. Sem isto, a connection string deixa de começar por
+// "postgresql://" e o pg tenta ligar a um host literal chamado "base"
+// (falha com `getaddrinfo ENOTFOUND base`) — encontrado 2026-08-18.
+function limparConnectionString(str) {
+  return str.replace(/^﻿/, '').trim()
+}
+
 function lerDatabaseUrlLocal() {
-  const env = fs.readFileSync('.env.local', 'utf8').replace(/^﻿/, '')
+  const env = limparConnectionString(fs.readFileSync('.env.local', 'utf8'))
   const match = env.match(/DATABASE_URL="?([^"\n]+)"?/)
   if (!match) throw new Error('DATABASE_URL não encontrado em .env.local')
-  return match[1]
+  return limparConnectionString(match[1])
 }
 
 async function listarHashes(connectionString) {
@@ -36,6 +46,8 @@ async function listarHashes(connectionString) {
 }
 
 const prodUrl = process.env.PROD_DATABASE_URL
+  ? limparConnectionString(process.env.PROD_DATABASE_URL)
+  : process.env.PROD_DATABASE_URL
 if (!prodUrl) {
   console.error(
     'Defina PROD_DATABASE_URL (connection string de produção, sem pooling) para correr esta verificação.',
