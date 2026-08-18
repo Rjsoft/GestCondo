@@ -2,6 +2,7 @@ import { requireMembroPagina, temPermissaoGestao, temPermissaoOperacional } from
 import { getDocumentos } from '@/app/actions/documentos'
 import { PageHeader } from '@/components/page-header'
 import { NovoDocumentoDialog } from '@/components/documentos/novo-documento-dialog'
+import { ExportarArquivoDocumentosButton } from '@/components/documentos/exportar-arquivo-button'
 import { DocumentoActions } from '@/components/documentos/documento-actions'
 import { ConfirmarLeituraDocumentoButton } from '@/components/documentos/confirmar-leitura-button'
 import { ConfirmacoesDocumentoDialog } from '@/components/documentos/confirmacoes-documento-dialog'
@@ -11,7 +12,8 @@ import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { formatData } from '@/lib/format'
-import { FileText, ExternalLink } from 'lucide-react'
+import { FileText, ExternalLink, Archive } from 'lucide-react'
+import Link from 'next/link'
 
 const CATEGORIA_LABEL: Record<string, string> = {
   ata: 'Ata',
@@ -23,7 +25,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
 export default async function DocumentosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>
+  searchParams: Promise<{ q?: string; page?: string; arquivo?: string }>
 }) {
   const membro = await requireMembroPagina()
   const isAdmin = temPermissaoGestao(membro)
@@ -32,7 +34,8 @@ export default async function DocumentosPage({
   const params = await searchParams
   const search = params.q ?? ''
   const page = Math.max(1, Number(params.page) || 1)
-  const { documentos, totalPages } = await getDocumentos({ page, search })
+  const mostrarArquivados = params.arquivo === '1'
+  const { documentos, totalPages } = await getDocumentos({ page, search, mostrarArquivados })
 
   return (
     <div>
@@ -40,18 +43,32 @@ export default async function DocumentosPage({
         title="Documentos"
         description="Atas, regulamentos e outros documentos do condomínio."
       >
+        {isAdmin && <ExportarArquivoDocumentosButton />}
         {podeOperar && <NovoDocumentoDialog />}
       </PageHeader>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <SearchInput placeholder="Pesquisar documentos..." />
+        <Link
+          href={`/documentos?${new URLSearchParams({ ...(search ? { q: search } : {}), ...(mostrarArquivados ? {} : { arquivo: '1' }) }).toString()}`}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+        >
+          <Archive className="h-3.5 w-3.5" />
+          {mostrarArquivados ? 'Ver documentos ativos' : 'Ver arquivados'}
+        </Link>
       </div>
 
       {documentos.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
             <FileText className="h-8 w-8" />
-            <p>{search ? 'Nenhum documento encontrado.' : 'Ainda não existem documentos.'}</p>
+            <p>
+              {search
+                ? 'Nenhum documento encontrado.'
+                : mostrarArquivados
+                  ? 'Ainda não existem documentos arquivados.'
+                  : 'Ainda não existem documentos.'}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -69,6 +86,11 @@ export default async function DocumentosPage({
                     {d.confidencial && (
                       <Badge variant="outline" className="border-amber-200 bg-amber-100 text-amber-800">
                         Confidencial
+                      </Badge>
+                    )}
+                    {d.arquivado && (
+                      <Badge variant="outline" className="border-muted bg-muted text-muted-foreground">
+                        Arquivado
                       </Badge>
                     )}
                   </div>
@@ -97,7 +119,9 @@ export default async function DocumentosPage({
                     <VersoesDocumentoDialog documentoId={d.id} total={d.totalVersoes} />
                   </div>
                 </div>
-                {isAdmin && <DocumentoActions id={d.id} confidencial={d.confidencial} />}
+                {isAdmin && (
+                  <DocumentoActions id={d.id} confidencial={d.confidencial} arquivado={d.arquivado} />
+                )}
               </CardContent>
             </Card>
           ))}
@@ -105,7 +129,9 @@ export default async function DocumentosPage({
         <PaginationControls
           page={page}
           totalPages={totalPages}
-          buildHref={(p) => `/documentos?${new URLSearchParams({ ...(search ? { q: search } : {}), page: String(p) }).toString()}`}
+          buildHref={(p) =>
+            `/documentos?${new URLSearchParams({ ...(search ? { q: search } : {}), ...(mostrarArquivados ? { arquivo: '1' } : {}), page: String(p) }).toString()}`
+          }
         />
         </>
       )}

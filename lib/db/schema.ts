@@ -1364,6 +1364,12 @@ export const documento = pgTable(
     // condomínio (temConsultaGestao) — mesmo critério de minimização já
     // usado para IBAN/contactos, não uma lista de permissões por pessoa.
     confidencial: boolean("confidencial").notNull().default(false),
+    // Arquivo morto (FUNCTIONAL_GAPS.md, secção 6) — distinto de
+    // `deletedAt`: um documento arquivado continua a existir e é
+    // pesquisável/consultável (ex. na exportação integral), só fica fora
+    // da listagem principal por já não ser relevante no dia a dia (ex. um
+    // regulamento substituído por uma versão nova mantida à parte).
+    arquivado: boolean("arquivado").notNull().default(false),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     // Soft-delete (auditoria jurídica 2026-07-22, achado DOC-01) — mesmo
     // padrão de movimento/seguro.deletedAt.

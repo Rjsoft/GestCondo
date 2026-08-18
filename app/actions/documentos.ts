@@ -1,5 +1,8 @@
 'use server'
 
+import { createHash } from 'node:crypto'
+import JSZip from 'jszip'
+import { get } from '@vercel/blob'
 import { db } from '@/lib/db'
 import { confirmacaoLeitura, documento, documentoVersao } from '@/lib/db/schema'
 import { registarAuditoria } from '@/lib/audit'
@@ -11,17 +14,26 @@ import { revalidatePath } from 'next/cache'
 
 const PAGE_SIZE = 20
 
-export async function getDocumentos({ page = 1, search = '' }: { page?: number; search?: string } = {}) {
+export async function getDocumentos({
+  page = 1,
+  search = '',
+  mostrarArquivados = false,
+}: { page?: number; search?: string; mostrarArquivados?: boolean } = {}) {
   const m = await requireMembroAprovado()
   // Documentos confidenciais só são devolvidos a quem já gere/audita o
   // condomínio — filtrado aqui, nunca só na UI, mesmo critério de
   // minimização já usado para IBAN/contactos pessoais.
   const base = temConsultaGestao(m)
-    ? and(eq(documento.condominioId, m.condominioId), isNull(documento.deletedAt))
+    ? and(
+        eq(documento.condominioId, m.condominioId),
+        isNull(documento.deletedAt),
+        eq(documento.arquivado, mostrarArquivados),
+      )
     : and(
         eq(documento.condominioId, m.condominioId),
         isNull(documento.deletedAt),
         eq(documento.confidencial, false),
+        eq(documento.arquivado, mostrarArquivados),
       )
   const condicao = search
     ? and(
@@ -188,6 +200,33 @@ export async function alternarConfidencialidadeDocumento(id: number, confidencia
   revalidatePath('/documentos')
 }
 
+/**
+ * Marca ou desmarca um documento como arquivado (FUNCTIONAL_GAPS.md,
+ * secção 6, "arquivo morto") — distinto de eliminarDocumento: o documento
+ * continua a existir e a poder ser consultado/exportado, só sai da
+ * listagem principal por já não ser relevante no dia a dia.
+ */
+export async function alternarArquivoDocumento(id: number, arquivado: boolean) {
+  const admin = await requireAdmin()
+  const condicao = and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId))
+  const [antes] = await db.select({ titulo: documento.titulo, arquivado: documento.arquivado }).from(documento).where(condicao).limit(1)
+  if (!antes) throw new Error('Documento não encontrado')
+  if (antes.arquivado === arquivado) return
+
+  await db.update(documento).set({ arquivado }).where(condicao)
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'documento',
+    entidadeId: id,
+    detalhes: arquivado ? `${antes.titulo}: arquivado` : `${antes.titulo}: desarquivado`,
+    alteracoes: [{ campo: 'arquivado', label: 'Arquivado', antes: antes.arquivado, depois: arquivado }],
+  })
+
+  revalidatePath('/documentos')
+}
+
 export async function eliminarDocumento(id: number) {
   const admin = await requireAdmin()
   const condicao = and(eq(documento.id, id), eq(documento.condominioId, admin.condominioId))
@@ -301,4 +340,96 @@ export async function getVersoesDocumento(id: number) {
     .from(documentoVersao)
     .where(eq(documentoVersao.documentoId, id))
     .orderBy(desc(documentoVersao.createdAt))
+}
+
+type EntradaManifesto = {
+  id: number
+  titulo: string
+  categoria: string
+  nomeFicheiro: string | null
+  criadoEm: Date
+  confidencial: boolean
+  arquivado: boolean
+  hashSha256: string | null
+  incluido: boolean
+  nota: string | null
+}
+
+/**
+ * Exportação integral do arquivo documental (FUNCTIONAL_GAPS.md, secção 6):
+ * um .zip com o conteúdo real de cada documento carregado (não só os dados
+ * estruturados, ao contrário de exportarCondominio() em
+ * app/actions/condominio.ts) e um manifesto.json com um hash sha256 de
+ * cada ficheiro, para o destinatário poder confirmar mais tarde que o
+ * ficheiro que tem não foi alterado desde a exportação. Só admin — inclui
+ * o conteúdo de documentos confidenciais, exige a barreira mais alta.
+ * Documentos sem ficheiro real no Blob (link externo colado à mão, ou sem
+ * url) entram no manifesto com uma nota, mas sem ficheiro no zip — não há
+ * bytes fidedignos para incluir. deletedAt fica sempre de fora.
+ */
+export async function exportarArquivoDocumentos() {
+  const admin = await requireAdmin()
+
+  const documentos = await db
+    .select()
+    .from(documento)
+    .where(and(eq(documento.condominioId, admin.condominioId), isNull(documento.deletedAt)))
+    .orderBy(desc(documento.createdAt))
+
+  const zip = new JSZip()
+  const manifesto: EntradaManifesto[] = []
+
+  for (const d of documentos) {
+    const entrada: EntradaManifesto = {
+      id: d.id,
+      titulo: d.titulo,
+      categoria: d.categoria,
+      nomeFicheiro: d.nomeFicheiro,
+      criadoEm: d.createdAt,
+      confidencial: d.confidencial,
+      arquivado: d.arquivado,
+      hashSha256: null,
+      incluido: false,
+      nota: null,
+    }
+
+    if (d.url?.includes('.blob.vercel-storage.com')) {
+      const blob = await get(d.url, {
+        access: 'private',
+        token: process.env.BLOB_PRIVADO_READ_WRITE_TOKEN,
+      }).catch(() => null)
+
+      if (blob) {
+        const bytes = Buffer.from(await new Response(blob.stream).arrayBuffer())
+        entrada.hashSha256 = createHash('sha256').update(bytes).digest('hex')
+        entrada.incluido = true
+        zip.file(`documentos/${d.id}-${d.nomeFicheiro ?? d.titulo}`, bytes)
+      } else {
+        entrada.nota = 'Falha ao obter o ficheiro do armazenamento'
+      }
+    } else if (d.url) {
+      entrada.nota = `Link externo, não incluído no ficheiro: ${d.url}`
+    } else {
+      entrada.nota = 'Sem ficheiro associado'
+    }
+
+    manifesto.push(entrada)
+  }
+
+  zip.file('manifesto.json', JSON.stringify(manifesto, null, 2))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'atualizar',
+    entidade: 'condominio',
+    entidadeId: admin.condominioId,
+    detalhes: `Exportação integral do arquivo documental (${documentos.length} documento(s))`,
+  })
+
+  const base64 = await zip.generateAsync({ type: 'base64' })
+  return {
+    base64,
+    total: documentos.length,
+    totalIncluidos: manifesto.filter((m) => m.incluido).length,
+  }
 }

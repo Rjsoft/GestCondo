@@ -801,6 +801,28 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           qualquer momento em &ldquo;versões anteriores&rdquo;, junto do
           documento, com data, quem a substituiu e o motivo (se indicado).
         </p>
+        <Subtitulo>Arquivar um documento antigo</Subtitulo>
+        <p>
+          Quando um documento já não é relevante no dia a dia (por exemplo, um
+          regulamento substituído por uma versão nova, mas que ainda quer
+          guardar para consulta), use &ldquo;Arquivar&rdquo; no menu
+          &ldquo;...&rdquo; junto dele. O documento sai da lista principal,
+          mas não é eliminado — continua acessível a qualquer momento em
+          &ldquo;Ver arquivados&rdquo;, por cima da lista, onde também pode
+          desarquivar.
+        </p>
+        <Subtitulo>Exportar todos os documentos</Subtitulo>
+        <p>
+          O botão &ldquo;Exportar arquivo completo&rdquo; (visível só a
+          administradores) descarrega um ficheiro <code>.zip</code> com todos
+          os documentos do condomínio, mais uma lista (<code>manifesto.json</code>)
+          com o nome, categoria e um código de verificação (hash) de cada
+          ficheiro — útil para guardar uma cópia de segurança completa fora
+          da aplicação, ou para confirmar mais tarde que um ficheiro não foi
+          alterado. Documentos que são apenas um link colado à mão (sem
+          ficheiro carregado) aparecem listados no manifesto, mas sem o
+          ficheiro em si, por não haver nada para descarregar.
+        </p>
       </>
     ),
   },

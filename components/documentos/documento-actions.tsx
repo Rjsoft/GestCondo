@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { alternarConfidencialidadeDocumento, eliminarDocumento } from '@/app/actions/documentos'
+import {
+  alternarArquivoDocumento,
+  alternarConfidencialidadeDocumento,
+  eliminarDocumento,
+} from '@/app/actions/documentos'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,10 +15,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { SubstituirFicheiroDialog } from '@/components/documentos/substituir-ficheiro-dialog'
-import { MoreHorizontal, Trash2, EyeOff, Eye, FileUp } from 'lucide-react'
+import { MoreHorizontal, Trash2, EyeOff, Eye, FileUp, Archive, ArchiveRestore } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function DocumentoActions({ id, confidencial }: { id: number; confidencial: boolean }) {
+export function DocumentoActions({
+  id,
+  confidencial,
+  arquivado,
+}: {
+  id: number
+  confidencial: boolean
+  arquivado: boolean
+}) {
   const [pending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [substituirOpen, setSubstituirOpen] = useState(false)
@@ -36,6 +48,17 @@ export function DocumentoActions({ id, confidencial }: { id: number; confidencia
       try {
         await alternarConfidencialidadeDocumento(id, !confidencial)
         toast.success(confidencial ? 'Documento tornado público' : 'Documento marcado como confidencial')
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Erro')
+      }
+    })
+  }
+
+  const alternarArquivo = () => {
+    startTransition(async () => {
+      try {
+        await alternarArquivoDocumento(id, !arquivado)
+        toast.success(arquivado ? 'Documento desarquivado' : 'Documento arquivado')
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro')
       }
@@ -66,6 +89,19 @@ export function DocumentoActions({ id, confidencial }: { id: number; confidencia
           <DropdownMenuItem onClick={() => setSubstituirOpen(true)}>
             <FileUp className="h-4 w-4" />
             Substituir ficheiro
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={alternarArquivo}>
+            {arquivado ? (
+              <>
+                <ArchiveRestore className="h-4 w-4" />
+                Desarquivar
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4" />
+                Arquivar
+              </>
+            )}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setConfirmOpen(true)}
