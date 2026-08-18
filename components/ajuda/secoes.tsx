@@ -640,6 +640,21 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             </ul>
           </li>
           <li>
+            <strong>Fundo de reserva</strong> (separador próprio): mostra o
+            saldo do fundo, dividido por exercício financeiro, e a lista de
+            retiradas já feitas (com um aviso quando uma retirada ainda não
+            está ligada à decisão de assembleia que a autorizou). Se o fundo
+            tiver sido usado para uma despesa grande, pode criar um{' '}
+            <strong>plano de reposição</strong> — um compromisso simples
+            (quanto e, opcionalmente, até quando) para acompanhar o
+            reembolso ao fundo com as quotas seguintes; a aplicação mostra
+            sempre quanto já foi reposto, calculado a partir das quotas
+            reais lançadas no fundo, nunca um número à parte que possa
+            ficar desatualizado. Só pode haver um plano em curso de cada
+            vez; ao terminar, marque &ldquo;Concluir&rdquo; (mesmo que o
+            valor não bata certo) ou &ldquo;Cancelar&rdquo; com o motivo.
+          </li>
+          <li>
             <strong>Conciliação bancária</strong>: confirmar que o dinheiro
             que entrou/saiu de verdade na conta do banco corresponde ao que
             está registado na aplicação — útil para detetar um pagamento

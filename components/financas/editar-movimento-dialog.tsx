@@ -234,12 +234,15 @@ export function EditarMovimentoDialog({
                 </Select>
               </div>
 
-              {(tipo === 'receita' || (tipo === 'despesa' && requerAprovacaoValor)) && (
+              {(tipo === 'receita' ||
+                (tipo === 'despesa' && (requerAprovacaoValor || destinoValor === 'reserva'))) && (
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="assembleiaPontoIdEdit">
                     {tipo === 'receita'
                       ? 'Quota extraordinária? Ligue a uma decisão de assembleia'
-                      : 'Ligue à decisão de assembleia que aprovou esta despesa'}
+                      : destinoValor === 'reserva'
+                        ? 'Ligue à decisão de assembleia que autorizou esta retirada do fundo de reserva'
+                        : 'Ligue à decisão de assembleia que aprovou esta despesa'}
                   </Label>
                   <Select
                     value={assembleiaPontoIdValor}

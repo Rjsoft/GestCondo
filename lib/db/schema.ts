@@ -1006,6 +1006,59 @@ export const saldoInicialConta = pgTable(
   ],
 )
 
+// Plano de reposição do fundo de reserva depois de uma retirada — mero
+// acompanhamento administrativo, nunca a fonte de verdade financeira
+// (mesmo princípio de `prestacao`, plano prestacional de cobrança): o
+// "valor já reposto" nunca é guardado aqui, é sempre calculado a partir
+// da soma real de `movimento` (receita, destino "reserva", lançada desde
+// `dataInicio`). Só um plano "em_curso" por condomínio de cada vez
+// (índice único parcial abaixo, mesmo padrão de `processo_cobranca`) —
+// evita que duas receitas de reposição sejam contadas para dois planos em
+// simultâneo. FUNCTIONAL_GAPS.md, secção 1 ("Fundo comum de reserva").
+export const fundoReservaReposicao = pgTable(
+  "fundo_reserva_reposicao",
+  {
+    id: serial("id").primaryKey(),
+    condominioId: integer("condominioId")
+      .notNull()
+      .references(() => condominio.id, { onDelete: "cascade" }),
+    descricao: text("descricao").notNull(),
+    valorAReposicao: numeric("valorAReposicao", { precision: 12, scale: 2 }).notNull(),
+    // A partir daqui (dia civil, inclusive) contam as receitas de
+    // reposição para o progresso. `date`, não `timestamp` — mesmo padrão
+    // de exercicioFinanceiro.dataInicio/dataFim, comparado diretamente
+    // contra `movimento.data` (timestamp) tal como já acontece na
+    // associação de movimentos a exercícios (app/actions/exercicios.ts).
+    // Guardar a hora exata em vez do dia civil excluía silenciosamente
+    // receitas lançadas no mesmo dia em que o plano foi criado, mas antes
+    // dessa hora — encontrado a testar em runtime, 2026-08-18.
+    dataInicio: date("dataInicio", { mode: "date" }).notNull(),
+    // Opcional — prazo definido pela assembleia, se algum tiver sido fixado.
+    dataLimite: date("dataLimite", { mode: "date" }),
+    // Deliberação que autorizou a retirada/o plano — mesmo mecanismo de
+    // `movimento.assembleiaPontoId`, validado com validarAssembleiaPonto().
+    assembleiaPontoId: integer("assembleiaPontoId").references(() => assembleiaPonto.id, {
+      onDelete: "set null",
+    }),
+    estado: text("estado").notNull().default("em_curso"), // "em_curso" | "concluido" | "cancelado"
+    // Preenchido só ao concluir/cancelar: congela o valor reposto calculado
+    // nesse momento, para um plano já fechado não continuar a "ganhar"
+    // reposições lançadas depois (essas contam para o próximo plano, se
+    // houver um). Enquanto "em_curso", o valor reposto nunca vem daqui —
+    // é sempre recalculado a partir de `movimento` em tempo real.
+    valorRepostoFinal: numeric("valorRepostoFinal", { precision: 12, scale: 2 }),
+    notas: text("notas"),
+    userId: text("userId").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [
+    index("fundo_reserva_reposicao_condominio_idx").on(t.condominioId),
+    uniqueIndex("fundo_reserva_reposicao_em_curso_idx")
+      .on(t.condominioId)
+      .where(sql`estado = 'em_curso'`),
+  ],
+)
+
 // Documento de fornecedor (fatura, recibo) — Fase A.2. Distinto de
 // `movimento`: tem ciclo de vida próprio (nº de lançamento interno, nº do
 // documento do próprio fornecedor, emissão/vencimento) e pode ser liquidado

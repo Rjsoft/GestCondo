@@ -234,12 +234,15 @@ export function NovoMovimentoDialog({
                 </p>
               </div>
 
-              {(tipo === 'receita' || (tipo === 'despesa' && requerAprovacao)) && (
+              {(tipo === 'receita' ||
+                (tipo === 'despesa' && (requerAprovacao || destino === 'reserva'))) && (
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="assembleiaPontoId">
                     {tipo === 'receita'
                       ? 'Quota extraordinária? Ligue a uma decisão de assembleia'
-                      : 'Ligue à decisão de assembleia que aprovou esta despesa'}
+                      : destino === 'reserva'
+                        ? 'Ligue à decisão de assembleia que autorizou esta retirada do fundo de reserva'
+                        : 'Ligue à decisão de assembleia que aprovou esta despesa'}
                   </Label>
                   <Select
                     value={assembleiaPontoId}

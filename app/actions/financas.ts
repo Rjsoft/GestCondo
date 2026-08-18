@@ -724,7 +724,7 @@ export async function getDespesasParaRatificar() {
 // ligar uma quota a uma deliberação ainda pendente ou reprovada. Isolamento
 // multi-tenant garantido aqui, não ao nível da BD (assembleiaPonto não tem
 // condominioId próprio nem FK composta — ver comentário em lib/db/schema.ts).
-async function validarAssembleiaPonto(condominioId: number, assembleiaPontoId: number) {
+export async function validarAssembleiaPonto(condominioId: number, assembleiaPontoId: number) {
   const [ponto] = await db
     .select({ id: assembleiaPonto.id })
     .from(assembleiaPonto)

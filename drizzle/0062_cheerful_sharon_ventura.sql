@@ -1,0 +1,1 @@
+ALTER TABLE "fundo_reserva_reposicao" ADD COLUMN "valorRepostoFinal" numeric(12, 2);

@@ -428,6 +428,27 @@
       "when": 1787035794741,
       "tag": "0060_fat_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1787041039950,
+      "tag": "0061_shocking_namorita",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1787041243643,
+      "tag": "0062_cheerful_sharon_ventura",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1787042272755,
+      "tag": "0063_public_stone_men",
+      "breakpoints": true
     }
   ]
 }

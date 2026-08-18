@@ -16,6 +16,13 @@ import { DividirDespesaDialog } from '@/components/financas/dividir-despesa-dial
 import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
 import { ExerciciosTab, type ContaComSaldo, type ExercicioLinha } from '@/components/financas/exercicios-tab'
+import {
+  ReservaTab,
+  type PlanoReposicao,
+  type PlanoReposicaoAtual,
+  type Retirada,
+  type SaldoPorExercicio,
+} from '@/components/financas/reserva-tab'
 import { NovoDocumentoFornecedorDialog } from '@/components/financas/novo-documento-fornecedor-dialog'
 import { NovoAdiantamentoDialog } from '@/components/financas/novo-adiantamento-dialog'
 import { CreditoFracaoActions } from '@/components/financas/credito-fracao-actions'
@@ -185,6 +192,10 @@ export function FinancasTabs({
   exercicios,
   contasComSaldo,
   exercicioEmVistaId,
+  saldoFundoReservaPorExercicio,
+  retiradasFundoReserva,
+  planoReposicaoAtual,
+  historicoPlanosReposicao,
   documentosFornecedor,
   pontosAssembleia,
   balancoPatrimonialInicial,
@@ -218,6 +229,10 @@ export function FinancasTabs({
   exercicios: ExercicioLinha[]
   contasComSaldo: ContaComSaldo[]
   exercicioEmVistaId: number | null
+  saldoFundoReservaPorExercicio: SaldoPorExercicio[]
+  retiradasFundoReserva: Retirada[]
+  planoReposicaoAtual: PlanoReposicaoAtual | null
+  historicoPlanosReposicao: PlanoReposicao[]
   documentosFornecedor: DocumentoFornecedor[]
   pontosAssembleia: PontoAssembleiaOpcao[]
   balancoPatrimonialInicial: Awaited<ReturnType<typeof getBalancoPatrimonial>> | null
@@ -244,6 +259,7 @@ export function FinancasTabs({
         <TabsTrigger value="seguro">Seguro</TabsTrigger>
         <TabsTrigger value="conciliacao">Conciliação bancária</TabsTrigger>
         <TabsTrigger value="exercicios">Exercícios e contas</TabsTrigger>
+        <TabsTrigger value="reserva">Fundo de reserva</TabsTrigger>
         <TabsTrigger value="documentosFornecedor">Documentos de fornecedor</TabsTrigger>
         <TabsTrigger value="balancoPatrimonial">Balanço patrimonial</TabsTrigger>
       </TabsList>
@@ -803,6 +819,17 @@ export function FinancasTabs({
           exerciciosIniciais={exercicios}
           contasIniciais={contasComSaldo}
           exercicioEmVistaIdInicial={exercicioEmVistaId}
+          isAdmin={isAdmin}
+        />
+      </TabsContent>
+
+      <TabsContent value="reserva" className="mt-4">
+        <ReservaTab
+          saldoPorExercicioInicial={saldoFundoReservaPorExercicio}
+          retiradasIniciais={retiradasFundoReserva}
+          planoAtualInicial={planoReposicaoAtual}
+          historicoInicial={historicoPlanosReposicao}
+          pontosAssembleia={pontosAssembleia}
           isAdmin={isAdmin}
         />
       </TabsContent>

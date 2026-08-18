@@ -26,6 +26,12 @@ import {
   getMovimentosPorConciliar,
 } from '@/app/actions/extrato'
 import { getExercicios } from '@/app/actions/exercicios'
+import {
+  getHistoricoPlanosReposicao,
+  getPlanoReposicaoAtual,
+  getRetiradasFundoReserva,
+  getSaldoFundoReservaPorExercicio,
+} from '@/app/actions/fundo-reserva'
 import { getBalancoPatrimonial, getSaldosContas } from '@/app/actions/contas-financeiras'
 import { getDocumentosFornecedor } from '@/app/actions/documentos-fornecedor'
 import { getSaldosCredito } from '@/app/actions/creditos'
@@ -73,6 +79,10 @@ export default async function FinancasPage({
     resumoFinanceiro,
     condominioAtual,
     processosCobranca,
+    saldoFundoReservaPorExercicio,
+    retiradasFundoReserva,
+    planoReposicaoAtual,
+    historicoPlanosReposicao,
   ] = await Promise.all([
     getMovimentos(),
     getMovimentosPaginado({ page, search }),
@@ -94,6 +104,10 @@ export default async function FinancasPage({
     getResumoFinanceiro(),
     getCondominioAtual(membro.condominioId),
     getProcessosCobranca(),
+    getSaldoFundoReservaPorExercicio(),
+    getRetiradasFundoReserva(),
+    getPlanoReposicaoAtual(),
+    getHistoricoPlanosReposicao(),
   ])
   const criterioRateio = condominioAtual?.criterioRateio === 'partes_iguais' ? 'partes_iguais' : 'permilagem'
 
@@ -194,6 +208,10 @@ export default async function FinancasPage({
         exercicios={exercicios}
         contasComSaldo={contasComSaldo}
         exercicioEmVistaId={exercicioEmVistaId}
+        saldoFundoReservaPorExercicio={saldoFundoReservaPorExercicio}
+        retiradasFundoReserva={retiradasFundoReserva}
+        planoReposicaoAtual={planoReposicaoAtual}
+        historicoPlanosReposicao={historicoPlanosReposicao}
         balancoPatrimonialInicial={balancoPatrimonial}
         documentosFornecedor={documentosFornecedor}
         pontosAssembleia={pontosAssembleia.map((p) => ({
