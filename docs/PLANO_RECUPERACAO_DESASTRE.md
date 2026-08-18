@@ -42,9 +42,12 @@ Executado a partir do snapshot manual de produção existente (criado em 2026-08
 5. **Só depois de confirmado**: promover esse branch a `production` (a Neon permite trocar qual branch responde pela connection string de produção) — **nunca fazer one-step restore como primeiro reflexo**, mesmo estando confiante.
 6. **Depois de resolvido**: registar o incidente (o que aconteceu, causa raiz, o que se perdeu, se algo), atualizar este documento e `TECHNICAL_DEBT.md` se revelar uma lacuna nova.
 
-## O que continua em aberto (decisões do utilizador, não deste documento)
+## Decisões já tomadas
 
-- **RPO de 6 horas é aceitável?** Decisão de negócio — ver `TECHNICAL_DEBT.md` D7. Reduzi-lo exige upgrade de plano Neon, atualmente adiado por decisão prévia (`upgrade-neon-adiado`).
+- **RPO de 6 horas, aceite** — confirmado pelo utilizador em 2026-08-18: mantém o adiamento do upgrade do plano Neon, mesmo havendo já dados reais de produção desde 2026-08-17. Não voltar a levantar isto como pendência, salvo mudança de circunstâncias (mais clientes, mais dados, ou pedido explícito de reavaliação).
+
+## O que continua em aberto
+
 - **Cópias fora da Neon**: hoje não existem — tudo depende de um único fornecedor. `exportarCondominio()` (JSON, por condomínio, acionado manualmente) não é um substituto de um backup de sistema. Fica como melhoria P2, não implementada.
 - **One-step restore nunca testado**: por ser destrutivo, decidiu-se não o testar sem um incidente real a justificar. Se isso for considerado insuficiente, o multi-step restore já testado é funcionalmente equivalente no primeiro passo (a diferença está só em como se troca `production` para o branch restaurado no fim).
 
