@@ -936,6 +936,33 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           novo titular) e, se necessário, emitir a declaração de dívida em
           &ldquo;Finanças&rdquo;.
         </p>
+        <Subtitulo>Vários titulares na mesma fração (herança indivisa)</Subtitulo>
+        <p>
+          Quando uma fração tem mais do que um dono e ainda não foi possível
+          dividir a herança entre eles (uma &ldquo;herança indivisa&rdquo;),
+          o campo &ldquo;Proprietário&rdquo; só permite escrever um nome —
+          mas a lei pede que uma declaração de dívida ou uma carta de
+          interpelação identifiquem cada um dos donos, não só um. Para isso,
+          use &ldquo;Titulares&rdquo;, no menu &ldquo;...&rdquo; junto de cada
+          fração: aí pode adicionar o nome e o NIF de cada titular, um de
+          cada vez. Isto não substitui o nome mostrado na listagem de
+          frações (esse continua a editar-se em &ldquo;Editar fração&rdquo;)
+          — é só uma lista extra, usada apenas quando gera a declaração de
+          dívida ou a interpelação: se tiver titulares registados, o
+          documento passa a listar cada um deles com o respetivo NIF, em vez
+          de mostrar só o nome único do proprietário.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Exemplo: o Sr. António Ferreira faleceu e deixou a fração 2º Esq
+          para os seus dois filhos, Maria e Pedro, sem a herança estar
+          formalmente partilhada. Enquanto isso, o campo
+          &ldquo;Proprietário&rdquo; pode continuar a mostrar
+          &ldquo;Herança de António Ferreira&rdquo; (para não complicar as
+          listagens do dia a dia), mas em &ldquo;Titulares&rdquo; regista-se
+          a Maria e o Pedro, cada um com o seu NIF — para que, se um deles
+          precisar de vender a sua parte, a declaração de dívida já os
+          identifique aos dois corretamente.
+        </p>
         <Subtitulo>A declaração de dívida na escritura — o que precisa de saber</Subtitulo>
         <p>
           Em &ldquo;Finanças&rdquo; → &ldquo;Dívidas por fração&rdquo;, o botão

@@ -428,6 +428,36 @@ export const fracaoTransmissao = pgTable(
   (t) => [index("fracao_transmissao_fracao_idx").on(t.fracaoId)],
 )
 
+// Titulares adicionais de uma fração — para heranças indivisas ou frações
+// com vários donos, quando um único fracao.proprietario (texto) não chega
+// para identificar cada um em documentos formais (declaração de dívida,
+// interpelação). Opcional: uma fração sem nenhuma linha aqui continua a
+// funcionar exatamente como hoje, usando só fracao.proprietario — nunca
+// sincronizado automaticamente com esse campo (propósitos distintos: um é
+// o nome de apresentação nas listagens, o outro é a lista formal). Achado
+// 2026-08-18, ver FUNCTIONAL_GAPS.md secção 1 ("Frações autónomas").
+export const fracaoTitular = pgTable(
+  "fracao_titular",
+  {
+    id: serial("id").primaryKey(),
+    fracaoId: integer("fracaoId")
+      .notNull()
+      .references(() => fracao.id, { onDelete: "cascade" }),
+    nome: text("nome").notNull(),
+    nif: text("nif"),
+    // Mesma tipagem de fracao.tipoTitular — cada titular pode ter uma
+    // qualidade diferente (ex: um herdeiro proprietário, outro usufrutuário).
+    tipoTitular: text("tipoTitular")
+      .$type<"proprietario" | "inquilino" | "usufrutuario" | "locatario" | "antigo">()
+      .notNull()
+      .default("proprietario"),
+    contactoEmail: text("contactoEmail"),
+    contactoTelefone: text("contactoTelefone"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+  },
+  (t) => [index("fracao_titular_fracao_idx").on(t.fracaoId)],
+)
+
 // Movimentos financeiros: quotas (receita) e despesas.
 // `deletedAt` implementa soft-delete: registos financeiros têm obrigação
 // legal de retenção (contabilística/fiscal) independente do RGPD, pelo que

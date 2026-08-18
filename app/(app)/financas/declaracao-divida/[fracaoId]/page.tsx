@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getDeclaracaoDivida } from '@/app/actions/financas'
+import { getTitularesFracao } from '@/app/actions/fracoes'
+import { TIPO_TITULAR_LABEL, type TipoTitular } from '@/lib/fracoes'
 import { getCondominioAtual, requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmitirDocumentoButton } from '@/components/financas/emitir-documento-button'
@@ -34,7 +36,10 @@ export default async function DeclaracaoDividaPage({
     notFound()
   }
 
-  const condominio = await getCondominioAtual(membro.condominioId)
+  const [condominio, titulares] = await Promise.all([
+    getCondominioAtual(membro.condominioId),
+    getTitularesFracao(id),
+  ])
   const { fracao, anoOrcamento, quotaMensalAtual, dividas, totalDivida } = declaracao
 
   return (
@@ -78,14 +83,33 @@ export default async function DeclaracaoDividaPage({
               <dt className="text-muted-foreground">Fração</dt>
               <dd className="font-medium text-foreground">{fracao.identificacao}</dd>
             </div>
-            <div className="flex justify-between border-b border-border pb-2">
-              <dt className="text-muted-foreground">Proprietário</dt>
-              <dd className="font-medium text-foreground">{fracao.proprietario}</dd>
-            </div>
-            {fracao.nif && (
-              <div className="flex justify-between border-b border-border pb-2">
-                <dt className="text-muted-foreground">NIF do proprietário</dt>
-                <dd className="font-medium text-foreground">{fracao.nif}</dd>
+            {titulares.length === 0 ? (
+              <>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <dt className="text-muted-foreground">Proprietário</dt>
+                  <dd className="font-medium text-foreground">{fracao.proprietario}</dd>
+                </div>
+                {fracao.nif && (
+                  <div className="flex justify-between border-b border-border pb-2">
+                    <dt className="text-muted-foreground">NIF do proprietário</dt>
+                    <dd className="font-medium text-foreground">{fracao.nif}</dd>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="border-b border-border pb-2">
+                <dt className="mb-1 text-muted-foreground">Titulares</dt>
+                {titulares.map((t) => (
+                  <dd key={t.id} className="flex justify-between font-medium text-foreground">
+                    <span>
+                      {t.nome}{' '}
+                      <span className="font-normal text-muted-foreground">
+                        ({TIPO_TITULAR_LABEL[t.tipoTitular as TipoTitular] ?? t.tipoTitular})
+                      </span>
+                    </span>
+                    <span>{t.nif ? `NIF ${t.nif}` : '—'}</span>
+                  </dd>
+                ))}
               </div>
             )}
           </dl>

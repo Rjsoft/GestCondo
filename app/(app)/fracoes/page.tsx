@@ -192,6 +192,7 @@ export default async function FracoesPage({
                             id={f.id}
                             isentaElevador={f.isentaElevador}
                             proprietario={f.proprietario}
+                            identificacao={f.identificacao}
                             emDivida={mapaSaldos.find((s) => s.fracaoId === f.id)?.emDivida ?? 0}
                           />
                         </div>

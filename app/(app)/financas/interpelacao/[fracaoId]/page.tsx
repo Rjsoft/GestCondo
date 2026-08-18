@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getDeclaracaoDivida } from '@/app/actions/financas'
+import { getTitularesFracao } from '@/app/actions/fracoes'
+import { TIPO_TITULAR_LABEL, type TipoTitular } from '@/lib/fracoes'
 import { getCondominioAtual, requireMembroPagina, temAcessoFinanceiro } from '@/lib/session'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmitirDocumentoButton } from '@/components/financas/emitir-documento-button'
@@ -47,7 +49,10 @@ export default async function InterpelacaoPage({
     notFound()
   }
 
-  const condominio = await getCondominioAtual(membro.condominioId)
+  const [condominio, titulares] = await Promise.all([
+    getCondominioAtual(membro.condominioId),
+    getTitularesFracao(id),
+  ])
   const { fracao, dividas, totalDivida } = declaracao
 
   // Prazo de pagamento concedido na carta (?prazo=8|15|30, por omissão 15).
@@ -82,12 +87,29 @@ export default async function InterpelacaoPage({
           />
 
           <div className="flex flex-col gap-1 text-sm text-foreground">
-            <p className="font-medium">
-              Exmo.(a) Sr.(a) {fracao.proprietario}
-            </p>
-            <p className="text-muted-foreground">
-              Proprietário(a) da fração {fracao.identificacao}
-            </p>
+            {titulares.length === 0 ? (
+              <>
+                <p className="font-medium">
+                  Exmo.(a) Sr.(a) {fracao.proprietario}
+                </p>
+                <p className="text-muted-foreground">
+                  Proprietário(a) da fração {fracao.identificacao}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-medium">
+                  Exmos. Senhores Titulares da fração {fracao.identificacao}
+                </p>
+                {titulares.map((t) => (
+                  <p key={t.id} className="text-muted-foreground">
+                    {t.nome}
+                    {t.nif ? ` (NIF ${t.nif})` : ''} —{' '}
+                    {TIPO_TITULAR_LABEL[t.tipoTitular as TipoTitular] ?? t.tipoTitular}
+                  </p>
+                ))}
+              </>
+            )}
             <div className="mt-2 flex items-end gap-2">
               <span className="shrink-0 text-muted-foreground">Morada:</span>
               <span className="min-w-16 flex-1 border-b border-foreground" />

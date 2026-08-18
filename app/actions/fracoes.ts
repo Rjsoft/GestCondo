@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { fornecedor, fracao, fracaoTransmissao, membro } from '@/lib/db/schema'
+import { fornecedor, fracao, fracaoTitular, fracaoTransmissao, membro } from '@/lib/db/schema'
 import { compararCampos, gerarResumoAlteracoes, registarAuditoria } from '@/lib/audit'
 import {
   DECISAO_SALDO_LABEL,
@@ -644,4 +644,99 @@ export async function associarFracaoAdicional(formData: FormData) {
   })
 
   revalidatePath('/condominos')
+}
+
+/**
+ * Titulares adicionais de uma fração (heranças indivisas, vários donos) —
+ * lista opcional que complementa `fracao.proprietario`, para identificar
+ * cada um individualmente (nome + NIF) em documentos formais. Uma fração
+ * sem nenhuma linha aqui não é afetada — ver `lib/db/schema.ts:fracaoTitular`.
+ */
+export async function getTitularesFracao(fracaoId: number) {
+  const m = await requireAcessoFinanceiro()
+  const [f] = await db
+    .select({ id: fracao.id })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, m.condominioId)))
+    .limit(1)
+  if (!f) throw new Error('Fração não encontrada')
+
+  return db
+    .select()
+    .from(fracaoTitular)
+    .where(eq(fracaoTitular.fracaoId, fracaoId))
+    .orderBy(asc(fracaoTitular.createdAt))
+}
+
+export async function adicionarTitular(
+  fracaoId: number,
+  dados: { nome: string; nif?: string; tipoTitular?: string; contactoEmail?: string; contactoTelefone?: string },
+) {
+  const admin = await requireAdmin()
+  const nome = dados.nome.trim()
+  if (!nome) throw new Error('Indique o nome do titular')
+
+  const [f] = await db
+    .select({ id: fracao.id, identificacao: fracao.identificacao })
+    .from(fracao)
+    .where(and(eq(fracao.id, fracaoId), eq(fracao.condominioId, admin.condominioId)))
+    .limit(1)
+  if (!f) throw new Error('Fração não encontrada')
+
+  const tipoTitular = (TIPOS_TITULAR as readonly string[]).includes(dados.tipoTitular ?? '')
+    ? (dados.tipoTitular as (typeof TIPOS_TITULAR)[number])
+    : 'proprietario'
+
+  const [novo] = await db
+    .insert(fracaoTitular)
+    .values({
+      fracaoId,
+      nome,
+      nif: dados.nif?.trim() || null,
+      tipoTitular,
+      contactoEmail: dados.contactoEmail?.trim() || null,
+      contactoTelefone: dados.contactoTelefone?.trim() || null,
+    })
+    .returning()
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'criar',
+    entidade: 'fracao',
+    entidadeId: fracaoId,
+    detalhes: `Titular adicionado à fração ${f.identificacao}: ${nome}${dados.nif ? ` (NIF ${dados.nif})` : ''}`,
+  })
+
+  revalidatePath('/fracoes')
+  return novo
+}
+
+export async function removerTitular(titularId: number) {
+  const admin = await requireAdmin()
+
+  const [t] = await db
+    .select({
+      id: fracaoTitular.id,
+      nome: fracaoTitular.nome,
+      fracaoId: fracaoTitular.fracaoId,
+      condominioId: fracao.condominioId,
+      identificacao: fracao.identificacao,
+    })
+    .from(fracaoTitular)
+    .innerJoin(fracao, eq(fracao.id, fracaoTitular.fracaoId))
+    .where(eq(fracaoTitular.id, titularId))
+    .limit(1)
+  if (!t || t.condominioId !== admin.condominioId) throw new Error('Titular não encontrado')
+
+  await db.delete(fracaoTitular).where(eq(fracaoTitular.id, titularId))
+
+  await registarAuditoria({
+    actor: admin,
+    acao: 'eliminar',
+    entidade: 'fracao',
+    entidadeId: t.fracaoId,
+    detalhes: `Titular removido da fração ${t.identificacao}: ${t.nome}`,
+  })
+
+  revalidatePath('/fracoes')
 }

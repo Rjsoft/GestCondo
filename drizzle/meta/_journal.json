@@ -421,6 +421,13 @@
       "when": 1786986135472,
       "tag": "0059_giant_roughhouse",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1787035794741,
+      "tag": "0060_fat_iron_monger",
+      "breakpoints": true
     }
   ]
 }
