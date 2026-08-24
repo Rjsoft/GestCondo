@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatEuro } from '@/lib/format'
+import { MODELO_SALDOS } from '@/lib/modelo-csv'
+import { ModeloCsvActions } from '@/components/ui/modelo-csv-actions'
 import { parsearSaldosIniciais, validarConjuntoSaldos } from '@/lib/saldos-iniciais'
 import { ListPlus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -114,6 +116,8 @@ export function SaldosIniciaisMassaDialog({
               </p>
             </div>
           </div>
+
+          <ModeloCsvActions modelo={MODELO_SALDOS} onTextoCarregado={setTexto} />
 
           <div>
             <Label htmlFor="saldos-lista">Frações e valores em dívida</Label>
