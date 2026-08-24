@@ -67,7 +67,9 @@ Depois de cada merge, confirmar que o commit publicado é mesmo o teu:
 git rev-parse --short HEAD    # o commit que esperas ver em produção
 ```
 
-E comparar com o `githubCommitSha` do `latestDeployment` do projeto (API/painel da Vercel). Se não coincidir, há um deploy em fila por chegar — esperar e confirmar de novo antes de dar a alteração como publicada.
+E comparar com o commit indicado em **Overview → Production Deployment** no painel da Vercel. Se não coincidir, há um deploy em fila por chegar — esperar e confirmar de novo antes de dar a alteração como publicada.
+
+**Não usar o `latestDeployment` da API para isto** (corrigido 2026-08-24, depois do teste de rollback): esse campo é o **último build**, não o que está a servir tráfego. Durante o teste, `latestDeployment` continuou a apontar para `d8cb664` enquanto produção servia `9184d24`. Pior: o campo `alias` da API lista `gestcondo.vercel.app` em **todos** os deployments de produção que alguma vez o tiveram, e não só no ativo. Os dois indicadores óbvios da API estão errados para esta pergunta — a fonte fiável é o painel (Overview, ou o badge azul na lista de Deployments).
 
 **Nunca fazer um deploy manual (`vercel --prod`) enquanto houver deploys automáticos em fila** — foi exatamente essa combinação que causou a regressão silenciosa de 2026-08-17.
 
@@ -92,11 +94,22 @@ Distinguir sempre o que está avariado, porque a resposta é diferente:
 
 **O que o rollback de código não desfaz**: migrações já aplicadas (continuam aplicadas — e é por isso que serem aditivas importa), ficheiros já carregados no Blob, emails já enviados e dados já escritos pelos utilizadores na versão com o problema.
 
-### Estado do teste (2026-08-24)
+### Teste real do rollback (2026-08-24)
 
-O procedimento acima está **descrito mas ainda não executado a sério**. Foi autorizado nesta data, mas não pôde ser executado na sessão: o rollback não tem equivalente na API/MCP da Vercel disponível aqui, o Vercel CLI não está instalado e a extensão do Chrome não estava ligada — as três vias possíveis estavam fechadas. Fica ao mesmo nível do one-step restore da Neon: mecanismo documentado, resultado por confirmar.
+**Executado a sério em produção**, com autorização explícita — não é um procedimento teórico.
 
-Quando for executado, registar aqui a data, o deployment de origem e destino, e quanto tempo a versão anterior esteve a servir.
+- **De**: `d8cb664` (deployment `dpl_3sf6bu…`) → **para**: `9184d24` (`dpl_inum2…`).
+- **Duração**: a versão anterior serviu produção durante cerca de **4 minutos**, entre o rollback e a reposição.
+- **Verificado enquanto revertido**: `gestcondo.vercel.app` abriu com a sessão iniciada, o Painel mostrou os valores reais (saldo 35 320,37 €, 17 frações) e `/financas` carregou a lista de movimentos completa (20 movimentos, total 40 215,95 €) — sem erros.
+- **Reposição**: Deployments → menu do `d8cb664` → **Promote** → "Promoted Deployment successfully". Overview voltou ao estado normal ("To update your Production Deployment, push to the `main` branch"), sem barra de rollback, Error Rate 0%.
+- **Nenhum dado foi alterado** durante o teste.
+
+#### Quatro coisas que só o teste revelou
+
+1. **No plano Hobby só se pode reverter para o deployment imediatamente anterior.** O diálogo diz "Upgrade to Pro to roll back to an earlier deployment". Se o problema tiver duas versões de idade, o Instant Rollback não chega — nesse caso é `git revert` + PR (Regra 1), que passa pelo CI e demora minutos, não segundos.
+2. **Depois de um rollback, a Vercel deixa de promover deploys automaticamente** até o rollback ser desfeito ("production deployments will not be automatically promoted until the rollback is removed"). É a armadilha mais perigosa deste mecanismo: reverte-se, publica-se a correção, e a correção **não vai ao ar**. Desfazer com **Promote** sobre o deployment novo.
+3. **A verificação da Regra 3 estava errada** — ver a correção na própria Regra 3 acima. `latestDeployment` continuou a apontar para `d8cb664` durante todo o tempo em que produção servia `9184d24`, e o campo `alias` da API listava `gestcondo.vercel.app` nos **dois** deployments. Nenhum dos dois serve para saber o que está a servir.
+4. **O diálogo pode ficar preso a mostrar "Assigning production domains…"** com o rollback **já aplicado**. Não repetir a operação com base nesse spinner — confirmar antes na lista de Deployments (o badge azul marca o que está ativo). Nesta sessão, uma primeira tentativa de rollback foi dada como perdida por engano precisamente por causa de um ecrã ambíguo; a confirmação correta é sempre a lista, nunca o diálogo.
 
 ## Verificação depois de cada release
 
@@ -108,6 +121,6 @@ Quando for executado, registar aqui a data, o deployment de origem e destino, e 
 
 ## O que continua por fazer
 
-- **Ambiente de staging com dados próprios**: os deploys de preview da Vercel existem (cada PR gera um), mas não está confirmado documentalmente a que base de dados apontam. Enquanto não estiver, **não usar um preview para testes de escrita** — pode estar a escrever numa base de dados a sério. Verificação pendente.
+- **Ambiente de staging com dados próprios**: cada PR gera um deploy de preview. **Confirmado 2026-08-24** (painel da Vercel → Environment Variables): existem **duas entradas `DATABASE_URL` distintas**, uma com âmbito *Preview* e outra *Production* — os previews **não** escrevem na base de dados de produção. O valor está marcado "Sensitive" e não é legível no painel, pelo que *qual* base de dados o Preview usa não fica provado aqui; que **não é a de produção**, fica. **Ressalva importante**: as variáveis `BLOB_PRIVADO_*` (armazenamento de ficheiros) estão definidas como "Production and Preview" — o mesmo store — por isso um upload feito num preview **vai parar ao armazenamento real**. Não carregar ficheiros a partir de um preview.
 - **Alerta proativo de erro em produção**: continua a exigir plano pago (`FUNCTIONAL_GAPS.md` secção 10), deliberadamente adiado.
 - **Migrações desenhadas para deploy em duas fases** (código compatível com o schema antigo *e* com o novo): hoje resolvido pela ordem da Regra 2, o que é suficiente com um utilizador real e um único condomínio em produção. Com clientes externos e janelas de indisponibilidade a sério, passa a fazer falta.
