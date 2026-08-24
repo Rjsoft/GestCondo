@@ -9,6 +9,7 @@ import { getContagemTransmissoesPorFracao, getFracoes, getMembros } from '@/app/
 import { getSeguros } from '@/app/actions/seguros'
 import { getMapaSaldos } from '@/app/actions/financas'
 import { PageHeader } from '@/components/page-header'
+import { CriarFracoesMassaDialog } from '@/components/fracoes/criar-fracoes-massa-dialog'
 import { NovaFracaoDialog } from '@/components/fracoes/nova-fracao-dialog'
 import { EditarFracaoDialog } from '@/components/fracoes/editar-fracao-dialog'
 import { FracaoActions } from '@/components/fracoes/fracao-actions'
@@ -88,6 +89,15 @@ export default async function FracoesPage({
         title="Frações"
         description="Frações autónomas e respetivos proprietários."
       >
+        {isAdmin && (
+          <CriarFracoesMassaDialog
+            identificacoesExistentes={todasFracoes.map((f) => f.identificacao)}
+            somaPermilagemExistente={todasFracoes.reduce(
+              (soma, f) => soma + Number(f.permilagem),
+              0,
+            )}
+          />
+        )}
         {isAdmin && <NovaFracaoDialog />}
       </PageHeader>
 
