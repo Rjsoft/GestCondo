@@ -997,6 +997,26 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           de cabeçalho é ignorada automaticamente. O ficheiro é lido no seu
           computador — não é enviado para lado nenhum.
         </p>
+        <p>
+          Se as frações <strong>já existem</strong> e o que quer é completar
+          informação que ficou por preencher, assinale a opção{' '}
+          <strong>&ldquo;Atualizar as frações que já existem&rdquo;</strong>{' '}
+          dentro da mesma janela. Nesse caso, uma fração que já exista deixa de
+          dar erro e passa a ser aproveitada para preencher{' '}
+          <strong>apenas os campos que estiverem vazios</strong> — NIF, email e
+          telefone. Informação que já lá esteja nunca é substituída: se quiser
+          corrigir um valor, faça-o em &ldquo;Editar fração&rdquo;, onde vê o
+          que está lá antes de escrever por cima. Antes de gravar, a aplicação
+          mostra-lhe exatamente que campos vai preencher em que frações.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          A permilagem e o proprietário <strong>nunca</strong> são alterados por
+          esta via, mesmo que venham diferentes no ficheiro. A permilagem muda o
+          cálculo de todas as quotas do condomínio, e mudar de proprietário tem
+          efeitos legais — faz-se em &ldquo;Registar transmissão&rdquo;, que
+          guarda o histórico de quem foi dono e quando, necessário para a
+          declaração de dívida.
+        </p>
         <p className="text-xs text-muted-foreground">
           Exemplo do que escrever:{' '}
           <span className="font-mono">1ºDto; Maria Silva; 83,33</span> numa

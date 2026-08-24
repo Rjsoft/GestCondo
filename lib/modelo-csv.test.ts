@@ -36,6 +36,8 @@ describe('ida e volta: modelo -> analisador', () => {
       proprietario: 'Maria Silva',
       permilagem: 83.33,
       nif: '123456789',
+      contactoEmail: 'maria.silva@exemplo.pt',
+      contactoTelefone: '910000000',
     })
   })
 

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { lerPermilagem, parsearFracoes, validarConjuntoFracoes } from '@/lib/fracoes-massa'
+import {
+  lerPermilagem,
+  parsearFracoes,
+  planearImportacaoFracoes,
+  validarConjuntoFracoes,
+} from '@/lib/fracoes-massa'
 
 describe('lerPermilagem', () => {
   it('aceita vírgula decimal, como se escreve em Portugal', () => {
@@ -82,6 +87,8 @@ describe('validarConjuntoFracoes', () => {
     proprietario: 'Alguém',
     permilagem,
     nif: null,
+    contactoEmail: null,
+    contactoTelefone: null,
   })
 
   it('aceita um conjunto válido', () => {
@@ -112,5 +119,148 @@ describe('validarConjuntoFracoes', () => {
 
   it('deixa passar exatamente 1000‰', () => {
     expect(validarConjuntoFracoes([linha('1ºDto', 200)], [], 800)).toEqual([])
+  })
+})
+
+describe('planearImportacaoFracoes', () => {
+  const linha = (
+    identificacao: string,
+    extra: Partial<{ nif: string | null; contactoEmail: string | null; contactoTelefone: string | null }> = {},
+    numeroLinha = 1,
+  ) => ({
+    numeroLinha,
+    identificacao,
+    proprietario: 'Alguém',
+    permilagem: 100,
+    nif: null,
+    contactoEmail: null,
+    contactoTelefone: null,
+    ...extra,
+  })
+
+  const existente = (
+    identificacao: string,
+    extra: Partial<{ nif: string | null; contactoEmail: string | null; contactoTelefone: string | null }> = {},
+  ) => ({
+    id: 1,
+    identificacao,
+    nif: null,
+    contactoEmail: null,
+    contactoTelefone: null,
+    ...extra,
+  })
+
+  it('trata como criação uma fração que não existe', () => {
+    const plano = planearImportacaoFracoes([linha('9ºDto')], [])
+    expect(plano.aCriar).toHaveLength(1)
+    expect(plano.aAtualizar).toEqual([])
+  })
+
+  it('preenche um campo que está vazio na fração existente', () => {
+    const plano = planearImportacaoFracoes(
+      [linha('1ºDto', { nif: '123456789' })],
+      [existente('1ºDto')],
+    )
+    expect(plano.aCriar).toEqual([])
+    expect(plano.aAtualizar).toHaveLength(1)
+    expect(plano.aAtualizar[0].campos).toEqual([
+      { campo: 'nif', label: 'NIF', novo: '123456789' },
+    ])
+  })
+
+  // A regra que impede esta funcionalidade de destruir dados.
+  it('NUNCA substitui um valor que já lá está', () => {
+    const plano = planearImportacaoFracoes(
+      [linha('1ºDto', { nif: '999999999' })],
+      [existente('1ºDto', { nif: '123456789' })],
+    )
+    expect(plano.aAtualizar).toEqual([])
+    expect(plano.semAlteracao).toEqual(['1ºDto'])
+  })
+
+  it('preenche só os campos vazios, deixando os preenchidos em paz', () => {
+    const plano = planearImportacaoFracoes(
+      [linha('1ºDto', { nif: '999999999', contactoEmail: 'novo@exemplo.pt' })],
+      [existente('1ºDto', { nif: '123456789' })],
+    )
+    expect(plano.aAtualizar[0].campos.map((c) => c.campo)).toEqual(['contactoEmail'])
+  })
+
+  it('trata um valor existente só com espaços como vazio', () => {
+    const plano = planearImportacaoFracoes(
+      [linha('1ºDto', { nif: '123456789' })],
+      [existente('1ºDto', { nif: '   ' })],
+    )
+    expect(plano.aAtualizar[0].campos).toHaveLength(1)
+  })
+
+  it('não propõe nada quando o ficheiro não traz informação nova', () => {
+    const plano = planearImportacaoFracoes([linha('1ºDto')], [existente('1ºDto')])
+    expect(plano.aAtualizar).toEqual([])
+    expect(plano.semAlteracao).toEqual(['1ºDto'])
+  })
+
+  it('nunca propõe permilagem nem proprietário, mesmo vindo diferentes no ficheiro', () => {
+    const plano = planearImportacaoFracoes(
+      [{ ...linha('1ºDto'), proprietario: 'Outro Dono', permilagem: 999 }],
+      [existente('1ºDto')],
+    )
+    expect(plano.aAtualizar).toEqual([])
+    expect(plano.semAlteracao).toEqual(['1ºDto'])
+  })
+
+  it('compara identificações ignorando maiúsculas e espaços', () => {
+    const plano = planearImportacaoFracoes(
+      [linha('  1ºDTO ', { nif: '123456789' })],
+      [existente('1ºDto')],
+    )
+    expect(plano.aAtualizar).toHaveLength(1)
+  })
+
+  it('mistura criações e atualizações no mesmo ficheiro', () => {
+    const plano = planearImportacaoFracoes(
+      [linha('1ºDto', { nif: '123456789' }), linha('9ºDto', {}, 2)],
+      [existente('1ºDto')],
+    )
+    expect(plano.aCriar.map((l) => l.identificacao)).toEqual(['9ºDto'])
+    expect(plano.aAtualizar.map((a) => a.identificacao)).toEqual(['1ºDto'])
+  })
+})
+
+describe('validarConjuntoFracoes com atualização de existentes', () => {
+  const linha = (identificacao: string, permilagem: number, numeroLinha = 1) => ({
+    numeroLinha,
+    identificacao,
+    proprietario: 'Alguém',
+    permilagem,
+    nif: null,
+    contactoEmail: null,
+    contactoTelefone: null,
+  })
+
+  it('deixa de acusar "já existe" quando a atualização está ligada', () => {
+    const erros = validarConjuntoFracoes([linha('1ºDto', 100)], ['1ºDto'], 1000, {
+      atualizarExistentes: true,
+    })
+    expect(erros).toEqual([])
+  })
+
+  it('não soma a permilagem de uma fração existente ao limite — a importação não lhe toca', () => {
+    // O condomínio já está nos 1000‰ e a linha repete uma fração existente:
+    // sem esta regra, o total apareceria como 1100‰ e bloqueava sem motivo.
+    const erros = validarConjuntoFracoes([linha('1ºDto', 100)], ['1ºDto'], 1000, {
+      atualizarExistentes: true,
+    })
+    expect(erros).toEqual([])
+  })
+
+  it('continua a bloquear quando as frações NOVAS ultrapassam o limite', () => {
+    const erros = validarConjuntoFracoes(
+      [linha('1ºDto', 100), linha('9ºDto', 100, 2)],
+      ['1ºDto'],
+      1000,
+      { atualizarExistentes: true },
+    )
+    expect(erros[0]).toContain('1100.00')
   })
 })

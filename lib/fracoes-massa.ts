@@ -41,6 +41,49 @@ export type LinhaFracaoMassa = {
   proprietario: string
   permilagem: number
   nif: string | null
+  contactoEmail: string | null
+  contactoTelefone: string | null
+}
+
+/** O que se sabe de uma fração já existente, para planear atualizações. */
+export type FracaoExistente = {
+  id: number
+  identificacao: string
+  nif: string | null
+  contactoEmail: string | null
+  contactoTelefone: string | null
+}
+
+/**
+ * Campos que uma importação pode preencher numa fração que já existe.
+ *
+ * **Ficam de fora, deliberadamente**: `permilagem` (mudá-la altera o rateio
+ * de todas as quotas), `proprietario` (tem fluxo próprio,
+ * `registarTransmissaoFracao`, com histórico de titularidade e efeitos
+ * legais na declaração de dívida) e `isentaElevador` (também mexe no
+ * cálculo do rateio). Um ficheiro colado não pode ser a porta de entrada
+ * para nada disso — ver `FUNCTIONAL_GAPS.md` secção 11.
+ */
+export const CAMPOS_ATUALIZAVEIS = {
+  nif: 'NIF',
+  contactoEmail: 'Email',
+  contactoTelefone: 'Telefone',
+} as const
+
+export type CampoAtualizavel = keyof typeof CAMPOS_ATUALIZAVEIS
+
+export type AtualizacaoFracao = {
+  id: number
+  identificacao: string
+  numeroLinha: number
+  campos: { campo: CampoAtualizavel; label: string; novo: string }[]
+}
+
+export type PlanoImportacao = {
+  aCriar: LinhaFracaoMassa[]
+  aAtualizar: AtualizacaoFracao[]
+  /** Já existem e o ficheiro não traz nada de novo — nem erro, nem trabalho. */
+  semAlteracao: string[]
 }
 
 export type ErroLinhaFracao = {
@@ -94,7 +137,14 @@ export function parsearFracoes(texto: string): ResultadoParseFracoes {
       primeiraLinhaUtil = false
       if (ehLinhaCabecalho(colunas[0] ?? '', CABECALHOS_FRACAO)) return
     }
-    const [identificacao = '', proprietario = '', permilagemTexto = '', nif = ''] = colunas
+    const [
+      identificacao = '',
+      proprietario = '',
+      permilagemTexto = '',
+      nif = '',
+      contactoEmail = '',
+      contactoTelefone = '',
+    ] = colunas
 
     if (colunas.length < 3) {
       erros.push({
@@ -129,6 +179,8 @@ export function parsearFracoes(texto: string): ResultadoParseFracoes {
       proprietario,
       permilagem,
       nif: nif || null,
+      contactoEmail: contactoEmail || null,
+      contactoTelefone: contactoTelefone || null,
     })
   })
 
@@ -143,19 +195,22 @@ export function parsearFracoes(texto: string): ResultadoParseFracoes {
  * `identificacoesExistentes` e `somaPermilagemExistente` vêm da base de
  * dados, mas são passados de fora para esta função continuar pura.
  */
+export function normalizarIdentificacao(s: string): string {
+  return s.trim().toLowerCase()
+}
+
 export function validarConjuntoFracoes(
   linhas: LinhaFracaoMassa[],
   identificacoesExistentes: string[],
   somaPermilagemExistente: number,
+  opcoes: { atualizarExistentes?: boolean } = {},
 ): string[] {
   const erros: string[] = []
-
-  const normalizar = (s: string) => s.trim().toLowerCase()
-  const jaExistem = new Set(identificacoesExistentes.map(normalizar))
+  const jaExistem = new Set(identificacoesExistentes.map(normalizarIdentificacao))
 
   const vistas = new Map<string, number>()
   for (const l of linhas) {
-    const chave = normalizar(l.identificacao)
+    const chave = normalizarIdentificacao(l.identificacao)
     const anterior = vistas.get(chave)
     if (anterior !== undefined) {
       erros.push(
@@ -164,12 +219,19 @@ export function validarConjuntoFracoes(
     } else {
       vistas.set(chave, l.numeroLinha)
     }
-    if (jaExistem.has(chave)) {
+    // Com "atualizar existentes" ligado, uma fração que já existe deixa de
+    // ser um erro e passa a ser uma linha de atualização.
+    if (jaExistem.has(chave) && !opcoes.atualizarExistentes) {
       erros.push(`Já existe uma fração com a identificação "${l.identificacao}" neste condomínio.`)
     }
   }
 
-  const somaNovas = linhas.reduce((s, l) => s + l.permilagem, 0)
+  // Só a permilagem das frações **novas** conta para o limite: a de uma
+  // fração existente já está incluída em `somaPermilagemExistente`, e a
+  // importação nunca lhe toca.
+  const somaNovas = linhas
+    .filter((l) => !jaExistem.has(normalizarIdentificacao(l.identificacao)))
+    .reduce((s, l) => s + l.permilagem, 0)
   if (excedePermilagemTotal(somaPermilagemExistente, somaNovas)) {
     erros.push(
       `A soma das permilagens ficaria em ${(somaPermilagemExistente + somaNovas).toFixed(2)}‰ — acima do máximo de ${PERMILAGEM_TOTAL_MAX}‰.`,
@@ -177,4 +239,58 @@ export function validarConjuntoFracoes(
   }
 
   return erros
+}
+
+/**
+ * Separa o que o ficheiro pede em criações e atualizações.
+ *
+ * **Regra que não se negoceia**: só preenche campos **vazios**. Um valor já
+ * gravado nunca é substituído por esta via — ao contrário de criar, uma
+ * atualização em massa podia destruir dados corretos em silêncio, e uma
+ * lista trazida de outro sistema está muitas vezes mais desatualizada do
+ * que o que já está na aplicação. Quem quiser corrigir um valor existente
+ * usa "Editar fração", onde vê o que está lá antes de escrever por cima.
+ */
+export function planearImportacaoFracoes(
+  linhas: LinhaFracaoMassa[],
+  existentes: FracaoExistente[],
+): PlanoImportacao {
+  const porIdentificacao = new Map(
+    existentes.map((f) => [normalizarIdentificacao(f.identificacao), f]),
+  )
+
+  const aCriar: LinhaFracaoMassa[] = []
+  const aAtualizar: AtualizacaoFracao[] = []
+  const semAlteracao: string[] = []
+
+  for (const l of linhas) {
+    const existente = porIdentificacao.get(normalizarIdentificacao(l.identificacao))
+    if (!existente) {
+      aCriar.push(l)
+      continue
+    }
+
+    const campos: AtualizacaoFracao['campos'] = []
+    for (const campo of Object.keys(CAMPOS_ATUALIZAVEIS) as CampoAtualizavel[]) {
+      const novo = l[campo]
+      const atual = existente[campo]
+      const atualVazio = atual === null || atual.trim() === ''
+      if (novo && atualVazio) {
+        campos.push({ campo, label: CAMPOS_ATUALIZAVEIS[campo], novo })
+      }
+    }
+
+    if (campos.length > 0) {
+      aAtualizar.push({
+        id: existente.id,
+        identificacao: existente.identificacao,
+        numeroLinha: l.numeroLinha,
+        campos,
+      })
+    } else {
+      semAlteracao.push(existente.identificacao)
+    }
+  }
+
+  return { aCriar, aAtualizar, semAlteracao }
 }

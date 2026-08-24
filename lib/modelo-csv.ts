@@ -30,11 +30,18 @@ export type ModeloCsv = {
 
 export const MODELO_FRACOES: ModeloCsv = {
   nomeFicheiro: 'modelo-fracoes.csv',
-  cabecalho: ['Identificação', 'Proprietário', 'Permilagem', 'NIF (opcional)'],
+  cabecalho: [
+    'Identificação',
+    'Proprietário',
+    'Permilagem',
+    'NIF (opcional)',
+    'Email (opcional)',
+    'Telefone (opcional)',
+  ],
   exemplos: [
-    ['1ºDto', 'Maria Silva', '83,33', '123456789'],
-    ['1ºEsq', 'João Costa', '83,33', ''],
-    ['R/C Dto', 'Ana Sousa', '100', ''],
+    ['1ºDto', 'Maria Silva', '83,33', '123456789', 'maria.silva@exemplo.pt', '910000000'],
+    ['1ºEsq', 'João Costa', '83,33', '', '', ''],
+    ['R/C Dto', 'Ana Sousa', '100', '', '', ''],
   ],
 }
 

@@ -91,7 +91,13 @@ export default async function FracoesPage({
       >
         {isAdmin && (
           <CriarFracoesMassaDialog
-            identificacoesExistentes={todasFracoes.map((f) => f.identificacao)}
+            fracoesExistentes={todasFracoes.map((f) => ({
+              id: f.id,
+              identificacao: f.identificacao,
+              nif: f.nif,
+              contactoEmail: f.contactoEmail,
+              contactoTelefone: f.contactoTelefone,
+            }))}
             somaPermilagemExistente={todasFracoes.reduce(
               (soma, f) => soma + Number(f.permilagem),
               0,
