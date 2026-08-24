@@ -8,6 +8,7 @@ import { calcularQuotasMensais, calcularRateioValor } from '@/lib/rateio'
 import { ESCALOES_ANTIGUIDADE, calcularAntiguidadeDivida } from '@/lib/antiguidade-divida'
 import { NIVEIS_LEMBRETE, calcularEstadoLembretes } from '@/lib/lembrete-cobranca'
 import { garantirExercicioAberto } from '@/lib/contas-financeiras'
+import { parsearSaldosIniciais, validarConjuntoSaldos } from '@/lib/saldos-iniciais'
 import { sendEmail } from '@/lib/email'
 import { requireAcessoFinanceiro, requireAdmin, requireOperacionalOuAdmin } from '@/lib/session'
 import { and, asc, count, desc, eq, getTableColumns, gte, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
@@ -832,6 +833,101 @@ export async function criarMovimento(formData: FormData) {
 
   revalidatePath('/financas')
   revalidatePath('/')
+}
+
+/**
+ * Abertura de saldos iniciais: cria, de uma vez, uma quota em dívida por
+ * cada fração indicada (`FUNCTIONAL_GAPS.md` secção 11). É o que permite a
+ * um condomínio que muda para o GestCondo trazer as dívidas que já tinha,
+ * sem lançar um movimento de cada vez.
+ *
+ * Cada linha vira um `movimento` normal — receita, ligada à fração, por
+ * pagar. Deliberadamente **não** é um campo "dívida" editável: é a mesma
+ * verdade financeira do resto do módulo, com origem, data, auditoria,
+ * soft-delete e proteção de exercício fechado, e é isso que sustenta a
+ * declaração de dívida e a interpelação.
+ *
+ * `requireAdmin` e não `requireOperacionalOuAdmin` (que basta para lançar
+ * um movimento avulso): abrir saldos é configuração inicial do condomínio e
+ * escreve em muitas frações de uma vez.
+ */
+export async function criarSaldosIniciaisEmMassa(
+  texto: string,
+  dataStr: string,
+  descricaoBase: string,
+) {
+  const admin = await requireAdmin()
+
+  if (!dataStr) throw new Error('Indique a data a que os saldos dizem respeito')
+  const data = new Date(dataStr)
+  if (Number.isNaN(data.getTime())) throw new Error('Data inválida')
+
+  const { linhas, erros } = parsearSaldosIniciais(texto)
+  if (erros.length > 0) {
+    throw new Error(
+      `Há ${erros.length} linha(s) por corrigir. Reveja a pré-visualização antes de confirmar.`,
+    )
+  }
+  if (linhas.length === 0) throw new Error('Não há nenhum saldo para lançar.')
+
+  const fracoes = await db
+    .select({ id: fracao.id, identificacao: fracao.identificacao })
+    .from(fracao)
+    .where(eq(fracao.condominioId, admin.condominioId))
+
+  const errosConjunto = validarConjuntoSaldos(
+    linhas,
+    fracoes.map((f) => f.identificacao),
+  )
+  if (errosConjunto.length > 0) throw new Error(errosConjunto[0])
+
+  // Regra obrigatória de qualquer escrita financeira (ver CLAUDE.md): um
+  // exercício fechado bloqueia o lançamento até ser reaberto com motivo.
+  // Todos os saldos partilham a mesma data, por isso uma verificação chega.
+  await garantirExercicioAberto(admin.condominioId, data)
+
+  const porIdentificacao = new Map(
+    fracoes.map((f) => [f.identificacao.trim().toLowerCase(), f.id]),
+  )
+  const descricao =
+    descricaoBase.trim() || `Saldo em dívida a ${data.toLocaleDateString('pt-PT')}`
+
+  const criados = await db.transaction(async (tx) => {
+    return tx
+      .insert(movimento)
+      .values(
+        linhas.map((l) => ({
+          condominioId: admin.condominioId,
+          userId: admin.userId,
+          tipo: 'receita',
+          categoria: 'Saldo inicial',
+          descricao,
+          valor: l.valor.toFixed(2),
+          pago: false,
+          fracaoId: porIdentificacao.get(l.identificacao.trim().toLowerCase())!,
+          destino: 'geral',
+          data,
+        })),
+      )
+      .returning({ id: movimento.id, valor: movimento.valor, fracaoId: movimento.fracaoId })
+  })
+
+  const nomePorId = new Map(fracoes.map((f) => [f.id, f.identificacao]))
+  for (const c of criados) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'criar',
+      entidade: 'movimento',
+      entidadeId: c.id,
+      detalhes: `receita: Saldo inicial — ${descricao} (${c.valor} €) [fração ${nomePorId.get(c.fracaoId ?? -1) ?? '?'}] [abertura de saldos de ${criados.length} frações]`,
+    })
+  }
+
+  revalidatePath('/financas')
+  revalidatePath('/')
+
+  const total = linhas.reduce((soma, l) => soma + l.valor, 0)
+  return { criados: criados.length, total }
 }
 
 /**
