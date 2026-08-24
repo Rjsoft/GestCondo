@@ -16,9 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Sem `version:` aqui de propósito: a versão do pnpm vem do campo
+      # `packageManager` do package.json (fonte única). Ter as duas coisas
+      # faz a ação falhar com "Multiple versions of pnpm specified" — foi o
+      # que partiu o CI entre 2026-08-18 (commit 776c4c1, que introduziu o
+      # `packageManager`) e a correção desta sessão.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
