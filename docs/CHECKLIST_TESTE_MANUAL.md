@@ -552,6 +552,40 @@ Os totais devem ser atualizados manualmente após cada execução.
 - [ ] **F04 — condómino/senhorio com várias frações:** se tiveres alguém proprietário de mais do que uma fração no mesmo condomínio, em "Condóminos" usa o ícone de edifício ("Associar outra fração") junto ao nome para ligar a segunda fração à conta já existente — confirma que passam a aparecer duas linhas na tabela para essa pessoa, uma por fração, sem criar conta nova.
 - [ ] **F04:** com essa conta (ou pedindo à pessoa), confirma que aparece um seletor "Fração: ..." na barra lateral, por baixo do nome do condomínio, e que trocar de fração aí muda a fração mostrada em "Os meus dados" e nos ecrãs relevantes dessa conta.
 
+## Importação em massa (novo, 2026-08-24)
+
+Estes casos nunca foram exercitados com dados reais — em produção só foi feito um smoke test de leitura,
+sem gravar nada. **Faz isto primeiro num condomínio de teste**, não no teu a sério.
+
+### Criar várias frações
+
+- [ ] Em "Frações" → "Criar várias", cola três linhas no formato `identificação; proprietário; permilagem`. A pré-visualização mostra as três antes de gravares?
+- [ ] Escreve uma permilagem com vírgula (`83,33`). É lida como 83,33 e não dá erro?
+- [ ] Põe um erro de propósito numa linha (ex. deixa o nome vazio). Diz-te **em que linha** está o problema e impede-te de gravar?
+- [ ] Repete uma identificação que já existe no condomínio. Acusa "já existe"?
+- [ ] Excede os 1000‰ de propósito. Bloqueia e diz-te qual seria o total?
+- [ ] Grava. Foram criadas **todas** as frações, ou nenhuma? (Não pode ficar a meio.)
+
+### Modelo em Excel
+
+- [ ] "Descarregar modelo" dá-te um ficheiro que o **Excel abre com as colunas separadas** (não tudo numa célula) e com os acentos certos?
+- [ ] Preenche-o, guarda como CSV e carrega-o. O conteúdo aparece na caixa e a linha de cabeçalho é ignorada?
+
+### Atualizar frações que já existem
+
+- [ ] Assinala "Atualizar as frações que já existem". Uma fração existente deixa de dar erro?
+- [ ] **O caso que mais importa**: numa fração que já tem NIF preenchido, mete um NIF **diferente** no ficheiro. A pré-visualização **não** deve propor alterar esse campo, e depois de gravar o NIF antigo tem de continuar lá.
+- [ ] Mete também um proprietário e uma permilagem diferentes no ficheiro. Nem um nem outro podem mudar.
+- [ ] Em "Auditoria", a alteração aparece campo a campo, com o valor antigo e o novo?
+
+### Abrir saldos iniciais
+
+- [ ] Em "Finanças" → "Dívidas por fração" → "Abrir saldos iniciais", lança dois saldos. Aparecem em "Dívidas por fração" e o botão "Interpelação" passa a estar visível nessas frações?
+- [ ] **Dívida de vários anos**: lança a mesma fração em três anos diferentes (`1ºDto; 100; 2023`, depois 2024, depois 2025). São aceites as três linhas?
+- [ ] Abre "Antiguidade da dívida". Os três valores aparecem em **escalões diferentes** (e não todos no mesmo)?
+- [ ] Tenta lançar a mesma fração duas vezes com a mesma data. Acusa e sugere somar numa linha só?
+- [ ] Se tiveres um exercício financeiro fechado, tenta lançar um saldo com data dentro desse exercício. Tem de recusar e dizer para reabrir o exercício primeiro.
+
 ## Auditoria
 
 - [ ] `/auditoria` mostra as ações recentes de forma legível (quem fez o quê, quando)?

@@ -11,7 +11,7 @@ Data: 2026-07-06. Este roadmap assume o objetivo declarado: aplicação profissi
 | CRUD de finanças | ✅ Resolvido 2026-07-07 a 2026-07-24 — orçamento anual, dívida por fração/mapa de saldos, recibo imprimível, mapa mensal de quotas, rateio por permilagem com isenção de elevador, juros de mora, reconciliação bancária, exportação CSV e relatório em PDF; exercícios financeiros e contas bancárias/caixa em produção desde 2026-07-24 (ver Fase 2, item 8). Documentos de fornecedor com pagamentos parciais e rubricas orçamentais (orçado vs. real) implementados 2026-07-24 (Fase A.2, ver Fase 2, item 9), **em produção desde 2026-07-25** (migrações `drizzle/0025_charming_epoch.sql`/`0026_great_sabretooth.sql` aplicadas e verificadas — schema confirmado, `db:check-drift` OK). Quotas extraordinárias ligadas a deliberação de assembleia e balanço patrimonial (Ativo/Passivo/Situação Líquida) implementados 2026-07-25 (Fase B, ver Fase 2, item 10), **em produção desde 2026-07-25** (aplicado de emergência após incidente de deploy — ver item 10 e `TECHNICAL_DEBT.md` D8). **2026-07-30**: critério de rateio passou a ser configurável por condomínio (`condominio.criterioRateio` — permilagem, regra geral, ou partes iguais nos termos do art. 1424º n.º2 CC), aplicado a quotas mensais e a divisão de despesas extraordinárias; migração `0054` aplicada em dev e em produção 2026-07-30 (`db:check-drift` OK, snapshot manual criado antes — ver `docs/PROCEDIMENTO_MIGRACAO_PRODUCAO.md`); código ainda por commitar/deploy nesta data, coluna nova em produção com omissão `'permilagem'` (compatível com o código atual). Falta exportação `.xlsx` real, se vier a ser necessária. |
 | CRUD de avisos | ✅ Pronto para o que se propõe (comunicação simples) |
 | CRUD de ocorrências | ✅ Resolvido — fotos anexadas 2026-07-09 (`ocorrencia.fotoUrl`, via Vercel Blob); atribuição a um fornecedor 2026-07-26 (`ocorrencia.fornecedorId`, seletor visível ao admin, testado em runtime); fluxo de aprovação de despesas 2026-07-27, **em produção desde 2026-07-27** (`movimento.requerAprovacao` + `movimento.assembleiaPontoId`, migração `0042`; obras urgentes via `movimento.urgente`/`justificacaoUrgencia`, art. 1427º CC — informativo, nunca bloqueia o lançamento). Ver `FUNCTIONAL_GAPS.md` secção 4, hoje inteiramente ✅ |
-| CRUD de frações | 🟡 Parcial — multi-condomínio resolvido 2026-07-06/22 (ver linha própria); falta proprietário relacional (`fracao.proprietario` continua a ser texto livre, sem ligação a uma entidade pessoa). **Correção 2026-08-24**: esta linha dizia também que faltava o histórico de titularidade — era falso desde 2026-07-26/27. Existe: `atualizarFracao()` regista a mudança de proprietário no `audit_log`, e a transmissão de fração tem tabela própria (`fracaoTransmissao`, migração `0047`, em produção desde 2026-07-27) com data de escritura e decisão sobre o saldo em dívida — ver `FUNCTIONAL_GAPS.md` secção 1 |
+| CRUD de frações | 🟡 Parcial — multi-condomínio resolvido 2026-07-06/22 (ver linha própria); falta proprietário relacional (`fracao.proprietario` continua a ser texto livre, sem ligação a uma entidade pessoa). **Correção 2026-08-24**: esta linha dizia também que faltava o histórico de titularidade — era falso desde 2026-07-26/27. Existe: `atualizarFracao()` regista a mudança de proprietário no `audit_log`, e a transmissão de fração tem tabela própria (`fracaoTransmissao`, migração `0047`, em produção desde 2026-07-27) com data de escritura e decisão sobre o saldo em dívida — ver `FUNCTIONAL_GAPS.md` secção 1. **2026-08-24, em produção**: criação de frações em massa por lista colada ou ficheiro CSV, atualização de frações já existentes preenchendo só campos vazios (nunca permilagem nem proprietário), modelo CSV descarregável e contactos de titulares sem conta — tudo sem migração, ver `FUNCTIONAL_GAPS.md` secção 11 |
 | CRUD de condóminos + aprovação | ✅ Resolvido 2026-07-06 — os 7 perfis (`membro.perfil`, ver `lib/perfis.ts`) e o âmbito por condomínio estão implementados desde a Fase 1 (itens 5 e 6). **Correção 2026-08-24**: esta linha dizia que faltavam representantes legais — era falso. `fracao.representanteLegal` e `fracao.representanteLegalContacto` existem no schema e têm campos em "Nova fração" e "Editar fração" desde antes desta data. O que continua por fazer é um modelo de representação mais rico (procurador com conta própria e poderes delegados), não o registo do nome |
 | Assembleias/atas | ✅ Resolvido 2026-07-09, **verificado em runtime 2026-07-21** — convocatória, ordem de trabalhos, presenças/procurações, quórum e votação por permilagem, ata imutável após aprovação; ciclo completo testado manualmente contra a BD Neon real. **2026-07-26**: numeração sequencial do livro de atas (atribuída na aprovação), confirmação de leitura da convocatória (por membro, com contagem visível) e anexos à ata (`assembleia_anexo`, upload/eliminação enquanto a ata não estiver aprovada, migração `0032` **em produção desde 2026-07-26**, `db:check-drift` OK). Falta videoconferência (ver `FUNCTIONAL_GAPS.md`) |
 | Multi-condomínio / multi-tenant | ✅ Resolvido 2026-07-22 — schema e isolamento (2026-07-06) + fluxo de onboarding por código de convite/criação de condomínio novo. Falta só o modelo de "empresa de administração" (uma conta a gerir vários condomínios), ver Fase 5. |
@@ -214,5 +214,35 @@ cobrança" visível) e `/financas/processos-cobranca` carregam sem erro, com dad
 um bug na leitura de `.env.local` que impediu correr a verificação oficial nesta sessão
 — contornado com uma comparação manual equivalente; o script fica por corrigir, não
 avaliado nesta sessão.
+
+**Sessão de 2026-08-24 — processo de releases, arranque de condomínio e coerência documental**
+
+**Processo seguro de releases (fecha o último P0/P1 técnico em aberto)**: a branch `main` passou a ter
+proteção real — ruleset "Protecao da main" (PR obrigatório, check `ci` verde, sem force-push nem
+eliminação, **sem exceção para o dono**), verificada com um push de teste rejeitado com `GH013`. O CI
+estava **vermelho na `main` desde 2026-08-18** sem bloquear nada (colisão entre o `packageManager` novo
+e o `version: 9` do `pnpm/action-setup`) e foi corrigido. O **rollback de deployment foi testado a sério
+em produção** (`d8cb664` → `9184d24`, ~4 min revertido, dados reais verificados, reposto por Promote),
+revelando quatro armadilhas que ninguém tinha previsto — ver `docs/PROCEDIMENTO_RELEASE.md` (novo) e
+`TECHNICAL_DEBT.md` D11.
+
+**Arranque de um condomínio (nova secção 11 do `FUNCTIONAL_GAPS.md`, resolvida no mesmo dia)**: criação
+de frações em massa, abertura de saldos iniciais por fração, dívidas de vários anos com data por linha,
+modelo CSV descarregável para preencher no Excel, e atualização de frações existentes preenchendo só
+campos vazios. Tudo **sem migração de schema**. Uma das peças saiu com um defeito real — a primeira
+versão dos saldos iniciais punha vários anos de dívida num só movimento, falseando a antiguidade da
+dívida e os juros de mora — detetado pelo utilizador e corrigido no mesmo dia.
+
+**Estado**: 294 testes unitários em 22 ficheiros, todos a passar; 9 PRs, todos pelo processo novo;
+smoke test em produção confirmou as funcionalidades a responder, **sem escrever nada**. O caminho de
+escrita destas funcionalidades **não foi exercitado em produção**.
+
+**Passagem de coerência documental**: encontradas e corrigidas **14 afirmações falsas** em 6 documentos —
+o `ROADMAP.md` dava como pendentes cinco coisas já feitas (histórico de titularidade, representantes
+legais, assembleias, mensagens internas, versionamento de documentos, backups/DR), o `TECHNICAL_DEBT.md`
+D6 dizia que só uma tabela tinha `updatedAt` quando são seis, o `GDPR_CHECKLIST.md` negava a existência
+da Política de Privacidade e da documentação de base legal (ambas existem desde 2026-07-09), e o
+`MBD_GEST_GAP_ANALYSIS.md` dava três funcionalidades implementadas como ❌. A contagem de testes estava
+desatualizada em dois documentos — pela segunda vez, depois de já ter sido corrigida em 2026-07-24.
 
 Este roadmap é sequencial nas primeiras 6–7 tarefas (cada uma depende ou é fortemente facilitada pela anterior); a partir daí, as tarefas de Fase 2–4 podem ser paralelizadas por equipa/sprint.

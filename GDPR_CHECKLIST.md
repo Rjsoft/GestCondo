@@ -9,8 +9,8 @@ Data: 2026-07-06, **atualizado 2026-07-22** (Fase B da auditoria jurídica/RGPD 
 | Dado | Onde | Titular | Finalidade aparente | Observação |
 |---|---|---|---|---|
 | Nome | `user.name`, `membro.nome` | Todos os utilizadores | Identificação | Duplicado entre `user` (better-auth) e `membro` — pode divergir sem sincronização. |
-| Email | `user.email`, `membro.email`, `fracao.contactoEmail` | Todos | Login, contacto | Email de login e email de contacto do proprietário são tratados como o mesmo dado sem distinção clara de finalidade. |
-| Telefone | `membro.telefone`, `fracao.contactoTelefone` | Condóminos/proprietários | Contacto | Sem indicação de opcionalidade explícita ao utilizador nem separação clara "obrigatório vs. opcional". |
+| Email | `user.email`, `membro.email`, `fracao.contactoEmail`, `fracao_titular.contactoEmail` (acrescentado 2026-08-24 — pode ser de pessoa **sem conta** na aplicação) | Todos | Login, contacto | Email de login e email de contacto do proprietário são tratados como o mesmo dado sem distinção clara de finalidade. |
+| Telefone | `membro.telefone`, `fracao.contactoTelefone`, `fracao_titular.contactoTelefone` (acrescentado 2026-08-24 — pode ser de pessoa **sem conta** na aplicação) | Condóminos/proprietários | Contacto | Sem indicação de opcionalidade explícita ao utilizador nem separação clara "obrigatório vs. opcional". |
 | Password (hash) | `account.password` | Todos | Autenticação | Gerido pelo better-auth (hash, não em texto simples) — correto. |
 | IP e user agent | `session.ipAddress`, `session.userAgent` | Todos | Gestão de sessão (better-auth) | **É dado pessoal.** Sem política de retenção definida. **Correção 2026-08-24**: a redação anterior dizia que o aviso de privacidade "ainda não existe" — é falso desde 2026-07-09 (`app/privacidade/page.tsx`); o que continua por confirmar é se o IP/user agent estão lá mencionados especificamente (não existe). |
 | Dados financeiros associados a frações/pessoas | `movimento` | Proprietários | Gestão de quotas/despesas | Potencialmente dado financeiro sensível de um agregado familiar identificável através da fração. |
