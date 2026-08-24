@@ -261,10 +261,11 @@ export async function criarFracoesEmMassa(
     }
   }
 
-  // Uma entrada de auditoria por fração, e não só um total agregado — é mais
-  // rastreável do que a limitação T2 descrita em
-  // `docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md`, e mantém o mesmo formato de
-  // `detalhes` usado por `criarFracao`, para o histórico ficar homogéneo.
+  // Uma entrada de auditoria por fração, e não só um total agregado — o mesmo
+  // nível de rastreabilidade que a T2 (`docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md`)
+  // já garantiu para as operações financeiras em massa, resolvida no commit
+  // `c25efc3`. Mantém o formato de `detalhes` usado por `criarFracao`, para o
+  // histórico ficar homogéneo.
   for (const c of criadas) {
     await registarAuditoria({
       actor: admin,
