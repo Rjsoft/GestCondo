@@ -51,4 +51,8 @@ As migrações deste projeto até hoje são **puramente aditivas** (`CREATE TABL
 
 ## O que ainda não está testado
 
-O **multi-step restore em si** (criar de facto um branch novo a partir de um snapshot e confirmar que os dados lá aparecem corretos) não foi executado nesta sessão — criaria um branch extra a limpar depois, sem necessidade real neste momento. Fica documentado o mecanismo, confirmado pela própria interface da Neon, mas o **resultado do restauro** só será verificado a sério da primeira vez que for genuinamente preciso, ou numa sessão dedicada a testá-lo deliberadamente.
+**Atualização 2026-08-18 — o multi-step restore já foi testado a sério.** Foi criado de facto um branch novo a partir do snapshot manual de produção (0,5 s), os dados foram verificados no branch restaurado (59 migrações, 2 condomínios, 546 movimentos, 32 frações, coerentes com o ponto de restauro escolhido) e o branch de teste foi eliminado no fim. Ver `docs/PLANO_RECUPERACAO_DESASTRE.md` e `TECHNICAL_DEBT.md` D7. O parágrafo anterior deste documento, que dizia o contrário, ficou desatualizado nessa data e foi corrigido a 2026-08-24.
+
+**Continua por testar**: o **one-step restore** (destrutivo por natureza — substitui os dados do branch atual; não há incidente real que justifique experimentá-lo) e a promoção de um branch restaurado a `production` propriamente dita.
+
+O rollback do **código** (distinto do restauro de dados) foi testado a 2026-08-24 — ver `docs/PROCEDIMENTO_RELEASE.md`.
