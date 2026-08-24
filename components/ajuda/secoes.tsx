@@ -529,6 +529,24 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
             deve.
             <ul className="list-disc pl-5">
               <li>
+                &ldquo;Abrir saldos iniciais&rdquo; — para quando o
+                condomínio começa a usar a aplicação e já traz dívidas de
+                trás. Escreve-se uma linha por fração, com a identificação e
+                o valor em dívida separados por ponto e vírgula (por exemplo
+                <span className="font-mono"> 1ºDto; 125,50</span>), indica-se
+                a data a que esses valores dizem respeito (normalmente 31 de
+                dezembro do ano anterior) e a aplicação lança tudo de uma
+                vez. Cada linha fica registada como uma quota por pagar
+                dessa fração — igual a qualquer outra, com data, autor e
+                histórico —, e não como um número solto. É por isso que
+                depois pode emitir a declaração de dívida ou a interpelação
+                sobre esses valores. Antes de gravar, mostra-lhe uma tabela
+                com tudo o que vai lançar e o total; se alguma linha tiver
+                um erro (fração que não existe, valor mal escrito, fração
+                repetida), diz qual e não grava nada enquanto não estiver
+                corrigido.
+              </li>
+              <li>
                 &ldquo;Declaração&rdquo; — gera a declaração de encargos e
                 dívidas exigida por lei para a venda de uma fração (ver
                 &ldquo;Registar uma transmissão&rdquo; em

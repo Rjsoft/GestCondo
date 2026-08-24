@@ -12,6 +12,7 @@ import { OrcamentoActions } from '@/components/financas/orcamento-actions'
 import { NovoSeguroDialog } from '@/components/financas/novo-seguro-dialog'
 import { SeguroActions } from '@/components/financas/seguro-actions'
 import { LancarJurosDialog } from '@/components/financas/lancar-juros-dialog'
+import { SaldosIniciaisMassaDialog } from '@/components/financas/saldos-iniciais-massa-dialog'
 import { DividirDespesaDialog } from '@/components/financas/dividir-despesa-dialog'
 import { ConciliacaoTab } from '@/components/financas/conciliacao-tab'
 import { MapaMensalTab } from '@/components/financas/mapa-mensal-tab'
@@ -488,6 +489,9 @@ export function FinancasTabs({
               criterioRateio={criterioRateio}
             />
             <LancarJurosDialog quotasEmAtraso={quotasEmAtraso} fracoes={fracoes} />
+            <SaldosIniciaisMassaDialog
+              identificacoesFracoes={fracoes.map((f) => f.identificacao)}
+            />
           </div>
         )}
         <Card>
