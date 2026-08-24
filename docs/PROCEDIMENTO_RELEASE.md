@@ -92,9 +92,11 @@ Distinguir sempre o que está avariado, porque a resposta é diferente:
 
 **O que o rollback de código não desfaz**: migrações já aplicadas (continuam aplicadas — e é por isso que serem aditivas importa), ficheiros já carregados no Blob, emails já enviados e dados já escritos pelos utilizadores na versão com o problema.
 
-### Teste real do rollback (2026-08-24)
+### Estado do teste (2026-08-24)
 
-O procedimento acima foi **executado a sério em produção** nesta data, com autorização explícita, e não apenas descrito. Resultado registado em `TECHNICAL_DEBT.md` D11.
+O procedimento acima está **descrito mas ainda não executado a sério**. Foi autorizado nesta data, mas não pôde ser executado na sessão: o rollback não tem equivalente na API/MCP da Vercel disponível aqui, o Vercel CLI não está instalado e a extensão do Chrome não estava ligada — as três vias possíveis estavam fechadas. Fica ao mesmo nível do one-step restore da Neon: mecanismo documentado, resultado por confirmar.
+
+Quando for executado, registar aqui a data, o deployment de origem e destino, e quanto tempo a versão anterior esteve a servir.
 
 ## Verificação depois de cada release
 
