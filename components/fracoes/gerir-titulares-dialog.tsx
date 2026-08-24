@@ -22,12 +22,27 @@ type Titular = {
   nome: string
   nif: string | null
   tipoTitular: string
+  contactoEmail: string | null
+  contactoTelefone: string | null
 }
 
 /**
  * Titulares adicionais de uma fração (heranças indivisas, vários donos) —
  * complementa `fracao.proprietario` (o nome principal, editado em "Editar
  * fração"), sem o substituir. Aberto a partir do menu "..." da listagem.
+ *
+ * É também o único sítio onde se guardam contactos de quem **não tem conta
+ * na aplicação** (`FUNCTIONAL_GAPS.md` secção 11): `membro` exige sempre uma
+ * conta de utilizador, pelo que um proprietário que nunca se registe não
+ * existiria em lado nenhum. As colunas `contactoEmail`/`contactoTelefone`
+ * existem em `fracao_titular` desde a migração 0060, mas até 2026-08-24 não
+ * havia forma de as preencher pela interface.
+ *
+ * **Guardar não é comunicar**: nada nesta aplicação envia emails para estes
+ * contactos. Avisos e convocatórias continuam a sair só para membros com
+ * conta aprovada — passar a escrever-lhes exige antes atualizar `RAT.md`, a
+ * política de privacidade e o DPA (o RAT limita hoje os titulares dos dados
+ * a quem tem conta) e prever uma via de oposição.
  */
 export function GerirTitularesDialog({
   fracaoId,
@@ -43,6 +58,8 @@ export function GerirTitularesDialog({
   const [lista, setLista] = useState<Titular[] | null>(null)
   const [nome, setNome] = useState('')
   const [nif, setNif] = useState('')
+  const [contactoEmail, setContactoEmail] = useState('')
+  const [contactoTelefone, setContactoTelefone] = useState('')
   const [tipoTitular, setTipoTitular] = useState<string | null>('proprietario')
   const [pending, startTransition] = useTransition()
 
@@ -65,10 +82,18 @@ export function GerirTitularesDialog({
     if (!nome.trim()) return
     startTransition(async () => {
       try {
-        await adicionarTitular(fracaoId, { nome, nif: nif || undefined, tipoTitular: tipoTitular ?? undefined })
+        await adicionarTitular(fracaoId, {
+          nome,
+          nif: nif || undefined,
+          tipoTitular: tipoTitular ?? undefined,
+          contactoEmail: contactoEmail || undefined,
+          contactoTelefone: contactoTelefone || undefined,
+        })
         toast.success('Titular adicionado')
         setNome('')
         setNif('')
+        setContactoEmail('')
+        setContactoTelefone('')
         carregar()
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Erro ao adicionar titular')
@@ -96,8 +121,9 @@ export function GerirTitularesDialog({
           <DialogDescription>
             Para heranças indivisas ou frações com vários donos: identifique cada titular
             individualmente (nome e NIF), para aparecerem discriminados na declaração de
-            dívida e na interpelação. Não substitui o nome principal mostrado na listagem de
-            frações — esse continua a editar-se em &ldquo;Editar fração&rdquo;.
+            dívida e na interpelação. É também aqui que guarda o email e o telefone de quem
+            não tem conta na aplicação. Não substitui o nome principal mostrado na listagem
+            de frações — esse continua a editar-se em &ldquo;Editar fração&rdquo;.
           </DialogDescription>
         </DialogHeader>
 
@@ -123,6 +149,11 @@ export function GerirTitularesDialog({
                         {TIPO_TITULAR_LABEL[t.tipoTitular as TipoTitular] ?? t.tipoTitular}
                         {t.nif ? ` · NIF ${t.nif}` : ''}
                       </span>
+                      {(t.contactoEmail || t.contactoTelefone) && (
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          {[t.contactoEmail, t.contactoTelefone].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
                     </div>
                     <Button
                       type="button"
@@ -170,6 +201,33 @@ export function GerirTitularesDialog({
                   </Select>
                 </div>
               </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label htmlFor="titular-email">Email (opcional)</Label>
+                  <Input
+                    id="titular-email"
+                    type="email"
+                    value={contactoEmail}
+                    onChange={(e) => setContactoEmail(e.target.value)}
+                    placeholder="Ex: maria.silva@exemplo.pt"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="titular-telefone">Telefone (opcional)</Label>
+                  <Input
+                    id="titular-telefone"
+                    type="tel"
+                    value={contactoTelefone}
+                    onChange={(e) => setContactoTelefone(e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Os contactos servem para o administrador ter onde os consultar, sobretudo
+                quando o titular não tem conta na aplicação. A aplicação não lhes envia
+                emails — avisos e convocatórias continuam a sair apenas para quem tem conta
+                aprovada.
+              </p>
               <Button type="button" onClick={adicionar} disabled={pending || !nome.trim()} className="self-start">
                 Adicionar titular
               </Button>
