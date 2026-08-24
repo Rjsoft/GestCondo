@@ -10,7 +10,12 @@ import {
   excedePermilagemTotal,
   type DecisaoSaldo,
 } from '@/lib/fracoes'
-import { parsearFracoes, validarConjuntoFracoes } from '@/lib/fracoes-massa'
+import {
+  CAMPOS_ATUALIZAVEIS,
+  parsearFracoes,
+  planearImportacaoFracoes,
+  validarConjuntoFracoes,
+} from '@/lib/fracoes-massa'
 import { getMapaSaldos } from '@/app/actions/financas'
 import {
   NIVEIS_GESTOR,
@@ -156,7 +161,10 @@ export async function criarFracao(formData: FormData) {
  * Tudo ou nada: uma transação. Ficar a meio deixaria o condomínio com uma
  * permilagem incoerente e obrigaria a apagar frações à mão.
  */
-export async function criarFracoesEmMassa(texto: string) {
+export async function criarFracoesEmMassa(
+  texto: string,
+  opcoes: { atualizarExistentes?: boolean } = {},
+) {
   const admin = await requireAdmin()
 
   const { linhas, erros } = parsearFracoes(texto)
@@ -170,7 +178,13 @@ export async function criarFracoesEmMassa(texto: string) {
   }
 
   const existentes = await db
-    .select({ identificacao: fracao.identificacao })
+    .select({
+      id: fracao.id,
+      identificacao: fracao.identificacao,
+      nif: fracao.nif,
+      contactoEmail: fracao.contactoEmail,
+      contactoTelefone: fracao.contactoTelefone,
+    })
     .from(fracao)
     .where(eq(fracao.condominioId, admin.condominioId))
 
@@ -180,26 +194,72 @@ export async function criarFracoesEmMassa(texto: string) {
     linhas,
     existentes.map((e) => e.identificacao),
     somaExistente,
+    opcoes,
   )
   if (errosConjunto.length > 0) {
     throw new Error(errosConjunto[0])
   }
 
-  const criadas = await db.transaction(async (tx) => {
-    return tx
-      .insert(fracao)
-      .values(
-        linhas.map((l) => ({
-          condominioId: admin.condominioId,
-          userId: admin.userId,
-          identificacao: l.identificacao,
-          proprietario: l.proprietario,
-          nif: l.nif,
-          permilagem: String(l.permilagem),
-        })),
-      )
-      .returning({ id: fracao.id, identificacao: fracao.identificacao, proprietario: fracao.proprietario })
-  })
+  // Sem o modo de atualização ligado, uma fração existente já teria dado
+  // erro acima — o plano fica com tudo em `aCriar`, como antes.
+  const plano = opcoes.atualizarExistentes
+    ? planearImportacaoFracoes(linhas, existentes)
+    : { aCriar: linhas, aAtualizar: [], semAlteracao: [] }
+
+  const criadas = plano.aCriar.length
+    ? await db.transaction(async (tx) => {
+        return tx
+          .insert(fracao)
+          .values(
+            plano.aCriar.map((l) => ({
+              condominioId: admin.condominioId,
+              userId: admin.userId,
+              identificacao: l.identificacao,
+              proprietario: l.proprietario,
+              nif: l.nif,
+              contactoEmail: l.contactoEmail,
+              contactoTelefone: l.contactoTelefone,
+              permilagem: String(l.permilagem),
+            })),
+          )
+          .returning({
+            id: fracao.id,
+            identificacao: fracao.identificacao,
+            proprietario: fracao.proprietario,
+          })
+      })
+    : []
+
+  // Atualizações: só os campos que o plano marcou, e o plano só marca
+  // campos que estavam vazios. Reconfirmado aqui contra a linha da base de
+  // dados — entre a pré-visualização e a confirmação alguém pode ter
+  // preenchido o campo em "Editar fração", e nesse caso não se toca.
+  for (const a of plano.aAtualizar) {
+    const condicao = and(eq(fracao.id, a.id), eq(fracao.condominioId, admin.condominioId))
+    const [antes] = await db.select().from(fracao).where(condicao).limit(1)
+    if (!antes) continue
+
+    const set: Record<string, string> = {}
+    for (const c of a.campos) {
+      const atual = antes[c.campo]
+      if (atual === null || String(atual).trim() === '') set[c.campo] = c.novo
+    }
+    if (Object.keys(set).length === 0) continue
+
+    await db.update(fracao).set(set).where(condicao)
+
+    const alteracoes = compararCampos(antes, { ...antes, ...set }, CAMPOS_ATUALIZAVEIS)
+    if (alteracoes.length > 0) {
+      await registarAuditoria({
+        actor: admin,
+        acao: 'atualizar',
+        entidade: 'fracao',
+        entidadeId: a.id,
+        detalhes: `${a.identificacao}: ${gerarResumoAlteracoes(alteracoes)} (importação em massa)`,
+        alteracoes,
+      })
+    }
+  }
 
   // Uma entrada de auditoria por fração, e não só um total agregado — é mais
   // rastreável do que a limitação T2 descrita em
@@ -218,7 +278,11 @@ export async function criarFracoesEmMassa(texto: string) {
   revalidatePath('/fracoes')
   revalidatePath('/')
 
-  return { criadas: criadas.length }
+  return {
+    criadas: criadas.length,
+    atualizadas: plano.aAtualizar.length,
+    semAlteracao: plano.semAlteracao.length,
+  }
 }
 
 export async function atualizarFracao(formData: FormData) {
