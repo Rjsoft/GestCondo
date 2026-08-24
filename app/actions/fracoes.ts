@@ -10,6 +10,7 @@ import {
   excedePermilagemTotal,
   type DecisaoSaldo,
 } from '@/lib/fracoes'
+import { parsearFracoes, validarConjuntoFracoes } from '@/lib/fracoes-massa'
 import { getMapaSaldos } from '@/app/actions/financas'
 import {
   NIVEIS_GESTOR,
@@ -138,6 +139,86 @@ export async function criarFracao(formData: FormData) {
 
   revalidatePath('/fracoes')
   revalidatePath('/')
+}
+
+/**
+ * Cria várias frações de uma vez a partir de texto colado (uma fração por
+ * linha) — ver `lib/fracoes-massa.ts` para o formato aceite e
+ * `FUNCTIONAL_GAPS.md` secção 11 para o motivo. Resolve a fricção de dar
+ * entrada de um condomínio novo, onde criar 40 frações uma a uma no diálogo
+ * "Nova fração" era o passo mais penoso do primeiro dia.
+ *
+ * O cliente já valida e mostra uma pré-visualização antes de chamar isto,
+ * mas **toda a validação é repetida aqui** — o cliente nunca é fonte de
+ * verdade, e entre a pré-visualização e a confirmação as frações existentes
+ * podem ter mudado.
+ *
+ * Tudo ou nada: uma transação. Ficar a meio deixaria o condomínio com uma
+ * permilagem incoerente e obrigaria a apagar frações à mão.
+ */
+export async function criarFracoesEmMassa(texto: string) {
+  const admin = await requireAdmin()
+
+  const { linhas, erros } = parsearFracoes(texto)
+  if (erros.length > 0) {
+    throw new Error(
+      `Há ${erros.length} linha(s) por corrigir. Reveja a pré-visualização antes de confirmar.`,
+    )
+  }
+  if (linhas.length === 0) {
+    throw new Error('Não há nenhuma fração para criar.')
+  }
+
+  const existentes = await db
+    .select({ identificacao: fracao.identificacao })
+    .from(fracao)
+    .where(eq(fracao.condominioId, admin.condominioId))
+
+  const somaExistente = await getSomaPermilagemOutrasFracoes(admin.condominioId)
+
+  const errosConjunto = validarConjuntoFracoes(
+    linhas,
+    existentes.map((e) => e.identificacao),
+    somaExistente,
+  )
+  if (errosConjunto.length > 0) {
+    throw new Error(errosConjunto[0])
+  }
+
+  const criadas = await db.transaction(async (tx) => {
+    return tx
+      .insert(fracao)
+      .values(
+        linhas.map((l) => ({
+          condominioId: admin.condominioId,
+          userId: admin.userId,
+          identificacao: l.identificacao,
+          proprietario: l.proprietario,
+          nif: l.nif,
+          permilagem: String(l.permilagem),
+        })),
+      )
+      .returning({ id: fracao.id, identificacao: fracao.identificacao, proprietario: fracao.proprietario })
+  })
+
+  // Uma entrada de auditoria por fração, e não só um total agregado — é mais
+  // rastreável do que a limitação T2 descrita em
+  // `docs/audit/DOCUMENT_TRACEABILITY_AUDIT.md`, e mantém o mesmo formato de
+  // `detalhes` usado por `criarFracao`, para o histórico ficar homogéneo.
+  for (const c of criadas) {
+    await registarAuditoria({
+      actor: admin,
+      acao: 'criar',
+      entidade: 'fracao',
+      entidadeId: c.id,
+      detalhes: `${c.identificacao} — ${c.proprietario} (criação em massa de ${criadas.length} frações)`,
+    })
+  }
+
+  revalidatePath('/fracoes')
+  revalidatePath('/')
+
+  return { criadas: criadas.length }
 }
 
 export async function atualizarFracao(formData: FormData) {

@@ -931,6 +931,37 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           prédio). Se uma despesa comum custar 300€, o R/C Dto paga 75€
           (25% de 300€), e cada um dos outros dois paga 112,50€ (37,5%).
         </p>
+        <Subtitulo>Registar todas as frações de uma vez (prédio novo)</Subtitulo>
+        <p>
+          Quando começa a usar a aplicação num prédio, registar 20 ou 40
+          frações uma a uma dá muito trabalho. O botão{' '}
+          <strong>&ldquo;Criar várias&rdquo;</strong>, ao lado de &ldquo;Nova
+          fração&rdquo;, permite escrever ou colar a lista toda de uma vez:
+          uma fração por linha, com três informações separadas por ponto e
+          vírgula — <strong>identificação; proprietário; permilagem</strong>.
+          Se quiser, pode juntar o NIF numa quarta coluna.
+        </p>
+        <p>
+          Se já tiver a lista numa folha de cálculo (Excel), selecione as
+          colunas, copie e cole diretamente na caixa — a aplicação reconhece
+          as colunas sem precisar de mudar nada. Antes de gravar, mostra-lhe
+          uma tabela com tudo o que vai ser criado e o total de permilagem,
+          para conferir. Se alguma linha tiver um problema (falta um nome,
+          uma permilagem mal escrita, uma identificação repetida), a
+          aplicação diz exatamente em que linha está o erro e não deixa
+          gravar enquanto não estiver corrigido — ou grava tudo, ou não grava
+          nada.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Exemplo do que escrever:{' '}
+          <span className="font-mono">1ºDto; Maria Silva; 83,33</span> numa
+          linha,{' '}
+          <span className="font-mono">1ºEsq; João Costa; 83,33</span> na
+          seguinte, e assim por diante. Repare que a permilagem se escreve
+          com vírgula, como todos os números em Portugal. Os restantes dados
+          de cada fração (área, contactos, isenção de elevador) acrescenta-os
+          depois, quando quiser, em &ldquo;Editar fração&rdquo;.
+        </p>
         <Subtitulo>Como registar uma fração nova</Subtitulo>
         <p>
           Clique em &ldquo;Nova fração&rdquo;, indique a identificação (ex:
