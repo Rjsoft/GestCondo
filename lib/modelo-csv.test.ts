@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MODELO_FRACOES, MODELO_SALDOS, gerarCsvModelo } from '@/lib/modelo-csv'
 import { parsearFracoes } from '@/lib/fracoes-massa'
-import { parsearSaldosIniciais } from '@/lib/saldos-iniciais'
+import { parsearSaldosIniciais, validarConjuntoSaldos } from '@/lib/saldos-iniciais'
 
 describe('gerarCsvModelo', () => {
   it('começa com BOM UTF-8, sem o qual o Excel troca os acentos', () => {
@@ -44,7 +44,20 @@ describe('ida e volta: modelo -> analisador', () => {
     const { linhas, erros } = parsearSaldosIniciais(csv)
     expect(erros).toEqual([])
     expect(linhas).toHaveLength(MODELO_SALDOS.exemplos.length)
-    expect(linhas[2]).toMatchObject({ identificacao: 'R/C Dto', valor: 1234.56 })
+    expect(linhas[2]).toMatchObject({ identificacao: '1ºEsq', valor: 1234.56, dataIso: null })
+  })
+
+  // O modelo mostra de propósito a mesma fração em dois anos: é o caso que a
+  // primeira versão não cobria. Se alguém simplificar os exemplos e voltar a
+  // pôr uma linha por fração, este teste avisa.
+  it('o modelo de saldos demonstra uma dívida de vários anos na mesma fração', () => {
+    const csv = gerarCsvModelo(MODELO_SALDOS).replace(/^﻿/, '')
+    const { linhas } = parsearSaldosIniciais(csv)
+    const doPrimeiroDto = linhas.filter((l) => l.identificacao === '1ºDto')
+    expect(doPrimeiroDto).toHaveLength(2)
+    expect(doPrimeiroDto.map((l) => l.dataIso)).toEqual(['2024-12-31', '2025-12-31'])
+    // E o conjunto é válido, apesar da fração repetida.
+    expect(validarConjuntoSaldos(linhas, ['1ºDto', '1ºEsq'], '2025-06-30')).toEqual([])
   })
 })
 

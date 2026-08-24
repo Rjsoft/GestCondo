@@ -8,6 +8,15 @@
  * diálogo "Novo movimento". Num prédio com 20 frações em atraso, eram 20
  * lançamentos manuais.
  *
+ * **Dívidas de vários anos** (corrigido 2026-08-24, no próprio dia em que a
+ * primeira versão saiu): cada linha pode trazer a sua própria data numa
+ * terceira coluna, e a mesma fração pode aparecer em várias linhas desde que
+ * com datas diferentes. Sem isto, três anos de dívida ficavam num único
+ * movimento com uma só data, e isso **falseava** a antiguidade da dívida
+ * (`lib/antiguidade-divida.ts` distribui por escalões a partir da data do
+ * movimento) e os juros de mora (`lib/juros.ts` conta dias de atraso pela
+ * mesma data, a favor do devedor).
+ *
  * Aqui só vive a leitura do texto colado. A escrita, as regras de
  * exercício financeiro e a auditoria ficam em
  * `app/actions/financas.ts:criarSaldosIniciaisEmMassa`.
@@ -22,6 +31,13 @@ export type LinhaSaldoInicial = {
   numeroLinha: number
   identificacao: string
   valor: number
+  /**
+   * Data da dívida em formato ISO (`aaaa-mm-dd`), lida da terceira coluna.
+   * `null` quando a linha não a traz — nesse caso vale a data por omissão
+   * escolhida no diálogo, que é o comportamento de quem só tem um ano de
+   * dívida e não quer pensar nisto.
+   */
+  dataIso: string | null
 }
 
 export type ErroLinhaSaldo = {
@@ -64,6 +80,47 @@ export function lerValorEuros(valor: string): number | null {
   return n
 }
 
+/**
+ * Lê a data de uma linha. Aceita três formas, por ordem de conveniência
+ * para quem tem a dívida organizada por ano:
+ *
+ * - `2023` — um ano só: fica **31 de dezembro de 2023**, que é como se fecha
+ *   um exercício e como as dívidas antigas costumam estar registadas;
+ * - `31/12/2023` — a forma como se escreve uma data em Portugal;
+ * - `2023-12-31` — ISO, para quem exporta de outro sistema.
+ *
+ * Devolve sempre `aaaa-mm-dd`, ou `null` se não for nenhuma delas.
+ */
+export function lerDataSaldo(valor: string): string | null {
+  const limpo = valor.trim()
+  if (!limpo) return null
+
+  const soAno = /^(\d{4})$/.exec(limpo)
+  if (soAno) {
+    const ano = Number(soAno[1])
+    if (ano < 1900 || ano > 2200) return null
+    return `${ano}-12-31`
+  }
+
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(limpo)
+  if (iso) return validarComponentes(Number(iso[1]), Number(iso[2]), Number(iso[3]))
+
+  const pt = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(limpo)
+  if (pt) return validarComponentes(Number(pt[3]), Number(pt[2]), Number(pt[1]))
+
+  return null
+}
+
+/** Rejeita 31/02 e afins — o `Date` do JavaScript aceitaria e saltava para março. */
+function validarComponentes(ano: number, mes: number, dia: number): string | null {
+  if (ano < 1900 || ano > 2200 || mes < 1 || mes > 12 || dia < 1 || dia > 31) return null
+  const d = new Date(Date.UTC(ano, mes - 1, dia))
+  if (d.getUTCFullYear() !== ano || d.getUTCMonth() !== mes - 1 || d.getUTCDate() !== dia) {
+    return null
+  }
+  return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+}
+
 function separarColunas(linha: string): string[] {
   // Tabulação (colagem do Excel) ou ponto e vírgula (escrita à mão). Nunca
   // vírgula — é o separador decimal do valor.
@@ -98,7 +155,7 @@ export function parsearSaldosIniciais(texto: string): ResultadoParseSaldos {
       return
     }
 
-    const [identificacao = '', valorTexto = ''] = colunas
+    const [identificacao = '', valorTexto = '', dataTexto = ''] = colunas
     if (!identificacao) {
       erros.push({ numeroLinha, texto: linha, erro: 'Falta a identificação da fração.' })
       return
@@ -114,7 +171,21 @@ export function parsearSaldosIniciais(texto: string): ResultadoParseSaldos {
       return
     }
 
-    linhas.push({ numeroLinha, identificacao, valor })
+    // A data é opcional: sem ela vale a data por omissão do diálogo.
+    let dataIso: string | null = null
+    if (dataTexto) {
+      dataIso = lerDataSaldo(dataTexto)
+      if (dataIso === null) {
+        erros.push({
+          numeroLinha,
+          texto: linha,
+          erro: `"${dataTexto}" não é uma data válida. Escreva só o ano (2023), ou a data completa (31/12/2023).`,
+        })
+        return
+      }
+    }
+
+    linhas.push({ numeroLinha, identificacao, valor, dataIso })
   })
 
   return { linhas, erros }
@@ -131,25 +202,32 @@ export function parsearSaldosIniciais(texto: string): ResultadoParseSaldos {
 export function validarConjuntoSaldos(
   linhas: LinhaSaldoInicial[],
   identificacoesExistentes: string[],
+  dataPorOmissaoIso: string,
 ): string[] {
   const erros: string[] = []
   const normalizar = (s: string) => s.trim().toLowerCase()
   const existentes = new Set(identificacoesExistentes.map(normalizar))
 
+  // A chave é fração **+ data**, não só fração: a mesma fração pode e deve
+  // aparecer várias vezes quando deve vários anos. O que continua a ser um
+  // engano é a mesma fração com a mesma data — aí os valores somavam-se em
+  // silêncio e a dívida ficava errada.
   const vistas = new Map<string, number>()
   for (const l of linhas) {
-    const chave = normalizar(l.identificacao)
+    const chaveFracao = normalizar(l.identificacao)
 
-    if (!existentes.has(chave)) {
+    if (!existentes.has(chaveFracao)) {
       erros.push(
         `Não existe nenhuma fração com a identificação "${l.identificacao}" (linha ${l.numeroLinha}). Verifique se está escrita exatamente como em "Frações".`,
       )
     }
 
+    const dataEfetiva = l.dataIso ?? dataPorOmissaoIso
+    const chave = `${chaveFracao}|${dataEfetiva}`
     const anterior = vistas.get(chave)
     if (anterior !== undefined) {
       erros.push(
-        `A fração "${l.identificacao}" aparece duas vezes (linhas ${anterior} e ${l.numeroLinha}). Some os valores numa só linha.`,
+        `A fração "${l.identificacao}" aparece duas vezes com a mesma data (linhas ${anterior} e ${l.numeroLinha}). Some os valores numa só linha, ou indique datas diferentes se forem dívidas de anos diferentes.`,
       )
     } else {
       vistas.set(chave, l.numeroLinha)

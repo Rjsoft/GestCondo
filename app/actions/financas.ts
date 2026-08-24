@@ -859,6 +859,8 @@ export async function criarSaldosIniciaisEmMassa(
   const admin = await requireAdmin()
 
   if (!dataStr) throw new Error('Indique a data a que os saldos dizem respeito')
+  // `dataStr` é a data por omissão: vale para as linhas que não trazem data
+  // própria. Uma linha com data própria vence sempre esta.
   const data = new Date(dataStr)
   if (Number.isNaN(data.getTime())) throw new Error('Data inválida')
 
@@ -878,13 +880,20 @@ export async function criarSaldosIniciaisEmMassa(
   const errosConjunto = validarConjuntoSaldos(
     linhas,
     fracoes.map((f) => f.identificacao),
+    dataStr,
   )
   if (errosConjunto.length > 0) throw new Error(errosConjunto[0])
 
   // Regra obrigatória de qualquer escrita financeira (ver CLAUDE.md): um
   // exercício fechado bloqueia o lançamento até ser reaberto com motivo.
-  // Todos os saldos partilham a mesma data, por isso uma verificação chega.
-  await garantirExercicioAberto(admin.condominioId, data)
+  // Desde que cada linha pode ter a sua própria data (dívidas de vários
+  // anos), há de facto várias datas envolvidas — e o CLAUDE.md é explícito
+  // em que a verificação tem de cobrir **todas**. Uma só bastava enquanto
+  // partilhavam a mesma data; deixou de bastar.
+  const datasDistintas = [...new Set(linhas.map((l) => l.dataIso ?? dataStr))]
+  for (const iso of datasDistintas) {
+    await garantirExercicioAberto(admin.condominioId, new Date(iso))
+  }
 
   const porIdentificacao = new Map(
     fracoes.map((f) => [f.identificacao.trim().toLowerCase(), f.id]),
@@ -896,18 +905,25 @@ export async function criarSaldosIniciaisEmMassa(
     return tx
       .insert(movimento)
       .values(
-        linhas.map((l) => ({
-          condominioId: admin.condominioId,
-          userId: admin.userId,
-          tipo: 'receita',
-          categoria: 'Saldo inicial',
-          descricao,
-          valor: l.valor.toFixed(2),
-          pago: false,
-          fracaoId: porIdentificacao.get(l.identificacao.trim().toLowerCase())!,
-          destino: 'geral',
-          data,
-        })),
+        linhas.map((l) => {
+          const dataLinha = l.dataIso ? new Date(l.dataIso) : data
+          return {
+            condominioId: admin.condominioId,
+            userId: admin.userId,
+            tipo: 'receita',
+            categoria: 'Saldo inicial',
+            descricao: l.dataIso
+              ? `${descricao} (${dataLinha.toLocaleDateString('pt-PT')})`
+              : descricao,
+            valor: l.valor.toFixed(2),
+            pago: false,
+            fracaoId: porIdentificacao.get(l.identificacao.trim().toLowerCase())!,
+            destino: 'geral',
+            // Data por linha: é ela que faz a antiguidade da dívida e os
+            // juros de mora contarem certo em dívidas de vários anos.
+            data: dataLinha,
+          }
+        }),
       )
       .returning({ id: movimento.id, valor: movimento.valor, fracaoId: movimento.fracaoId })
   })

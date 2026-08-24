@@ -40,11 +40,14 @@ export const MODELO_FRACOES: ModeloCsv = {
 
 export const MODELO_SALDOS: ModeloCsv = {
   nomeFicheiro: 'modelo-saldos-iniciais.csv',
-  cabecalho: ['Fração', 'Valor em dívida'],
+  cabecalho: ['Fração', 'Valor em dívida', 'Ano ou data (opcional)'],
+  // Os exemplos mostram de propósito a mesma fração em dois anos: é o caso
+  // que a primeira versão desta funcionalidade não cobria, e é o que faz a
+  // antiguidade da dívida e os juros de mora contarem certo.
   exemplos: [
-    ['1ºDto', '125,50'],
-    ['1ºEsq', '340,00'],
-    ['R/C Dto', '1.234,56'],
+    ['1ºDto', '125,50', '2024'],
+    ['1ºDto', '340,00', '2025'],
+    ['1ºEsq', '1.234,56', ''],
   ],
 }
 

@@ -20,9 +20,9 @@ import { parsearSaldosIniciais, validarConjuntoSaldos } from '@/lib/saldos-inici
 import { ListPlus } from 'lucide-react'
 import { toast } from 'sonner'
 
-const EXEMPLO = `1ºDto; 125,50
-1ºEsq; 340,00
-2ºDto; 1.234,56`
+const EXEMPLO = `1ºDto; 125,50; 2024
+1ºDto; 340,00; 2025
+1ºEsq; 1.234,56`
 
 /**
  * Abertura de saldos iniciais por fração (`FUNCTIONAL_GAPS.md` secção 11):
@@ -47,8 +47,11 @@ export function SaldosIniciaisMassaDialog({
 
   const { linhas, erros } = useMemo(() => parsearSaldosIniciais(texto), [texto])
   const errosConjunto = useMemo(
-    () => (linhas.length > 0 ? validarConjuntoSaldos(linhas, identificacoesFracoes) : []),
-    [linhas, identificacoesFracoes],
+    () =>
+      linhas.length > 0 && data
+        ? validarConjuntoSaldos(linhas, identificacoesFracoes, data)
+        : [],
+    [linhas, identificacoesFracoes, data],
   )
 
   const total = linhas.reduce((s, l) => s + l.valor, 0)
@@ -83,15 +86,18 @@ export function SaldosIniciaisMassaDialog({
           <DialogDescription>
             Para trazer as dívidas que o condomínio já tinha antes de começar a usar a
             aplicação. Escreva ou cole uma linha por fração, com a identificação e o valor
-            em dívida separados por ponto e vírgula: <strong>1ºDto; 125,50</strong>. Se
-            copiar de uma folha de cálculo, cole diretamente.
+            em dívida separados por ponto e vírgula: <strong>1ºDto; 125,50</strong>. Se a
+            dívida for de vários anos, acrescente o ano numa terceira coluna e repita a
+            fração — <strong>1ºDto; 125,50; 2024</strong> numa linha,{' '}
+            <strong>1ºDto; 340,00; 2025</strong> na seguinte. Se copiar de uma folha de
+            cálculo, cole diretamente.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-3">
             <div className="flex-1">
-              <Label htmlFor="saldos-data">Data a que os saldos dizem respeito</Label>
+              <Label htmlFor="saldos-data">Data por omissão</Label>
               <Input
                 id="saldos-data"
                 type="date"
@@ -100,7 +106,8 @@ export function SaldosIniciaisMassaDialog({
                 aria-describedby="saldos-data-ajuda"
               />
               <p id="saldos-data-ajuda" className="mt-1 text-xs text-muted-foreground">
-                Normalmente 31 de dezembro do ano anterior.
+                Usada nas linhas que não indicam ano. Normalmente 31 de dezembro do ano
+                anterior.
               </p>
             </div>
             <div className="flex-1">
@@ -134,7 +141,9 @@ export function SaldosIniciaisMassaDialog({
             <p id="saldos-lista-ajuda" className="mt-1 text-xs text-muted-foreground">
               A identificação tem de estar escrita como em &ldquo;Frações&rdquo;. Cada
               linha fica registada como uma quota por pagar dessa fração — com data, autor
-              e histórico, como qualquer outro movimento.
+              e histórico, como qualquer outro movimento. A data de cada linha é o que faz
+              a antiguidade da dívida e os juros de mora contarem certo, por isso vale a
+              pena separar por ano em vez de somar tudo.
             </p>
           </div>
         </div>
@@ -183,6 +192,9 @@ export function SaldosIniciaisMassaDialog({
                         <th scope="col" className="p-2 text-left font-medium">
                           Fração
                         </th>
+                        <th scope="col" className="p-2 text-left font-medium">
+                          Data
+                        </th>
                         <th scope="col" className="p-2 text-right font-medium">
                           Em dívida
                         </th>
@@ -192,6 +204,9 @@ export function SaldosIniciaisMassaDialog({
                       {linhas.map((l) => (
                         <tr key={l.numeroLinha} className="border-t border-border">
                           <td className="p-2">{l.identificacao}</td>
+                          <td className="p-2 text-muted-foreground">
+                            {(l.dataIso ?? data).split('-').reverse().join('/')}
+                          </td>
                           <td className="p-2 text-right">{formatEuro(l.valor)}</td>
                         </tr>
                       ))}
