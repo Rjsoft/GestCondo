@@ -284,3 +284,29 @@ Pedido explícito do utilizador: uma segunda auditoria, feita por um agente sem 
 | A9 | Diálogo "Gerar quotas mensais" (ação irreversível) foca o botão de confirmação ao abrir | Baixa/Média | `components/financas/gerar-quotas-dialog.tsx` não tinha um botão "Cancelar" explícito — só "Confirmar e gerar", que por ser o único elemento focável do rodapé recebia o foco inicial do diálogo. Um `Enter` reflexo ao abrir o diálogo dispara a ação (cria os movimentos) sem o utilizador ter ouvido o aviso "esta ação não pode ser desfeita". | **Corrigido** — acrescentado um botão "Cancelar" antes de "Confirmar e gerar" no rodapé, mesmo padrão já usado em `components/ui/confirm-dialog.tsx` (usado nas eliminações) — por vir primeiro no DOM, é o que recebe o foco inicial automaticamente, sem necessidade de configuração extra de foco. Reverificado no browser: `document.activeElement` = `BUTTON "Cancelar"` ao abrir. |
 
 Verificado depois das três correções: `tsc --noEmit`, `eslint`, `vitest run` (134/134), `next build`, sem regressões. **Nota de segurança registada pelo agente independente**: o preenchimento automático do Chrome tentou uma vez preencher um formulário de login com uma credencial real guardada do utilizador — nunca foi submetida, os campos foram limpos e substituídos pela conta de teste antes de qualquer envio.
+
+## 7. Interfaces novas de 2026-08-24 — sem verificação de acessibilidade
+
+**Isto não reabre o A4/L4.** O teste real com o NVDA foi feito a 2026-07-29 por um utilizador cego
+externo (secção 6) e esse achado continua fechado. O que se regista aqui é mais estreito: quatro
+interfaces entraram em produção a 2026-08-24 e **nenhuma passou por verificação de acessibilidade** —
+nem leitor de ecrã, nem navegação só por teclado. Só houve revisão de código pelo autor, que a secção 6
+já demonstrou não ser suficiente (foi precisamente uma verificação técnica dirigida, e não a revisão de
+código, que encontrou o A6 — o achado mais grave dessa sessão).
+
+| Interface | Onde | Porque merece verificação |
+|---|---|---|
+| Diálogo "Criar várias frações" | `components/fracoes/criar-fracoes-massa-dialog.tsx` | Pré-visualização que muda **enquanto se escreve**, dentro de um `aria-live="polite"`. Um leitor de ecrã pode ficar a anunciar a cada tecla, ou não anunciar de todo. Nunca foi ouvido |
+| Diálogo "Abrir saldos iniciais" | `components/financas/saldos-iniciais-massa-dialog.tsx` | Mesmo padrão, mais um campo de data nativo e uma tabela de pré-visualização com `caption` em `sr-only` |
+| Campo de ficheiro + descarregar modelo | `components/ui/modelo-csv-actions.tsx` | Usa `input type="file"` nativo com etiqueta visível **de propósito** (em vez de um botão falso a disparar um input escondido), mas essa decisão nunca foi confirmada com um leitor de ecrã a correr |
+| Caixa "Atualizar as frações que já existem" | `criar-fracoes-massa-dialog.tsx` | É uma caixa de seleção que **muda o que a submissão escreve na base de dados**. Se o seu estado não for anunciado de forma clara, alguém pode gravar sem perceber que ativou a atualização |
+
+**Um risco transversal a todas**: a caixa de texto de colagem é `font-mono` e o conteúdo é estruturado
+por `;`. Não se sabe como um leitor de ecrã lê uma linha como `1ºDto; Maria Silva; 83,33` — nem se as
+mensagens de erro por número de linha ("Linha 3: ...") são úteis a quem não vê a caixa para contar as
+linhas.
+
+**Estado**: por verificar. Não é um defeito confirmado — é ausência de teste, a mesma categoria da
+secção 4a.3. A forma mais barata de o resolver é acrescentar estes quatro fluxos ao
+`docs/GUIA_TESTE_NVDA.md` antes do próximo teste com um utilizador de leitor de ecrã.
+
