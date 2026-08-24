@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { parsearFracoes, validarConjuntoFracoes } from '@/lib/fracoes-massa'
+import { MODELO_FRACOES } from '@/lib/modelo-csv'
+import { ModeloCsvActions } from '@/components/ui/modelo-csv-actions'
 import { ListPlus } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -83,6 +85,8 @@ export function CriarFracoesMassaDialog({
             (Excel), cole diretamente — as colunas são reconhecidas.
           </DialogDescription>
         </DialogHeader>
+
+        <ModeloCsvActions modelo={MODELO_FRACOES} onTextoCarregado={setTexto} />
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="fracoes-massa">Lista de frações</Label>

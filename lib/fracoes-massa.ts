@@ -16,6 +16,24 @@ import { excedePermilagemTotal, PERMILAGEM_TOTAL_MAX } from '@/lib/fracoes'
  * `app/actions/fracoes.ts:criarFracoesEmMassa`.
  */
 
+/**
+ * Um ficheiro guardado a partir do modelo (ou do Excel) traz uma linha de
+ * cabeçalho. Só a **primeira** linha não vazia é candidata, e só quando a
+ * primeira coluna é uma das palavras conhecidas — nunca por adivinhação a
+ * partir do conteúdo, para não engolir em silêncio uma linha de dados com
+ * um erro que a pessoa devia ver.
+ */
+export function ehLinhaCabecalho(primeiraColuna: string, palavras: string[]): boolean {
+  const normalizada = primeiraColuna
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+  return palavras.includes(normalizada)
+}
+
+const CABECALHOS_FRACAO = ['identificacao', 'fracao', 'identificacao da fracao']
+
 export type LinhaFracaoMassa = {
   /** 1-based, como a pessoa vê no que colou — para as mensagens de erro. */
   numeroLinha: number
@@ -63,12 +81,19 @@ export function parsearFracoes(texto: string): ResultadoParseFracoes {
 
   const todas = texto.split(/\r?\n/)
 
+  let primeiraLinhaUtil = true
+
   todas.forEach((original, i) => {
     const numeroLinha = i + 1
     const linha = original.trim()
     if (!linha) return
 
     const colunas = separarColunas(linha).map((c) => c.trim())
+
+    if (primeiraLinhaUtil) {
+      primeiraLinhaUtil = false
+      if (ehLinhaCabecalho(colunas[0] ?? '', CABECALHOS_FRACAO)) return
+    }
     const [identificacao = '', proprietario = '', permilagemTexto = '', nif = ''] = colunas
 
     if (colunas.length < 3) {

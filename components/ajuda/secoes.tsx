@@ -544,7 +544,9 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
                 com tudo o que vai lançar e o total; se alguma linha tiver
                 um erro (fração que não existe, valor mal escrito, fração
                 repetida), diz qual e não grava nada enquanto não estiver
-                corrigido.
+                corrigido. Tal como em &ldquo;Frações&rdquo;, também aqui pode
+                descarregar um modelo, preenchê-lo no Excel, guardá-lo como CSV
+                e carregá-lo em vez de escrever à mão.
               </li>
               <li>
                 &ldquo;Declaração&rdquo; — gera a declaração de encargos e
@@ -969,6 +971,17 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           aplicação diz exatamente em que linha está o erro e não deixa
           gravar enquanto não estiver corrigido — ou grava tudo, ou não grava
           nada.
+        </p>
+        <p>
+          Se preferir não escrever nada à mão, use{' '}
+          <strong>&ldquo;Descarregar modelo&rdquo;</strong> dentro dessa mesma
+          janela: recebe um ficheiro já com as colunas certas e três linhas de
+          exemplo. Abra-o no Excel, substitua os exemplos pelas suas frações,
+          guarde (o Excel pergunta se quer manter o formato CSV — responda que
+          sim) e carregue o ficheiro no campo &ldquo;Ficheiro preenchido&rdquo;.
+          O conteúdo aparece na caixa para conferir antes de gravar, e a linha
+          de cabeçalho é ignorada automaticamente. O ficheiro é lido no seu
+          computador — não é enviado para lado nenhum.
         </p>
         <p className="text-xs text-muted-foreground">
           Exemplo do que escrever:{' '}

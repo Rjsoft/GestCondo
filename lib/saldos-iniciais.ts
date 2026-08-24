@@ -13,6 +13,10 @@
  * `app/actions/financas.ts:criarSaldosIniciaisEmMassa`.
  */
 
+import { ehLinhaCabecalho } from '@/lib/fracoes-massa'
+
+const CABECALHOS_SALDO = ['fracao', 'identificacao', 'identificacao da fracao']
+
 export type LinhaSaldoInicial = {
   /** 1-based, como a pessoa vê no que colou. */
   numeroLinha: number
@@ -71,12 +75,20 @@ export function parsearSaldosIniciais(texto: string): ResultadoParseSaldos {
   const linhas: LinhaSaldoInicial[] = []
   const erros: ErroLinhaSaldo[] = []
 
+  let primeiraLinhaUtil = true
+
   texto.split(/\r?\n/).forEach((original, i) => {
     const numeroLinha = i + 1
     const linha = original.trim()
     if (!linha) return
 
     const colunas = separarColunas(linha).map((c) => c.trim())
+
+    if (primeiraLinhaUtil) {
+      primeiraLinhaUtil = false
+      if (ehLinhaCabecalho(colunas[0] ?? '', CABECALHOS_SALDO)) return
+    }
+
     if (colunas.length < 2) {
       erros.push({
         numeroLinha,
