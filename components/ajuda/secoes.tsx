@@ -1000,6 +1000,34 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
           precisar de vender a sua parte, a declaração de dívida já os
           identifique aos dois corretamente.
         </p>
+        <Subtitulo>Guardar o contacto de quem não tem conta na aplicação</Subtitulo>
+        <p>
+          Nem todos os condóminos vão criar uma conta aqui — é normal, e não
+          há nada de errado nisso. O problema prático é que, sem conta, essa
+          pessoa não aparece em lado nenhum, e acaba a ter o contacto numa
+          folha à parte ou no telemóvel do administrador. Para evitar isso,
+          o mesmo ecrã &ldquo;Titulares&rdquo; (no menu &ldquo;...&rdquo;
+          junto de cada fração) tem dois campos opcionais: email e telefone.
+          Preencha-os e ficam guardados junto do nome dessa pessoa, sempre
+          disponíveis quando abrir a fração.
+        </p>
+        <p>
+          <strong>Guardar o contacto não é o mesmo que enviar mensagens.</strong>{' '}
+          A aplicação nunca envia emails para estes contactos. Os avisos e as
+          convocatórias de assembleia continuam a ser enviados apenas a quem
+          tem conta criada e aprovada. Estes campos servem para o
+          administrador ter onde consultar o contacto — telefonar, escrever à
+          mão, ou enviar a carta registada que a lei exige para convocar uma
+          assembleia.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Exemplo: o prédio tem 12 frações, mas só 5 proprietários criaram
+          conta. Nos outros 7, o administrador abre a fração, vai a
+          &ldquo;Titulares&rdquo;, acrescenta o nome do proprietário e o
+          telefone. A partir daí, quando precisar de falar com o dono do 3º
+          Dto, encontra o número na própria aplicação em vez de andar à
+          procura.
+        </p>
         <Subtitulo>A declaração de dívida na escritura — o que precisa de saber</Subtitulo>
         <p>
           Em &ldquo;Finanças&rdquo; → &ldquo;Dívidas por fração&rdquo;, o botão
