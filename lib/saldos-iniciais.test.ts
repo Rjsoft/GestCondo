@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { lerValorEuros, parsearSaldosIniciais, validarConjuntoSaldos } from '@/lib/saldos-iniciais'
+import {
+  lerDataSaldo,
+  lerValorEuros,
+  parsearSaldosIniciais,
+  validarConjuntoSaldos,
+} from '@/lib/saldos-iniciais'
 
 describe('lerValorEuros', () => {
   it('aceita vírgula decimal, como se escreve em Portugal', () => {
@@ -71,30 +76,95 @@ describe('parsearSaldosIniciais', () => {
   })
 })
 
+describe('lerDataSaldo', () => {
+  it('lê um ano só como 31 de dezembro desse ano', () => {
+    expect(lerDataSaldo('2023')).toBe('2023-12-31')
+  })
+
+  it('lê uma data portuguesa', () => {
+    expect(lerDataSaldo('31/12/2023')).toBe('2023-12-31')
+    expect(lerDataSaldo('1/3/2024')).toBe('2024-03-01')
+  })
+
+  it('lê uma data ISO', () => {
+    expect(lerDataSaldo('2023-12-31')).toBe('2023-12-31')
+  })
+
+  it('rejeita datas que não existem, que o Date aceitaria e empurraria para o mês seguinte', () => {
+    expect(lerDataSaldo('31/02/2024')).toBeNull()
+    expect(lerDataSaldo('2023-02-30')).toBeNull()
+  })
+
+  it('rejeita texto e anos absurdos', () => {
+    expect(lerDataSaldo('o ano passado')).toBeNull()
+    expect(lerDataSaldo('1500')).toBeNull()
+    expect(lerDataSaldo('')).toBeNull()
+  })
+})
+
+describe('parsearSaldosIniciais — data por linha', () => {
+  it('lê a data da terceira coluna', () => {
+    const { linhas, erros } = parsearSaldosIniciais('1ºDto; 125,50; 2024')
+    expect(erros).toEqual([])
+    expect(linhas[0]).toMatchObject({ valor: 125.5, dataIso: '2024-12-31' })
+  })
+
+  it('deixa a data a null quando a linha não a traz', () => {
+    expect(parsearSaldosIniciais('1ºDto; 125,50').linhas[0].dataIso).toBeNull()
+  })
+
+  it('aponta a linha quando a data é inválida', () => {
+    const { erros } = parsearSaldosIniciais('1ºDto; 10; ontem')
+    expect(erros[0].erro).toContain('não é uma data válida')
+  })
+})
+
 describe('validarConjuntoSaldos', () => {
-  const linha = (identificacao: string, numeroLinha = 1) => ({
+  const OMISSAO = '2025-12-31'
+  const linha = (identificacao: string, numeroLinha = 1, dataIso: string | null = null) => ({
     numeroLinha,
     identificacao,
     valor: 100,
+    dataIso,
   })
 
   it('aceita frações que existem', () => {
-    expect(validarConjuntoSaldos([linha('1ºDto'), linha('1ºEsq', 2)], ['1ºDto', '1ºEsq'])).toEqual([])
+    expect(
+      validarConjuntoSaldos([linha('1ºDto'), linha('1ºEsq', 2)], ['1ºDto', '1ºEsq'], OMISSAO),
+    ).toEqual([])
   })
 
   it('recusa uma fração que não existe no condomínio', () => {
-    const erros = validarConjuntoSaldos([linha('9ºDto')], ['1ºDto'])
+    const erros = validarConjuntoSaldos([linha('9ºDto')], ['1ºDto'], OMISSAO)
     expect(erros[0]).toContain('Não existe nenhuma fração')
     expect(erros[0]).toContain('linha 1')
   })
 
   it('compara ignorando maiúsculas e espaços', () => {
-    expect(validarConjuntoSaldos([linha('  1ºdto ')], ['1ºDto'])).toEqual([])
+    expect(validarConjuntoSaldos([linha('  1ºdto ')], ['1ºDto'], OMISSAO)).toEqual([])
   })
 
-  it('deteta a mesma fração repetida, que somaria em silêncio', () => {
-    const erros = validarConjuntoSaldos([linha('1ºDto'), linha('1ºDto', 2)], ['1ºDto'])
-    expect(erros[0]).toContain('duas vezes')
-    expect(erros[0]).toContain('Some os valores')
+  it('deteta a mesma fração com a MESMA data, que somaria em silêncio', () => {
+    const erros = validarConjuntoSaldos([linha('1ºDto'), linha('1ºDto', 2)], ['1ºDto'], OMISSAO)
+    expect(erros[0]).toContain('duas vezes com a mesma data')
+  })
+
+  // O ponto de toda esta alteração: dívidas de vários anos.
+  it('aceita a mesma fração em anos diferentes', () => {
+    const erros = validarConjuntoSaldos(
+      [linha('1ºDto', 1, '2023-12-31'), linha('1ºDto', 2, '2024-12-31'), linha('1ºDto', 3, '2025-12-31')],
+      ['1ºDto'],
+      OMISSAO,
+    )
+    expect(erros).toEqual([])
+  })
+
+  it('apanha o choque entre uma linha sem data e outra com a data por omissão escrita à mão', () => {
+    const erros = validarConjuntoSaldos(
+      [linha('1ºDto', 1, null), linha('1ºDto', 2, OMISSAO)],
+      ['1ºDto'],
+      OMISSAO,
+    )
+    expect(erros[0]).toContain('mesma data')
   })
 })

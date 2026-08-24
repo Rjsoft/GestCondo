@@ -547,6 +547,20 @@ export const SECOES_AJUDA: SecaoAjuda[] = [
                 corrigido. Tal como em &ldquo;Frações&rdquo;, também aqui pode
                 descarregar um modelo, preenchê-lo no Excel, guardá-lo como CSV
                 e carregá-lo em vez de escrever à mão.
+                <br />
+                <strong>Se a dívida for de vários anos</strong>, não some tudo
+                numa linha só: acrescente o ano numa terceira coluna e repita a
+                fração — por exemplo{' '}
+                <span className="font-mono">1ºDto; 125,50; 2024</span> numa
+                linha e <span className="font-mono">1ºDto; 340,00; 2025</span> na
+                seguinte. Pode escrever só o ano (fica 31 de dezembro desse ano)
+                ou a data completa (31/12/2024). Isto não é um pormenor: é a
+                data de cada dívida que faz o relatório de{' '}
+                &ldquo;Antiguidade da dívida&rdquo; distribuir os valores pelos
+                escalões certos (30, 60, 90, 180, mais de 365 dias) e os juros
+                de mora contarem os dias de atraso a sério. Se somar três anos
+                numa linha só, a dívida antiga aparece como se fosse recente e
+                os juros ficam a menos.
               </li>
               <li>
                 &ldquo;Declaração&rdquo; — gera a declaração de encargos e
